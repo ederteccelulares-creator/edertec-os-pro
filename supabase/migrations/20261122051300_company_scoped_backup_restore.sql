@@ -117,8 +117,8 @@ begin
  -- Prevent accidental merges: every restorable destination collection must be empty.
  foreach table_name in array allowed_tables loop
   execute format('select exists(select 1 from public.%I where company_id=$1)',table_name)
-   into row_value using p_company_id;
-  if row_value::text='true' then
+   into has_rows using p_company_id;
+  if has_rows then
    raise exception 'Restore destination is not empty: % already contains data',table_name;
   end if;
  end loop;
