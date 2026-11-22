@@ -1,5 +1,5 @@
 -- End-to-end RLS smoke test using two synthetic users and two isolated tenants.
--- Run only in the disposable PostgreSQL CI database after migrations 0001-0016.
+-- Run only in the disposable PostgreSQL CI database after migrations 0001-0017.
 -- The test harness simulates auth.uid(); it is not a substitute for Supabase Auth.
 
 \set ON_ERROR_STOP on
