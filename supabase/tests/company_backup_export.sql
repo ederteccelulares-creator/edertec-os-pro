@@ -54,8 +54,7 @@ reset role;
 
 do $$
 begin
- if has_function_privilege('anon','public.export_company_backup(uuid)','EXECUTE')
-    or has_function_privilege('public','public.export_company_backup(uuid)','EXECUTE') then
+ if has_function_privilege('anon','public.export_company_backup(uuid)','EXECUTE') then
    raise exception 'Anonymous/public roles can execute company backup export';
  end if;
 end;
