@@ -15,6 +15,9 @@ Sistema de gestão para assistência técnica de celulares.
 - Lista, busca e filtro por status
 - Alteração do andamento da OS
 - Visualização de detalhes da ordem
+- Dados adicionais de entrada: IMEI/série, acessórios e condição física
+- Modelo de impressão A4 com identificação da OS, dados do cliente/aparelho, defeito, valor e assinaturas
+- Impressão pelo navegador com opção de salvar como PDF
 - Persistência temporária no armazenamento local do navegador
 
 ## Executar localmente
@@ -25,7 +28,7 @@ npm run dev
 
 ## Próximas etapas
 1. Cadastro completo de clientes e aparelhos
-2. Impressão e PDF A4 com identidade visual da assistência
+2. Completar o documento A4 com logo oficial, endereço, CNPJ/contatos e termos configuráveis
 3. Autenticação, perfis e permissões
 4. API e banco de dados centralizado para uso em rede
 5. Estoque, serviços, financeiro e relatórios
