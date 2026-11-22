@@ -80,7 +80,7 @@ BEGIN
   BEGIN
     UPDATE public.organization_members SET role='owner'
     WHERE organization_id=current_setting('test.org_b')::uuid
-      AND user_id='10000000-0000-4000-8000-000000000001';
+      AND user_id='20000000-0000-4000-8000-000000000002';
     RAISE EXCEPTION 'Direct membership role update unexpectedly succeeded';
   EXCEPTION WHEN insufficient_privilege THEN
     NULL;
