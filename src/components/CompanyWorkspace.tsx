@@ -32,7 +32,6 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
         listCompanyServiceOrders({companyId:company.id,branchId:branchId||null,limit:250}),
       ])
       setBranches(b); setCustomers(c); setOrders(o)
-      if (!branchId && b.length) setBranchId(b[0].id)
     } catch(e) { setError(e instanceof Error?e.message:'Erro ao carregar dados.') }
     finally { setLoading(false) }
   },[company.id,branchId])
