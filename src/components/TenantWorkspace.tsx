@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
-import { Building2, ClipboardList, LogOut, Plus, RefreshCw, Smartphone, Users, Boxes, ArrowDownUp, Wallet, ShoppingCart, Trash2, ShieldCheck, UserCog, BarChart3, MessageCircle, Link2 } from 'lucide-react'
-import { changeInventoryStock, createInventoryItem, createFinancialEntry, createSale, createServiceOrderWithDevice, listBranches, listCustomers, listDevices, saveDevice, updateDevice, createServiceOrder, listFinancialEntries, listInventory, listSales, listServiceOrderEvents, listServiceOrders, saveCustomer, updateCustomer, listOrganizationTeam, setOrganizationMemberActive, setOrganizationMemberRole, listServiceCatalog, saveServiceCatalogItem, addServiceToOrder, inviteOrganizationMember, updateFinancialEntryStatus, updateServiceOrderStatus, assignServiceOrderTechnician, exportOrganizationBackup, validateOrganizationBackup, restoreOrganizationBackup, uploadServiceOrderIntakeMedia, listServiceOrderIntakeMedia, createServiceOrderPortalLink } from '../lib/tenant-data'
+import { Building2, ClipboardList, LogOut, Plus, RefreshCw, Smartphone, Users, Boxes, ArrowDownUp, Wallet, ShoppingCart, Trash2, ShieldCheck, UserCog, BarChart3, MessageCircle, Link2, Bell } from 'lucide-react'
+import { changeInventoryStock, createInventoryItem, createFinancialEntry, createSale, createServiceOrderWithDevice, listBranches, listCustomers, listDevices, saveDevice, updateDevice, createServiceOrder, listFinancialEntries, listInventory, listSales, listServiceOrderEvents, listServiceOrders, saveCustomer, updateCustomer, listOrganizationTeam, setOrganizationMemberActive, setOrganizationMemberRole, listServiceCatalog, saveServiceCatalogItem, addServiceToOrder, inviteOrganizationMember, updateFinancialEntryStatus, updateServiceOrderStatus, assignServiceOrderTechnician, exportOrganizationBackup, validateOrganizationBackup, restoreOrganizationBackup, uploadServiceOrderIntakeMedia, listServiceOrderIntakeMedia, createServiceOrderPortalLink, listServiceOrderNotifications, markServiceOrderNotificationRead } from '../lib/tenant-data'
 import type { Organization, Branch } from '../lib/supabase'
-import type { ServiceOrderStatus, TeamMember, ServiceCatalogItem } from '../lib/tenant-data'
+import type { ServiceOrderStatus, TeamMember, ServiceCatalogItem, ServiceOrderNotification } from '../lib/tenant-data'
 
 type Props = { organization: Organization; role: import('../lib/supabase').OrganizationRole; email: string; onSignOut: () => void }
 type Customer = { id: string; name: string; phone: string; email?: string | null; document?: string | null; notes?: string | null }
@@ -60,6 +60,8 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
   const [busy, setBusy] = useState(false)
   const [portalBusyId, setPortalBusyId] = useState<string | null>(null)
   const [portalNotice, setPortalNotice] = useState('')
+  const [notifications, setNotifications] = useState<ServiceOrderNotification[]>([])
+  const [notificationOpen, setNotificationOpen] = useState(false)
   const [error, setError] = useState('')
   const [backupBusy, setBackupBusy] = useState(false)
   const [backupNotice, setBackupNotice] = useState('')
@@ -211,7 +213,7 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
     setLoading(true); setError('')
     try {
       const context = { organizationId: organization.id, branchId: targetBranch }
-      const [customerRows, orderRows, stockRows, financeData, salesData, teamData, serviceData] = await Promise.all([listCustomers(context), listServiceOrders(context), listInventory(context), canManageFinance ? listFinancialEntries(context) : Promise.resolve([]), listSales(context), canViewTeam ? listOrganizationTeam(organization.id) : Promise.resolve([]), listServiceCatalog(organization.id)])
+      const [customerRows, orderRows, stockRows, financeData, salesData, teamData, serviceData, notificationRows] = await Promise.all([listCustomers(context), listServiceOrders(context), listInventory(context), canManageFinance ? listFinancialEntries(context) : Promise.resolve([]), listSales(context), canViewTeam ? listOrganizationTeam(organization.id) : Promise.resolve([]), listServiceCatalog(organization.id), listServiceOrderNotifications(context)])
       setCustomers(customerRows as Customer[])
       setOrders(orderRows as unknown as Order[])
       setInventory(stockRows as typeof inventory)
@@ -219,12 +221,36 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
       setSalesRows(salesData as typeof salesRows)
       setTeamRows(teamData)
       setServiceRows(serviceData)
+      setNotifications(notificationRows)
     } catch (e) { setError(e instanceof Error ? e.message : 'Não foi possível carregar os dados.') }
     finally { setLoading(false) }
   }
 
   useEffect(() => { loadBranches().catch(e => { setError(e.message || 'Erro ao carregar filiais.'); setLoading(false) }) }, [organization.id])
   useEffect(() => { if (branchId) loadWorkspace(branchId) }, [branchId])
+  useEffect(() => {
+    if (!branchId) return
+    const timer = window.setInterval(() => {
+      listServiceOrderNotifications({ organizationId: organization.id, branchId })
+        .then(setNotifications)
+        .catch(() => undefined)
+    }, 30000)
+    return () => window.clearInterval(timer)
+  }, [organization.id, branchId])
+
+  async function openServiceOrderNotification(item: ServiceOrderNotification) {
+    if (!item.read_at) {
+      try {
+        await markServiceOrderNotificationRead(item.id)
+        setNotifications(current => current.map(row => row.id === item.id ? { ...row, read_at: new Date().toISOString() } : row))
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Não foi possível marcar a notificação como lida.')
+      }
+    }
+    setTab('orders')
+    setOrderSearch(String(orders.find(order => order.id === item.service_order_id)?.order_number || ''))
+    setNotificationOpen(false)
+  }
 
   async function submitInventoryItem(event: React.FormEvent) {
     event.preventDefault(); setBusy(true); setError('')
@@ -556,7 +582,7 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
   }
 
   return <main className="tenant-page">
-    <header className="tenant-header"><div className="tenant-brand"><span><Smartphone/></span><div><b>EDERTEC <i>OS PRO</i></b><small>{organization.name}</small></div></div><div className="tenant-account"><span>{email}</span>{['owner','admin'].includes(role)&&<button onClick={downloadBackup} disabled={backupBusy} title="Baixar backup da empresa" aria-label="Baixar backup da empresa"><Boxes size={17}/></button>}<button onClick={onSignOut} title="Sair"><LogOut size={17}/></button></div></header>
+    <header className="tenant-header"><div className="tenant-brand"><span><Smartphone/></span><div><b>EDERTEC <i>OS PRO</i></b><small>{organization.name}</small></div></div><div className="tenant-account"><span>{email}</span><div className="tenant-notification-wrap"><button className="tenant-notification-toggle" onClick={() => setNotificationOpen(value => !value)} title="Notificações" aria-label="Abrir notificações"><Bell size={18}/>{notifications.filter(item => !item.read_at).length > 0 && <i>{notifications.filter(item => !item.read_at).length}</i>}</button>{notificationOpen && <div className="tenant-notification-panel"><div className="tenant-notification-heading"><b>Notificações</b><small>{notifications.filter(item => !item.read_at).length} não lidas</small></div>{notifications.length === 0 ? <p className="tenant-notification-empty">Nenhuma notificação nesta filial.</p> : notifications.map(item => <button key={item.id} className={item.read_at ? 'tenant-notification-item read' : 'tenant-notification-item'} onClick={() => void openServiceOrderNotification(item)}><strong>{item.title}</strong><span>{item.message}</span><small>{new Date(item.created_at).toLocaleString('pt-BR')}</small>{!item.read_at && <em>Nova</em>}</button>)}</div>}</div>{['owner','admin'].includes(role)&&<button onClick={downloadBackup} disabled={backupBusy} title="Baixar backup da empresa" aria-label="Baixar backup da empresa"><Boxes size={17}/></button>}<button onClick={onSignOut} title="Sair"><LogOut size={17}/></button></div></header>
     <section className="tenant-content">
       <div className="tenant-heading"><div><small>AMBIENTE EMPRESARIAL</small><h1>{organization.name}</h1><p>Gestão de atendimentos e clientes</p></div><label className="branch-select"><Building2 size={16}/><select value={branchId} onChange={e=>setBranchId(e.target.value)}>{branches.map(branch=><option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label></div>
       <div className="tenant-stats"><article><span>Ordens nesta filial</span><b>{orders.length}</b></article><article><span>Clientes cadastrados</span><b>{customers.length}</b></article><article><span>Em andamento</span><b>{orders.filter(item=>!['delivered','cancelled'].includes(item.status)).length}</b></article></div>
