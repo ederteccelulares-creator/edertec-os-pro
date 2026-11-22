@@ -150,3 +150,9 @@ A validação também confere referências internas entre clientes, aparelhos, O
 
 A migração `0016_service_history_integrity.sql` impede reatribuir eventos e linhas de serviços a outra ordem, filial, empresa ou usuário responsável. Também protege as chaves do catálogo de serviços. Ela preserva os dados existentes e deve ser aplicada após a migração 0015.
 A validação consulta também, em modo somente leitura, a quantidade atual de registros de cada tabela operacional da empresa de destino. O painel informa se o destino está vazio ou já contém dados e lista as tabelas ocupadas. Se houver dados no destino, uma futura restauração não deverá sobrescrevê-los automaticamente; será necessário um procedimento de mesclagem com regras explícitas. Essa prévia não executa importação e não libera a restauração.
+
+
+### Plano de restauração segura (prévia)
+A validação do backup agora discrimina, por tabela e campo, quantos registros dependem de referências a usuários do Supabase Auth (por exemplo, responsável pela OS, autor de eventos, vendedor e autor de movimentações). Essas contas não fazem parte do arquivo JSON e precisarão ser mapeadas para usuários já existentes e membros ativos da empresa de destino antes de qualquer importação.
+
+A prévia de ocupação do destino continua sendo somente leitura. A existência de registros, inclusive a filial Matriz criada no cadastro da empresa, não autoriza mesclagem automática. Ainda não existe rotina de restauração: não importar, sobrescrever nem excluir dados com base apenas no relatório. A próxima implementação deverá definir mapeamento explícito de IDs de filiais e usuários, ordem de dependências, validação de vínculos e execução transacional com rollback; até isso ser implementado e testado em ambiente separado, a restauração permanece indisponível.
