@@ -191,3 +191,16 @@ Esta seção registra alterações já aplicadas no banco BR; não é um arquivo
   - `purchase_items(product_id, company_id)` -> products
 - As tabelas suppliers, purchases e purchase_items estavam vazias antes da alteração. As constraints foram verificadas depois.
 - Security Advisor permanece com os dois apontamentos já conhecidos: `platform_admins` sem política RLS (intencionalmente fechado até desenhar o acesso Super Admin) e `register_company` SECURITY DEFINER executável por authenticated (necessário ao fluxo de cadastro, com grants restritos e verificados).
+
+
+## Pedidos de compra e recebimento — 22/11/2026
+
+- Criados `src/lib/company-purchases.ts` e `src/components/CompanyPurchasesPanel.tsx`; seção Compras integrada ao workspace.
+- Cadastro de pedido com fornecedor, filial opcional, itens, quantidade, custo unitário, desconto, frete, observações e total calculado.
+- Compra é criada como `draft`; o número é obtido de `purchases_purchase_number_seq`. Concedido USAGE/SELECT da sequência somente a authenticated (verificado: authenticated=true, anon=false).
+- Criada RPC `create_company_purchase` como SECURITY INVOKER, com validação de membro, fornecedor, filial e produtos da mesma empresa; insere cabeçalho e itens na mesma transação.
+- Criada RPC `receive_company_purchase` como SECURITY INVOKER. Bloqueia compra já recebida/cancelada; registra movimento de entrada para cada item vinculado a produto, atualiza o custo do produto e marca a compra como recebida na mesma transação.
+- Itens sem produto vinculado permanecem apenas como despesa/linha informativa e não alteram estoque.
+- EXECUTE das duas RPCs concedido a authenticated e revogado de PUBLIC/anon.
+- A confirmação do recebimento no painel informa que itens vinculados serão adicionados ao estoque.
+- Ainda não existe baixa financeira/contas a pagar vinculada à compra. O módulo atual controla pedido, recebimento e estoque; integração financeira fica para etapa posterior.
