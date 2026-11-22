@@ -70,6 +70,24 @@ export async function listCustomers(context: TenantContext) {
   return data ?? []
 }
 
+export async function updateCustomer(context: TenantContext, customerId: string, input: CustomerInput) {
+  const payload = {
+    name: required(input.name, 'o nome do cliente'),
+    phone: required(input.phone, 'o telefone'),
+    email: input.email?.trim() || null,
+    document: input.document?.trim() || null,
+    notes: input.notes?.trim() || null,
+  }
+  const { data, error } = await client().from('customers')
+    .update(payload)
+    .eq('organization_id', context.organizationId)
+    .eq('id', customerId)
+    .select('id, organization_id, name, phone, email, document, address, notes, created_at, updated_at')
+    .single()
+  if (error) throw error
+  return data
+}
+
 export async function saveCustomer(context: TenantContext, input: CustomerInput) {
   const payload = {
     organization_id: context.organizationId,
