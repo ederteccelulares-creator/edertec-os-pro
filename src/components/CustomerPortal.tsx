@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { AlertCircle, CheckCircle2, Clock3, LoaderCircle, Smartphone } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Clock3, LoaderCircle, Smartphone, ThumbsUp, ThumbsDown } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
 type PortalEvent = { status: string; created_at: string }
@@ -7,6 +7,8 @@ type PortalData = {
   organization_name: string
   order_number: number
   status: string
+  customer_quote_decision: 'pending' | 'approved' | 'declined'
+  customer_quote_decided_at: string | null
   reported_issue: string
   estimated_amount: number
   approved_amount: number | null
@@ -34,6 +36,8 @@ export default function CustomerPortal({ token }: { token: string }) {
   const [data, setData] = useState<PortalData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [decisionBusy, setDecisionBusy] = useState(false)
+  const [decisionNotice, setDecisionNotice] = useState('')
 
   useEffect(() => {
     let active = true
@@ -53,6 +57,40 @@ export default function CustomerPortal({ token }: { token: string }) {
     return () => { active = false }
   }, [token])
 
+  async function respondToQuote(decision: 'approved' | 'declined') {
+    if (!data || decisionBusy || data.status !== 'waiting_approval' || data.customer_quote_decision !== 'pending') return
+    const prompt = decision === 'approved'
+      ? 'Confirma a aprovação do orçamento? A assistência poderá iniciar o reparo.'
+      : 'Confirma que deseja recusar o orçamento? A ordem será encerrada como cancelada.'
+    if (!window.confirm(prompt)) return
+    setDecisionBusy(true)
+    setDecisionNotice('')
+    setError('')
+    try {
+      if (!supabase) throw new Error('Portal não conectado ao banco de dados.')
+      const { data: result, error: requestError } = await supabase.rpc('respond_service_order_quote', {
+        p_token: token,
+        p_decision: decision,
+      })
+      if (requestError) throw requestError
+      setData(current => current ? {
+        ...current,
+        status: result.status,
+        customer_quote_decision: result.decision,
+        customer_quote_decided_at: result.decided_at,
+        approved_amount: result.approved_amount,
+        updated_at: result.decided_at,
+      } : current)
+      setDecisionNotice(decision === 'approved'
+        ? 'Orçamento aprovado. A assistência foi avisada e poderá iniciar o reparo.'
+        : 'Orçamento recusado. A assistência foi avisada da sua decisão.')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Não foi possível registrar sua decisão. Atualize a página e tente novamente.')
+    } finally {
+      setDecisionBusy(false)
+    }
+  }
+
   return <main className="customer-portal-page">
     <section className="customer-portal-card">
       <div className="customer-portal-brand"><span><Smartphone size={22}/></span><div><b>EDERTEC <i>OS PRO</i></b><small>ACOMPANHAMENTO DO CLIENTE</small></div></div>
@@ -63,7 +101,7 @@ export default function CustomerPortal({ token }: { token: string }) {
           <div className="customer-portal-order"><div><small>ORDEM DE SERVIÇO</small><strong>#{data.order_number}</strong></div><span className={'customer-portal-status status-'+data.status}><CheckCircle2 size={16}/>{labels[data.status] || data.status}</span></div>
           <div className="customer-portal-device"><Smartphone size={20}/><div><b>{data.device ? `${data.device.brand} ${data.device.model}` : 'Aparelho em atendimento'}</b><small>Recebido em {new Date(data.received_at).toLocaleDateString('pt-BR')}</small></div></div>
           <section className="customer-portal-section"><h2>Atendimento</h2><p><b>Problema informado:</b> {data.reported_issue}</p></section>
-          <section className="customer-portal-section customer-portal-values"><h2>Orçamento</h2><p><span>Valor estimado</span><b>{money(data.estimated_amount)}</b></p>{data.approved_amount !== null && <p><span>Valor aprovado</span><b>{money(data.approved_amount)}</b></p>}</section>
+          <section className="customer-portal-section customer-portal-values"><h2>Orçamento</h2><p><span>Valor estimado</span><b>{money(data.estimated_amount)}</b></p>{data.approved_amount !== null && <p><span>Valor aprovado</span><b>{money(data.approved_amount)}</b></p>}{data.status === 'waiting_approval' && data.customer_quote_decision === 'pending' && <div className="customer-portal-decision"><p>Este orçamento aguarda sua resposta. Confirme se autoriza o reparo.</p><div><button type="button" disabled={decisionBusy} onClick={() => respondToQuote('approved')}><ThumbsUp size={16}/>{decisionBusy ? 'Registrando...' : 'Aprovar orçamento'}</button><button type="button" className="customer-portal-decline" disabled={decisionBusy} onClick={() => respondToQuote('declined')}><ThumbsDown size={16}/>Recusar orçamento</button></div></div>}{data.customer_quote_decision !== 'pending' && <p className="customer-portal-decision-result">{data.customer_quote_decision === 'approved' ? 'Orçamento aprovado por você.' : 'Orçamento recusado por você.'}</p>}{decisionNotice && <p className="customer-portal-decision-result">{decisionNotice}</p>}</section>
           <section className="customer-portal-section"><h2><Clock3 size={17}/> Histórico do atendimento</h2>{data.events.length === 0 ? <p>O histórico será atualizado conforme o atendimento avançar.</p> : <div className="customer-portal-timeline">{data.events.map((event,index)=><article key={index}><span/><div><b>{labels[event.status] || event.status}</b><small>{new Date(event.created_at).toLocaleString('pt-BR')}</small></div></article>)}</div>}</section>
           <p className="customer-portal-updated">Última atualização: {new Date(data.updated_at).toLocaleString('pt-BR')}</p>
         </>}
