@@ -29,16 +29,22 @@ set search_path=public
 as $$
 declare
   invitation public.pending_team_invitations%rowtype;
+  invitation_id uuid;
 begin
   if new.email is null then return new; end if;
+  begin
+    invitation_id := nullif(new.raw_user_meta_data->>'team_invitation_id','')::uuid;
+  exception when invalid_text_representation then
+    return new;
+  end;
+  if invitation_id is null then return new; end if;
 
   select * into invitation
   from public.pending_team_invitations
-  where lower(email)=lower(new.email)
+  where id=invitation_id
+    and lower(email)=lower(new.email)
     and status='pending'
     and expires_at>now()
-  order by created_at
-  limit 1
   for update;
 
   if not found then return new; end if;
