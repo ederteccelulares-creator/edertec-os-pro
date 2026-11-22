@@ -18,7 +18,8 @@ Plataforma SaaS de gestão para assistências técnicas de celulares, preparada 
 - Histórico cronológico de alterações de status das ordens.
 - Atualização de status por função SQL transacional, com gravação do evento e log de auditoria.
 - Políticas de função para limitar quem abre, atualiza e exclui ordens.
-- Protótipo anterior de dashboard, OS, clientes e impressão A4 preservado no repositório para migração progressiva.
+- Impressão de ordem de serviço em formato A4 no novo painel, com dados do cliente, aparelho, atendimento e campos de assinatura.
+- Interface que respeita o perfil do membro ao habilitar atualização de status da OS.
 
 ## Configurar o banco e autenticação
 1. Crie um projeto no [Supabase](https://supabase.com/dashboard).
@@ -38,7 +39,7 @@ Plataforma SaaS de gestão para assistências técnicas de celulares, preparada 
 **Segurança:** nunca coloque a chave `service_role` ou segredo de backend em variáveis `VITE_*` ou no navegador. O frontend usa somente a chave pública; operações privilegiadas, cobrança e webhooks deverão rodar em backend seguro.
 
 ## Estado atual
-A camada inicial de autenticação e criação de organizações foi implementada no frontend, mas depende da criação e configuração do projeto Supabase pelo proprietário. Os módulos iniciais de clientes, aparelhos e ordens de serviço já estão conectados ao PostgreSQL no código, mas dependem da execução das duas migrações e da configuração do Supabase. Convites, permissões completas por tela, impressão A4 no novo painel, estoque, financeiro, cobrança e testes de isolamento ainda precisam ser concluídos. Não comercialize o acesso nem use dados reais até executar as migrações e concluir os testes e a revisão de segurança.
+A camada inicial de autenticação e criação de organizações foi implementada no frontend, mas depende da criação e configuração do projeto Supabase pelo proprietário. Os módulos iniciais de clientes, aparelhos e ordens de serviço já estão conectados ao PostgreSQL no código, mas dependem da execução das duas migrações e da configuração do Supabase. Convites de equipe, edição completa de cadastros, estoque, financeiro, cobrança e testes de isolamento ainda precisam ser concluídos. Não comercialize o acesso nem use dados reais até executar as migrações e concluir os testes e a revisão de segurança.
 
 ## Próximas etapas
 1. Finalizar testes e validação de clientes, aparelhos, ordens e histórico no Supabase real.
