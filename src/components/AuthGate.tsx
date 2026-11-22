@@ -73,8 +73,10 @@ export default function AuthGate() {
           const isAdmin = await isPlatformAdmin()
           if (alive) setPlatformAdmin(isAdmin)
           if (!isAdmin) await loadMemberships(data.session.user.id)
-        } catch (e) {
-          if (alive) setError(e instanceof Error ? e.message : 'Não foi possível verificar seu acesso.')
+        } catch {
+          if (alive) setPlatformAdmin(false)
+          try { await loadMemberships(data.session.user.id) }
+          catch (e) { if (alive) setError(e instanceof Error ? e.message : 'Não foi possível carregar suas empresas.') }
         }
       }
       if (alive) setLoading(false)
@@ -90,8 +92,10 @@ export default function AuthGate() {
             setPlatformAdmin(isAdmin)
             if (!isAdmin) await loadMemberships(nextSession.user.id)
             else { setMemberships([]); setSelectedOrg(null) }
-          } catch (e) {
-            setError(e instanceof Error ? e.message : 'Erro ao verificar acesso administrativo.')
+          } catch {
+            setPlatformAdmin(false)
+            try { await loadMemberships(nextSession.user.id) }
+            catch (e) { setError(e instanceof Error ? e.message : 'Erro ao carregar empresas.') }
           }
         }, 0)
       }
