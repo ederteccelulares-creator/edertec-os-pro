@@ -494,8 +494,7 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
       const token = await createServiceOrderPortalLink({ organizationId: organization.id, branchId }, item.id)
       const url = new URL(window.location.href)
       url.search = ''
-      url.hash = ''
-      url.searchParams.set('portal', token)
+      url.hash = `portal=${token}`
       try {
         await navigator.clipboard.writeText(url.toString())
         setPortalNotice(`Link da OS #${item.order_number} copiado. Envie ao cliente pelo WhatsApp ou outro canal seguro.`)
