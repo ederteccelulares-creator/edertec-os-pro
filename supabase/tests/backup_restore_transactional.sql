@@ -51,7 +51,7 @@ begin
    'products',jsonb_build_array(jsonb_build_object(
     'id','a9000000-0000-4000-8000-000000000001',
     'company_id','a3000000-0000-4000-8000-000000000001',
-    'name','Tela de teste','cost_price',50,'sale_price',100,'stock_quantity',4,'created_at',now(),'updated_at',now()
+    'name','Tela de teste','cost_price',50,'sale_price',100,'stock_quantity',4,'min_stock',0,'is_active',true,'created_at',now(),'updated_at',now()
    )),
    'service_orders',jsonb_build_array(jsonb_build_object(
     'id','aa000000-0000-4000-8000-000000000001',
