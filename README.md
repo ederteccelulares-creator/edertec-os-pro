@@ -179,3 +179,5 @@ O script `supabase/tests/backup_restore_schema_contract.sql` faz uma verificaç�
 O workflow executa as migrações 0001–0016 em um PostgreSQL 16 descartável, usando `supabase/tests/postgres_auth_harness.sql` para simular somente os objetos mínimos do Supabase Auth necessários às migrações. Em seguida, executa `security_regression.sql` e `backup_restore_schema_contract.sql`.
 
 Esse job verifica a compatibilidade SQL das migrações e as asserções estruturais em PostgreSQL isolado. Ele **não** equivale a uma homologação completa no Supabase: não testa PostgREST, Auth real, Edge Functions, políticas com sessões reais de usuários, e-mail, nem restauração transacional. Nenhum banco de produção é acessado ou alterado.
+
+O workflow também cria dois usuários e duas empresas sintéticas e verifica, sob o papel `authenticated`, que cada empresa só enxerga seus próprios clientes; tenta bloquear gravação cruzada, vínculo de aparelho com cliente de outra empresa, alteração direta de função de membro e inserção direta de OS. Esse smoke test valida RLS e privilégios básicos no PostgreSQL isolado, mas não simula todas as camadas de uma instância Supabase real.
