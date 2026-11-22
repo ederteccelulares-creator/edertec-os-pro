@@ -213,3 +213,13 @@ export async function createCompanyServiceOrder(input: CreateCompanyServiceOrder
   }
   return created
 }
+
+export async function createCompanyServiceOrderTrackingLink(input:{companyId:string;orderId:string}) {
+  const { data, error } = await db().rpc('create_company_service_order_tracking_link', {
+    p_company_id: input.companyId,
+    p_order_id: input.orderId,
+  })
+  if (error) throw error
+  if (typeof data !== 'string' || data.length !== 64) throw new Error('Não foi possível gerar o link de acompanhamento.')
+  return new URL(`?acompanhar=${data}`, window.location.origin + window.location.pathname).toString()
+}
