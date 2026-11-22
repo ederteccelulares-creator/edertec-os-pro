@@ -31,6 +31,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   const [logoPreview,setLogoPreview] = useState(company.logo_url||'')
   const [companyForm,setCompanyForm] = useState({name:companyInfo.name,legalName:company.legal_name||'',taxId:company.tax_id||'',email:company.email||'',phone:company.phone||''})
   const [printFormat,setPrintFormat] = useState<'a4'|'thermal80'>(() => { try { return localStorage.getItem('edertec-os-print-format')==='thermal80'?'thermal80':'a4' } catch { return 'a4' } })
+  const [brasiliaNow,setBrasiliaNow] = useState(()=>new Date())
   const [planInfo,setPlanInfo] = useState<{subscription_status:string|null;trial_ends_at:string|null;ends_at:string|null;plan_name:string|null}|null>(null)
   const [branches,setBranches] = useState<CompanyBranch[]>([])
   const [branchId,setBranchId] = useState('')
@@ -72,6 +73,14 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   },[company.id,branchId])
 
   useEffect(()=>{void load()},[load])
+
+  useEffect(()=>{
+    const updateClock=()=>setBrasiliaNow(new Date())
+    const timer=window.setInterval(updateClock,1000)
+    return ()=>window.clearInterval(timer)
+  },[])
+  const brasiliaDate=new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'numeric'}).format(brasiliaNow)
+  const brasiliaTime=new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(brasiliaNow)
 
   useEffect(()=>{
     let alive=true
@@ -281,7 +290,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
     </aside>
     <main className="company-main">
       <div className="company-mobilebar"><button onClick={()=>setMenuOpen(true)} aria-label="Abrir menu"><Menu/></button><div><b>EDERTEC <i>OS PRO</i></b><small>{companyInfo.name}</small></div><span className="company-mobile-avatar">{(email[0]||'U').toUpperCase()}</span></div>
-      <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='backup'?'Backup de dados':tab==='settings'?'Configurações':tab==='team'?'Funcionários e usuários':tab==='customerPortal'?'Compartilhar Área do Cliente':tab==='support'?'Suporte e chamados':tab==='pos'?'PDV / Vendas':'Financeiro'}</h1></div><div className="company-top-actions"><div className="company-plan-period"><b>{planInfo?.plan_name||'Plano não identificado'}</b><span>{planStatusLabel} · até {planEndLabel}</span>{planDaysLeft!==null&&<small>{planDaysLeft===0?'Vence hoje':planDaysLeft+' dia(s) restante(s)'}</small>}</div><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
+      <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='backup'?'Backup de dados':tab==='settings'?'Configurações':tab==='team'?'Funcionários e usuários':tab==='customerPortal'?'Compartilhar Área do Cliente':tab==='support'?'Suporte e chamados':tab==='pos'?'PDV / Vendas':'Financeiro'}</h1></div><div className="company-top-actions"><div className="company-brasilia-clock"><b>{brasiliaTime}</b><span>{brasiliaDate}</span><small>Horário de Brasília</small></div><div className="company-plan-period"><b>{planInfo?.plan_name||'Plano não identificado'}</b><span>{planStatusLabel} · até {planEndLabel}</span>{planDaysLeft!==null&&<small>{planDaysLeft===0?'Vence hoje':planDaysLeft+' dia(s) restante(s)'}</small>}</div><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
       {tab==='customerPortal'&&<CustomerPortalAdminPanel company={company} customers={customers}/>}
       {tab==='support'&&<CompanySupportPanel companyId={company.id} companyName={company.name}/ >}
       {tab==='team'&&canAdmin&&<CompanyTeamPanel companyId={company.id} actorRole={role}/ >}
