@@ -82,20 +82,21 @@ export default function AuthGate() {
   }, [loadMemberships])
 
   if (!isSupabaseConfigured || !supabase) return <SetupRequired />
+  const db = supabase
   if (loading) return <main className="auth-page"><div className="auth-loading"><LoaderCircle className="spin" size={25}/> Verificando acesso seguro...</div></main>
 
   const submitAuth = async (event: FormEvent) => {
     event.preventDefault(); setBusy(true); setError(''); setNotice('')
     try {
       if (mode === 'signup') {
-        const { data, error: authError } = await supabase.auth.signUp({
+        const { data, error: authError } = await db.auth.signUp({
           email, password, options: { data: { full_name: fullName } }
         })
         if (authError) throw authError
         if (!data.session) setNotice('Cadastro recebido. Confirme seu e-mail para ativar o acesso e depois entre no sistema.')
         else setNotice('Conta criada. Agora cadastre sua assistência.')
       } else {
-        const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
+        const { error: authError } = await db.auth.signInWithPassword({ email, password })
         if (authError) throw authError
       }
     } catch (e) { setError(e instanceof Error ? e.message : 'Não foi possível autenticar.') }
@@ -107,12 +108,12 @@ export default function AuthGate() {
     try {
       const slug = slugify(companySlug || companyName)
       if (slug.length < 3) throw new Error('Use um nome de empresa com pelo menos 3 caracteres.')
-      const { data, error: rpcError } = await supabase.rpc('create_organization', {
+      const { data, error: rpcError } = await db.rpc('create_organization', {
         org_name: companyName.trim(), org_slug: slug
       })
       if (rpcError) throw rpcError
       await loadMemberships(session!.user.id)
-      const { data: org, error: orgError } = await supabase.from('organizations')
+      const { data: org, error: orgError } = await db.from('organizations')
         .select('id,name,slug,timezone').eq('id', data).single()
       if (orgError) throw orgError
       setSelectedOrg(org as Organization)
@@ -121,7 +122,7 @@ export default function AuthGate() {
     finally { setBusy(false) }
   }
 
-  const signOut = async () => { await supabase.auth.signOut(); setSelectedOrg(null); setMemberships([]) }
+  const signOut = async () => { await db.auth.signOut(); setSelectedOrg(null); setMemberships([]) }
 
   if (!session) return <main className="auth-page"><section className="auth-card">
     <div className="auth-brand"><span><Smartphone size={25}/></span><div><b>EDERTEC <i>OS PRO</i></b><small>PLATAFORMA DE GESTÃO</small></div></div>
