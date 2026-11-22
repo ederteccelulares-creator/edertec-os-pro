@@ -100,8 +100,7 @@ A migração `0014_tenant_record_immutability.sql` impede mover clientes entre e
 
 ## Proteção das chaves operacionais multiempresa
 
-A migração `0015_operational_tenant_key_hardening.sql
-16. `0016_service_history_integrity.sql`` torna imutáveis os IDs e vínculos de organização das filiais, produtos, categorias e lançamentos financeiros, estoque, vendas e itens vendidos. Também impede reatribuir um registro de estoque a outra filial ou produto. Campos operacionais editáveis continuam sujeitos às permissões existentes.
+A migração `0015_operational_tenant_key_hardening.sql` torna imutáveis os IDs e vínculos de organização das filiais, produtos, categorias e lançamentos financeiros, estoque, vendas e itens vendidos. Também impede reatribuir um registro de estoque a outra filial ou produto. Campos operacionais editáveis continuam sujeitos às permissões existentes.
 
 
 ## Verificação de segurança do banco
