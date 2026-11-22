@@ -25,6 +25,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   const [companyInfo,setCompanyInfo] = useState(company)
   const [companySaving,setCompanySaving] = useState(false)
   const [logoFile,setLogoFile] = useState<File|null>(null)
+  const [logoRemoved,setLogoRemoved] = useState(false)
   const [logoPreview,setLogoPreview] = useState(company.logo_url||'')
   const [companyForm,setCompanyForm] = useState({name:companyInfo.name,legalName:company.legal_name||'',taxId:company.tax_id||'',email:company.email||'',phone:company.phone||''})
   const [printFormat,setPrintFormat] = useState<'a4'|'thermal80'>(() => { try { return localStorage.getItem('edertec-os-print-format')==='thermal80'?'thermal80':'a4' } catch { return 'a4' } })
@@ -69,7 +70,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   async function saveCompanyDetails(event:FormEvent) {
     event.preventDefault(); setCompanySaving(true); setError(''); setNotice('')
     try {
-      let logoUrl=companyInfo.logo_url||null
+      let logoUrl=logoRemoved?null:(companyInfo.logo_url||null)
       if(logoFile){
         if(!supabase) throw new Error('Banco de dados não configurado.')
         const ext=logoFile.name.split('.').pop()?.toLowerCase()||'png'
@@ -81,7 +82,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
       }
       const updated = await updateCompanyProfile({companyId:company.id,...companyForm,logoUrl})
       setCompanyInfo(updated)
-      setLogoPreview(updated.logo_url||'');setLogoFile(null)
+      setLogoPreview(updated.logo_url||'');setLogoFile(null);setLogoRemoved(false)
       setCompanyForm({name:updated.name,legalName:updated.legal_name||'',taxId:updated.tax_id||'',email:updated.email||'',phone:updated.phone||''})
       setNotice('Dados da empresa atualizados com sucesso.')
     } catch(e) { setError(e instanceof Error?e.message:'Não foi possível salvar os dados da empresa.') }
@@ -303,8 +304,8 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
             <label>CPF ou CNPJ<input value={companyForm.taxId} onChange={e=>setCompanyForm(v=>({...v,taxId:e.target.value}))} placeholder="Documento da empresa"/></label>
             <label>E-mail<input type="email" value={companyForm.email} onChange={e=>setCompanyForm(v=>({...v,email:e.target.value}))} placeholder="contato@empresa.com"/></label>
             <label>Telefone / WhatsApp<input value={companyForm.phone} onChange={e=>setCompanyForm(v=>({...v,phone:e.target.value}))} placeholder="(00) 00000-0000"/></label>
-            <label>Logo da empresa (PNG, JPG ou WebP · até 5 MB)<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>{const file=e.target.files?.[0]||null;if(file&&file.size>5*1024*1024){setError('A logo deve ter no máximo 5 MB.');e.target.value='';return}setLogoFile(file);if(file)setLogoPreview(URL.createObjectURL(file))}}/></label>
-            {logoPreview&&<div className="company-logo-preview"><img src={logoPreview} alt="Prévia da logo da empresa"/><button type="button" className="company-secondary" onClick={()=>{setLogoFile(null);setLogoPreview('')}}>Remover logo</button></div>}
+            <label>Logo da empresa (PNG, JPG ou WebP · até 5 MB)<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>{const file=e.target.files?.[0]||null;if(file&&file.size>5*1024*1024){setError('A logo deve ter no máximo 5 MB.');e.target.value='';return}setLogoFile(file);if(file){setLogoRemoved(false);setLogoPreview(URL.createObjectURL(file))}}}/></label>
+            {logoPreview&&<div className="company-logo-preview"><img src={logoPreview} alt="Prévia da logo da empresa"/><button type="button" className="company-secondary" onClick={()=>{setLogoFile(null);setLogoPreview('');setLogoRemoved(true)}}>Remover logo</button></div>}
             <small>A logo será exibida no cabeçalho das vias impressas da OS.</small>
             <button className="company-primary" type="submit" disabled={companySaving}>{companySaving?'Salvando...':'Salvar dados da empresa'}</button>
           </form>
