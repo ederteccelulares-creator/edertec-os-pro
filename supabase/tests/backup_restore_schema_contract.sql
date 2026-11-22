@@ -148,6 +148,15 @@ begin
     raise exception 'Backup schema contract failed: partial unique SKU index is missing';
   end if;
 
+  -- Restore-run ledger must be tenant-scoped and protected from browser roles.
+  if to_regclass('public.backup_restore_runs') is null then
+    raise exception 'Backup restore schema contract failed: restore-run ledger is missing';
+  end if;
+  if has_table_privilege('authenticated','public.backup_restore_runs','SELECT')
+     or has_table_privilege('anon','public.backup_restore_runs','SELECT') then
+    raise exception 'Backup restore schema contract failed: browser roles can read restore ledger';
+  end if;
+
   -- Identity columns must be imported with explicit identity handling and
   -- their sequences reconciled after a successful transaction.
   select exists (
