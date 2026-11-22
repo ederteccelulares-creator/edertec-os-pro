@@ -150,10 +150,11 @@ Deno.serve(async (req) => {
     ["sales", "sold_by"], ["service_order_lines", "created_by"],
     ["stock_movements", "actor_id"], ["audit_logs", "actor_id"],
   ] as const;
-  const requiresUserMapping = authReferences.some(([table, field]) => {
+  const userMappingRequirements = authReferences.map(([table, field]) => {
     const rows = Array.isArray(tables[table]) ? tables[table] as Array<Record<string, unknown>> : [];
-    return rows.some(row => row?.[field] !== null && row?.[field] !== undefined);
-  });
+    return { table, field, records: rows.filter(row => row?.[field] !== null && row?.[field] !== undefined).length };
+  }).filter(item => item.records > 0);
+  const requiresUserMapping = userMappingRequirements.length > 0;
 
   const unknownTables = Object.keys(tables).filter(name => !TABLES.includes(name as typeof TABLES[number]));
   if (unknownTables.length) errors.push("O arquivo contém tabelas não reconhecidas: " + unknownTables.join(", "));
@@ -185,6 +186,7 @@ Deno.serve(async (req) => {
     total_records: totalRecords,
     counts,
     requires_user_mapping: requiresUserMapping,
+    user_mapping_requirements: userMappingRequirements,
     destination_empty: destinationEmpty,
     target_counts: targetCounts,
     occupied_tables: occupiedTables,
