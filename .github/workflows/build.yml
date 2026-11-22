@@ -22,6 +22,8 @@ jobs:
         uses: denoland/setup-deno@v2
       - name: Check WhatsApp Edge Function
         run: deno check supabase/functions/respond-service-order-quote/index.ts
+      - name: Check company backup restore Edge Function
+        run: deno check supabase/functions/restore-company-backup/index.ts
 
   database-migrations:
     name: PostgreSQL migration and security checks
