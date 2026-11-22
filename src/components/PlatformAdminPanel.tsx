@@ -127,7 +127,7 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
     if(tab!=='billing'||!supabase)return
     let alive=true
     setBillingLoading(true)
-    supabase.functions.invoke('mercadopago-billing',{method:'GET',headers:{'x-billing-action':'settings'},body:undefined})
+    supabase.functions.invoke('mercadopago-billing?action=settings',{method:'GET'})
       .then(({data,error})=>{
         if(!alive)return
         if(error)throw error
