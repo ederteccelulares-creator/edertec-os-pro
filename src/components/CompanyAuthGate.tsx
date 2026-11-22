@@ -129,9 +129,23 @@ export default function CompanyAuthGate() {
   async function submitCompany(event: FormEvent) {
     event.preventDefault(); setBusy(true); setError(''); setNotice('')
     try {
-      await registerCompany({name:companyName,taxId,phone})
-      await refreshMemberships()
-      setNotice('Assistência cadastrada com sucesso.')
+      const normalize = (value:string) => value.trim().toLocaleLowerCase('pt-BR').replace(/\\s+/g,' ')
+      const digits = (value:string) => value.replace(/\\D/g,'')
+      const existing = memberships.find(m => {
+        const company = Array.isArray(m.companies) ? m.companies[0] : m.companies
+        if (!company || m.role !== 'owner') return false
+        return normalize(company.name) === normalize(companyName)
+          || (!!taxId.trim() && !!company.tax_id && digits(company.tax_id) === digits(taxId))
+      })
+      if (existing) {
+        const company = Array.isArray(existing.companies) ? existing.companies[0] : existing.companies
+        if (company) setSelected(company)
+        setNotice('Esta assistência já está cadastrada na sua conta. Abrimos o ambiente existente.')
+      } else {
+        await registerCompany({name:companyName,taxId,phone})
+        await refreshMemberships()
+        setNotice('Assistência cadastrada com sucesso.')
+      }
     } catch(e) { setError(e instanceof Error ? e.message : 'Não foi possível cadastrar a assistência.') }
     finally { setBusy(false) }
   }
