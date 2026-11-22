@@ -156,5 +156,6 @@ export default function AuthGate() {
     </form><button className="auth-switch" onClick={signOut}>Sair da conta</button>
   </section></main>
 
-  return <TenantWorkspace organization={selectedOrg} email={session.user.email || ''} onSignOut={signOut} />
+  const activeMembership = memberships.find(item => item.organization_id === selectedOrg.id)
+  return <TenantWorkspace organization={selectedOrg} role={activeMembership?.role || 'attendant'} email={session.user.email || ''} onSignOut={signOut} />
 }
