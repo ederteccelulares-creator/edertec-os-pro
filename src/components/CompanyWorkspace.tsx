@@ -219,7 +219,19 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
         {showCustomer&&<form className="company-form" onSubmit={submitCustomer}><div className="company-form-grid"><label>Nome<input required value={customerForm.name} onChange={e=>setCustomerForm({...customerForm,name:e.target.value})}/></label><label>Telefone<input value={customerForm.phone} onChange={e=>setCustomerForm({...customerForm,phone:e.target.value})}/></label><label>E-mail<input type="email" value={customerForm.email} onChange={e=>setCustomerForm({...customerForm,email:e.target.value})}/></label><label>CPF / CNPJ<input value={customerForm.document} onChange={e=>setCustomerForm({...customerForm,document:e.target.value})}/></label></div><label>Observações<input value={customerForm.notes} onChange={e=>setCustomerForm({...customerForm,notes:e.target.value})}/></label><div className="company-form-actions"><button type="button" className="company-secondary" onClick={()=>setShowCustomer(false)}>Cancelar</button><button className="company-primary" disabled={busy}>Salvar cliente</button></div></form>}
         {loading?<p className="company-empty">Carregando...</p>:customers.length===0?<p className="company-empty">Nenhum cliente cadastrado.</p>:<div className="company-table-wrap"><table><thead><tr><th>NOME</th><th>TELEFONE</th><th>E-MAIL</th><th>DOCUMENTO</th></tr></thead><tbody>{customers.map(c=><tr key={c.id}><td>{c.name}</td><td>{c.phone||'—'}</td><td>{c.email||'—'}</td><td>{c.document||'—'}</td></tr>)}</tbody></table></div>}
       </section>}
-      {tab==='settings'&&<section className="company-panel">
+      {tab==='settings'&&<section className="company-settings-stack">
+        <div className="company-panel">
+          <div className="company-panel-head"><div><b>Dados da empresa</b><small>Informações exibidas nas ordens de serviço</small></div><Building2 size={22}/></div>
+          <form className="company-print-settings" onSubmit={saveCompanyDetails}>
+            <label>Nome fantasia<input required minLength={2} value={companyForm.name} onChange={e=>setCompanyForm(v=>({...v,name:e.target.value}))} placeholder="Nome da assistência"/></label>
+            <label>Razão social<input value={companyForm.legalName} onChange={e=>setCompanyForm(v=>({...v,legalName:e.target.value}))} placeholder="Razão social"/></label>
+            <label>CPF ou CNPJ<input value={companyForm.taxId} onChange={e=>setCompanyForm(v=>({...v,taxId:e.target.value}))} placeholder="Documento da empresa"/></label>
+            <label>E-mail<input type="email" value={companyForm.email} onChange={e=>setCompanyForm(v=>({...v,email:e.target.value}))} placeholder="contato@empresa.com"/></label>
+            <label>Telefone / WhatsApp<input value={companyForm.phone} onChange={e=>setCompanyForm(v=>({...v,phone:e.target.value}))} placeholder="(00) 00000-0000"/></label>
+            <button className="company-primary" type="submit" disabled={companySaving}>{companySaving?'Salvando...':'Salvar dados da empresa'}</button>
+          </form>
+        </div>
+        <div className="company-panel">
         <div className="company-panel-head"><div><b>Configurações de impressão</b><small>Escolha o formato padrão das ordens de serviço</small></div><Printer size={22}/></div>
         <div className="company-print-settings">
           <label htmlFor="os-print-format">Formato da impressão</label>
@@ -228,6 +240,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
             <option value="thermal80">Térmica 80 mm — bobina, duas vias</option>
           </select>
           <p>{printFormat==='thermal80'?'A OS será formatada para impressora térmica de 80 mm, com uma via da assistência e outra do cliente.':'A OS será gerada em duas páginas A4, uma para a assistência e outra para o cliente.'}</p>
+        </div>
         </div>
       </section>}
       <footer className="company-footer">Dados protegidos por políticas de acesso do banco · {company.name}</footer>
