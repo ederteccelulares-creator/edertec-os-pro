@@ -127,3 +127,8 @@
 .tenant-finance-summary small{font-size:10px;color:#93a0b2}
 .tenant-finance-summary b{font-size:19px;color:#e6bd6b;overflow-wrap:anywhere}
 @media(max-width:680px){.tenant-finance-summary{grid-template-columns:1fr}.tenant-finance-summary article{padding:11px;gap:5px}.tenant-finance-summary b{font-size:17px}}
+
+.tenant-sale-total{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:15px 0;padding:15px;background:#0d1520;border:1px solid #3d4a5d;border-radius:9px;color:#aab6c6;font-size:12px}
+.tenant-sale-total b{font-size:22px;color:#e6bd6b}
+.tenant-form label>button.tenant-primary{min-height:37px}
+@media(max-width:680px){.tenant-sale-total{padding:12px}.tenant-sale-total b{font-size:19px}}
