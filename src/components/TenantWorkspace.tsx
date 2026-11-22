@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Building2, ClipboardList, LogOut, Plus, RefreshCw, Smartphone, Users, Boxes, ArrowDownUp, Wallet, ShoppingCart, Trash2, ShieldCheck, UserCog } from 'lucide-react'
-import { changeInventoryStock, createInventoryItem, createFinancialEntry, createSale, createServiceOrderWithDevice, listBranches, listCustomers, listFinancialEntries, listInventory, listSales, listServiceOrderEvents, listServiceOrders, saveCustomer, listOrganizationTeam, setOrganizationMemberActive, setOrganizationMemberRole, updateFinancialEntryStatus, updateServiceOrderStatus } from '../lib/tenant-data'
+import { changeInventoryStock, createInventoryItem, createFinancialEntry, createSale, createServiceOrderWithDevice, listBranches, listCustomers, listFinancialEntries, listInventory, listSales, listServiceOrderEvents, listServiceOrders, saveCustomer, listOrganizationTeam, setOrganizationMemberActive, setOrganizationMemberRole, listServiceCatalog, saveServiceCatalogItem, addServiceToOrder, updateFinancialEntryStatus, updateServiceOrderStatus } from '../lib/tenant-data'
 import type { Organization, Branch } from '../lib/supabase'
-import type { ServiceOrderStatus, TeamMember } from '../lib/tenant-data'
+import type { ServiceOrderStatus, TeamMember, ServiceCatalogItem } from '../lib/tenant-data'
 
 type Props = { organization: Organization; role: import('../lib/supabase').OrganizationRole; email: string; onSignOut: () => void }
 type Customer = { id: string; name: string; phone: string }
@@ -23,7 +23,7 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
   const [branchId, setBranchId] = useState('')
   const [customers, setCustomers] = useState<Customer[]>([])
   const [orders, setOrders] = useState<Order[]>([])
-  const [tab, setTab] = useState<'orders' | 'customers' | 'inventory' | 'finance' | 'sales' | 'team'>('orders')
+  const [tab, setTab] = useState<'orders' | 'customers' | 'inventory' | 'finance' | 'sales' | 'team' | 'services'>('orders')
   const [inventory, setInventory] = useState<Array<{item_id:string;quantity:number;inventory_items:Array<{id:string;sku:string|null;name:string;category:string;cost_price:number;sale_price:number;min_stock:number;active:boolean}>}>>([])
   const [showInventoryForm, setShowInventoryForm] = useState(false)
   const [inventoryForm, setInventoryForm] = useState({name:'',sku:'',category:'Acessórios',costPrice:'0',salePrice:'0',minStock:'0'})
@@ -38,6 +38,13 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
   const [showSaleForm, setShowSaleForm] = useState(false)
   const [saleForm, setSaleForm] = useState({itemId:'',quantity:'1',customerId:'',paymentMethod:'pix' as 'cash'|'pix'|'debit_card'|'credit_card'|'bank_transfer'|'boleto'|'other',paymentStatus:'paid' as 'paid'|'pending',discount:'0',notes:''})
   const [saleCart, setSaleCart] = useState<Array<{itemId:string;name:string;quantity:number;unitPrice:number;costPrice:number}>>([])
+
+  const canManageServices = ['owner','admin','manager'].includes(role)
+  const [serviceRows, setServiceRows] = useState<ServiceCatalogItem[]>([])
+  const [showServiceForm, setShowServiceForm] = useState(false)
+  const [editingServiceId, setEditingServiceId] = useState<string | undefined>()
+  const [serviceForm, setServiceForm] = useState({name:'',description:'',category:'Reparo',price:'0',estimatedMinutes:'30',active:true})
+  const [serviceForOrder, setServiceForOrder] = useState<Record<string,string>>({})
   const canViewTeam = ['owner','admin','manager'].includes(role)
   const canManageTeam = ['owner','admin'].includes(role)
   const [teamRows, setTeamRows] = useState<TeamMember[]>([])
@@ -64,13 +71,14 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
     setLoading(true); setError('')
     try {
       const context = { organizationId: organization.id, branchId: targetBranch }
-      const [customerRows, orderRows, stockRows, financeData, salesData, teamData] = await Promise.all([listCustomers(context), listServiceOrders(context), listInventory(context), canManageFinance ? listFinancialEntries(context) : Promise.resolve([]), listSales(context), canViewTeam ? listOrganizationTeam(organization.id) : Promise.resolve([])])
+      const [customerRows, orderRows, stockRows, financeData, salesData, teamData, serviceData] = await Promise.all([listCustomers(context), listServiceOrders(context), listInventory(context), canManageFinance ? listFinancialEntries(context) : Promise.resolve([]), listSales(context), canViewTeam ? listOrganizationTeam(organization.id) : Promise.resolve([]), listServiceCatalog(organization.id)])
       setCustomers(customerRows as Customer[])
       setOrders(orderRows as unknown as Order[])
       setInventory(stockRows as typeof inventory)
       setFinanceRows(financeData as typeof financeRows)
       setSalesRows(salesData as typeof salesRows)
       setTeamRows(teamData)
+      setServiceRows(serviceData)
     } catch (e) { setError(e instanceof Error ? e.message : 'Não foi possível carregar os dados.') }
     finally { setLoading(false) }
   }
@@ -139,6 +147,32 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
     setBusy(true); setError('')
     try { await updateFinancialEntryStatus({organizationId:organization.id,branchId},id,status); await loadWorkspace() }
     catch(e) { setError(e instanceof Error ? e.message : 'Falha ao atualizar lançamento.') }
+    finally { setBusy(false) }
+  }
+
+
+  function editService(item: ServiceCatalogItem) {
+    setEditingServiceId(item.id)
+    setServiceForm({name:item.name,description:item.description||'',category:item.category,price:String(item.price),estimatedMinutes:String(item.estimated_minutes),active:item.active})
+    setShowServiceForm(true)
+  }
+
+  async function submitService(event: React.FormEvent) {
+    event.preventDefault();setBusy(true);setError('')
+    try {
+      await saveServiceCatalogItem(organization.id,{id:editingServiceId,name:serviceForm.name,description:serviceForm.description,category:serviceForm.category,price:Number(serviceForm.price),estimated_minutes:Number(serviceForm.estimatedMinutes),active:serviceForm.active})
+      setServiceRows(await listServiceCatalog(organization.id));setShowServiceForm(false);setEditingServiceId(undefined)
+      setServiceForm({name:'',description:'',category:'Reparo',price:'0',estimatedMinutes:'30',active:true})
+    } catch(e) { setError(e instanceof Error ? e.message : 'Falha ao salvar serviço.') }
+    finally { setBusy(false) }
+  }
+
+  async function attachService(orderId: string) {
+    const serviceId=serviceForOrder[orderId]
+    if(!serviceId) { setError('Selecione um serviço para adicionar à OS.');return }
+    setBusy(true);setError('')
+    try { await addServiceToOrder(organization.id,branchId,orderId,serviceId);await loadWorkspace();setServiceForOrder(current=>({...current,[orderId]:''})) }
+    catch(e) { setError(e instanceof Error ? e.message : 'Falha ao adicionar serviço à OS.') }
     finally { setBusy(false) }
   }
 
@@ -212,11 +246,11 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
     <section className="tenant-content">
       <div className="tenant-heading"><div><small>AMBIENTE EMPRESARIAL</small><h1>{organization.name}</h1><p>Gestão de atendimentos e clientes</p></div><label className="branch-select"><Building2 size={16}/><select value={branchId} onChange={e=>setBranchId(e.target.value)}>{branches.map(branch=><option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label></div>
       <div className="tenant-stats"><article><span>Ordens nesta filial</span><b>{orders.length}</b></article><article><span>Clientes cadastrados</span><b>{customers.length}</b></article><article><span>Em andamento</span><b>{orders.filter(item=>!['delivered','cancelled'].includes(item.status)).length}</b></article></div>
-      <div className="tenant-tabs"><button className={tab==='orders'?'selected':''} onClick={()=>setTab('orders')}><ClipboardList size={17}/> Ordens de serviço</button><button className={tab==='customers'?'selected':''} onClick={()=>setTab('customers')}><Users size={17}/> Clientes</button><button className={tab==='inventory'?'selected':''} onClick={()=>setTab('inventory')}><Boxes size={17}/> Estoque</button>{canManageFinance&&<button className={tab==='finance'?'selected':''} onClick={()=>setTab('finance')}><Wallet size={17}/> Financeiro</button>}<button className={tab==='sales'?'selected':''} onClick={()=>setTab('sales')}><ShoppingCart size={17}/> Vendas</button>{canViewTeam&&<button className={tab==='team'?'selected':''} onClick={()=>setTab('team')}><ShieldCheck size={17}/> Equipe</button>}<button className="refresh" onClick={()=>loadWorkspace()}><RefreshCw size={16}/> Atualizar</button></div>
+      <div className="tenant-tabs"><button className={tab==='orders'?'selected':''} onClick={()=>setTab('orders')}><ClipboardList size={17}/> Ordens de serviço</button><button className={tab==='customers'?'selected':''} onClick={()=>setTab('customers')}><Users size={17}/> Clientes</button><button className={tab==='inventory'?'selected':''} onClick={()=>setTab('inventory')}><Boxes size={17}/> Estoque</button>{canManageFinance&&<button className={tab==='finance'?'selected':''} onClick={()=>setTab('finance')}><Wallet size={17}/> Financeiro</button>}<button className={tab==='sales'?'selected':''} onClick={()=>setTab('sales')}><ShoppingCart size={17}/> Vendas</button><button className={tab==='services'?'selected':''} onClick={()=>setTab('services')}><ClipboardList size={17}/> Serviços</button>{canViewTeam&&<button className={tab==='team'?'selected':''} onClick={()=>setTab('team')}><ShieldCheck size={17}/> Equipe</button>}<button className="refresh" onClick={()=>loadWorkspace()}><RefreshCw size={16}/> Atualizar</button></div>
       {error&&<div className="tenant-error">{error}</div>}
       {tab==='orders'&&<section className="tenant-panel"><div className="tenant-panel-head"><div><b>Ordens de serviço</b><small>Atendimentos registrados na filial selecionada</small></div><button className="tenant-primary" onClick={()=>setShowOrder(v=>!v)}><Plus size={16}/> Nova OS</button></div>
         {showOrder&&<form className="tenant-form" onSubmit={submitOrder}><label>Cliente<select required value={order.customerId} onChange={e=>setOrder({...order,customerId:e.target.value})}><option value="">Selecione um cliente</option>{customers.map(c=><option key={c.id} value={c.id}>{c.name} · {c.phone}</option>)}</select></label><div className="tenant-grid"><label>Marca<select value={order.brand} onChange={e=>setOrder({...order,brand:e.target.value})}>{['Apple','Samsung','Motorola','Xiaomi','Realme','Infinix','Outra'].map(v=><option key={v}>{v}</option>)}</select></label><label>Modelo<input required value={order.model} onChange={e=>setOrder({...order,model:e.target.value})}/></label><label>IMEI / Série<input value={order.imei} onChange={e=>setOrder({...order,imei:e.target.value})}/></label><label>Valor estimado (R$)<input type="number" min="0" step="0.01" value={order.amount} onChange={e=>setOrder({...order,amount:e.target.value})}/></label><label className="wide">Defeito informado<textarea required value={order.issue} onChange={e=>setOrder({...order,issue:e.target.value})}/></label><label>Acessórios<input value={order.accessories} onChange={e=>setOrder({...order,accessories:e.target.value})}/></label><label>Condição física<input value={order.condition} onChange={e=>setOrder({...order,condition:e.target.value})}/></label></div><div className="tenant-form-actions"><button type="button" onClick={()=>setShowOrder(false)}>Cancelar</button><button className="tenant-primary" disabled={busy}>Salvar ordem</button></div></form>}
-        {loading?<p className="tenant-empty">Carregando dados...</p>:orders.length===0?<p className="tenant-empty">Nenhuma ordem cadastrada nesta filial.</p>:<div className="tenant-table-wrap"><table><thead><tr><th>Nº</th><th>CLIENTE / APARELHO</th><th>DEFEITO</th><th>VALOR</th><th>STATUS</th><th>HISTÓRICO</th><th>IMPRIMIR</th></tr></thead><tbody>{orders.map(item=><tr key={item.id}><td>#{item.order_number}</td><td><b>{item.customers?.name || 'Cliente'}</b><small>{item.devices?.brand} {item.devices?.model}</small></td><td>{item.reported_issue}</td><td>{money(item.estimated_amount)}</td><td><select value={item.status} disabled={busy || !canUpdateOrders} title={!canUpdateOrders ? 'Seu perfil pode abrir OS, mas não alterar o status.' : 'Atualizar status'} onChange={e=>changeStatus(item.id,e.target.value)}>{statuses.map(status=><option key={status} value={status}>{statusLabels[status]}</option>)}</select></td><td><button className="tenant-history-button" onClick={()=>openHistory(item)}>Ver histórico</button></td><td><button className="tenant-history-button" onClick={()=>printServiceOrder(item)}>Imprimir A4</button></td></tr>)}</tbody></table></div>}
+        {loading?<p className="tenant-empty">Carregando dados...</p>:orders.length===0?<p className="tenant-empty">Nenhuma ordem cadastrada nesta filial.</p>:<div className="tenant-table-wrap"><table><thead><tr><th>Nº</th><th>CLIENTE / APARELHO</th><th>DEFEITO</th><th>VALOR</th><th>STATUS</th><th>HISTÓRICO</th><th>SERVIÇO</th><th>IMPRIMIR</th></tr></thead><tbody>{orders.map(item=><tr key={item.id}><td>#{item.order_number}</td><td><b>{item.customers?.name || 'Cliente'}</b><small>{item.devices?.brand} {item.devices?.model}</small></td><td>{item.reported_issue}</td><td>{money(item.estimated_amount)}</td><td><select value={item.status} disabled={busy || !canUpdateOrders} title={!canUpdateOrders ? 'Seu perfil pode abrir OS, mas não alterar o status.' : 'Atualizar status'} onChange={e=>changeStatus(item.id,e.target.value)}>{statuses.map(status=><option key={status} value={status}>{statusLabels[status]}</option>)}</select></td><td><button className="tenant-history-button" onClick={()=>openHistory(item)}>Ver histórico</button></td><td><div className="tenant-order-service-action"><select value={serviceForOrder[item.id]||''} onChange={e=>setServiceForOrder(current=>({...current,[item.id]:e.target.value}))} disabled={['delivered','cancelled'].includes(item.status)}><option value="">Adicionar serviço</option>{serviceRows.filter(service=>service.active).map(service=><option key={service.id} value={service.id}>{service.name} · {money(Number(service.price))}</option>)}</select><button className="tenant-history-button" disabled={busy||!serviceForOrder[item.id]||['delivered','cancelled'].includes(item.status)} onClick={()=>attachService(item.id)}>Adicionar</button></div></td><td><button className="tenant-history-button" onClick={()=>printServiceOrder(item)}>Imprimir A4</button></td></tr>)}</tbody></table></div>}
       </section>}
       {tab==='customers'&&<section className="tenant-panel"><div className="tenant-panel-head"><div><b>Clientes</b><small>Cadastro compartilhado dentro da empresa</small></div><button className="tenant-primary" onClick={()=>setShowCustomer(v=>!v)}><Plus size={16}/> Novo cliente</button></div>
         {showCustomer&&<form className="tenant-form" onSubmit={submitCustomer}><div className="tenant-grid"><label>Nome completo<input required value={customer.name} onChange={e=>setCustomer({...customer,name:e.target.value})}/></label><label>Telefone / WhatsApp<input required value={customer.phone} onChange={e=>setCustomer({...customer,phone:e.target.value})}/></label><label className="wide">E-mail<input type="email" value={customer.email} onChange={e=>setCustomer({...customer,email:e.target.value})}/></label></div><div className="tenant-form-actions"><button type="button" onClick={()=>setShowCustomer(false)}>Cancelar</button><button className="tenant-primary" disabled={busy}>Salvar cliente</button></div></form>}
@@ -231,6 +265,11 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
 
 
 
+
+      {tab==='services'&&<section className="tenant-panel"><div className="tenant-panel-head"><div><b>Catálogo de serviços</b><small>Preços e tempo estimado · compartilhado entre as filiais</small></div>{canManageServices&&<button className="tenant-primary" onClick={()=>{setEditingServiceId(undefined);setServiceForm({name:'',description:'',category:'Reparo',price:'0',estimatedMinutes:'30',active:true});setShowServiceForm(v=>!v)}}><Plus size={16}/> Novo serviço</button>}</div>
+        {showServiceForm&&canManageServices&&<form className="tenant-form" onSubmit={submitService}><div className="tenant-grid"><label>Nome do serviço<input required value={serviceForm.name} onChange={e=>setServiceForm({...serviceForm,name:e.target.value})}/></label><label>Categoria<input value={serviceForm.category} onChange={e=>setServiceForm({...serviceForm,category:e.target.value})}/></label><label>Preço (R$)<input required type="number" min="0" step="0.01" value={serviceForm.price} onChange={e=>setServiceForm({...serviceForm,price:e.target.value})}/></label><label>Tempo estimado (minutos)<input type="number" min="0" step="5" value={serviceForm.estimatedMinutes} onChange={e=>setServiceForm({...serviceForm,estimatedMinutes:e.target.value})}/></label><label className="wide">Descrição<input value={serviceForm.description} onChange={e=>setServiceForm({...serviceForm,description:e.target.value})}/></label><label><input type="checkbox" checked={serviceForm.active} onChange={e=>setServiceForm({...serviceForm,active:e.target.checked})}/> Serviço ativo</label></div><div className="tenant-form-actions"><button type="button" onClick={()=>setShowServiceForm(false)}>Cancelar</button><button className="tenant-primary" disabled={busy}>Salvar serviço</button></div></form>}
+        {serviceRows.length===0?<p className="tenant-empty">Nenhum serviço cadastrado. Cadastre troca de tela, bateria, conector e reparo de placa.</p>:<div className="tenant-table-wrap"><table><thead><tr><th>SERVIÇO</th><th>CATEGORIA</th><th>PREÇO</th><th>TEMPO</th><th>SITUAÇÃO</th><th>AÇÃO</th></tr></thead><tbody>{serviceRows.map(item=><tr key={item.id}><td><b>{item.name}</b><small>{item.description||'Sem descrição'}</small></td><td>{item.category}</td><td>{money(Number(item.price))}</td><td>{item.estimated_minutes?item.estimated_minutes+' min':'Não definido'}</td><td><span className={item.active?'tenant-stock-ok':'tenant-stock-low'}>{item.active?'Ativo':'Inativo'}</span></td><td>{canManageServices?<button className="tenant-history-button" onClick={()=>editService(item)}>Editar</button>:<span>Somente leitura</span>}</td></tr>)}</tbody></table></div>}
+      </section>}
       {tab==='team'&&canViewTeam&&<section className="tenant-panel"><div className="tenant-panel-head"><div><b>Equipe e permissões</b><small>Gerencie as funções e os acessos dos usuários já vinculados a esta empresa</small></div><button className="tenant-history-button" onClick={()=>listOrganizationTeam(organization.id).then(setTeamRows).catch(e=>setError(e.message||'Falha ao atualizar equipe.'))}><RefreshCw size={14}/> Atualizar equipe</button></div>
         <div className="tenant-team-notice"><UserCog size={17}/><span>Convites para novos usuários por e-mail serão habilitados em uma etapa de backend seguro. Esta tela administra apenas contas que já fazem parte da empresa.</span></div>
         {teamRows.length===0?<p className="tenant-empty">Nenhum membro encontrado ou a migração 0007 ainda não foi aplicada.</p>:<div className="tenant-table-wrap"><table><thead><tr><th>MEMBRO</th><th>FUNÇÃO</th><th>ENTRADA</th><th>ACESSO</th><th>AÇÃO</th></tr></thead><tbody>{teamRows.map(member=><tr key={member.member_id}><td><b>{member.full_name||'Usuário sem nome'}</b><small>{member.phone||member.user_id}</small></td><td>{canManageTeam?<select value={member.member_role} disabled={busy||!member.is_active||member.user_id===undefined} onChange={e=>updateTeamRole(member,e.target.value as TeamMember['member_role'])}><option value="owner">Proprietário</option><option value="admin">Administrador</option><option value="manager">Gerente</option><option value="attendant">Atendente</option><option value="technician">Técnico</option></select>:({owner:'Proprietário',admin:'Administrador',manager:'Gerente',attendant:'Atendente',technician:'Técnico'}[member.member_role])}</td><td>{new Date(member.joined_at).toLocaleDateString('pt-BR')}</td><td><span className={member.is_active?'tenant-stock-ok':'tenant-stock-low'}>{member.is_active?'Ativo':'Inativo'}</span></td><td>{canManageTeam&&member.member_role!=='owner'&&member.user_id!==undefined?<button className="tenant-history-button" disabled={busy} onClick={()=>toggleTeamAccess(member)}>{member.is_active?'Desativar':'Reativar'}</button>:<span>—</span>}</td></tr>)}</tbody></table></div>}
