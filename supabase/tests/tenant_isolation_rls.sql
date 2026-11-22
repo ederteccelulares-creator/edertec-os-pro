@@ -170,7 +170,7 @@ BEGIN
   BEGIN
     PERFORM public.assign_service_order_technician(
       current_setting('test.org_a')::uuid,
-      (SELECT branch_id FROM public.service_orders WHERE id=current_setting('test.assigned_order_id')::uuid),
+      current_setting('test.branch_a')::uuid,
       current_setting('test.assigned_order_id')::uuid,
       NULL
     );
@@ -187,7 +187,7 @@ BEGIN
   BEGIN
     PERFORM public.assign_service_order_technician(
       current_setting('test.org_a')::uuid,
-      (SELECT branch_id FROM public.service_orders WHERE id=current_setting('test.assigned_order_id')::uuid),
+      current_setting('test.branch_a')::uuid,
       current_setting('test.assigned_order_id')::uuid,
       NULL
     );
