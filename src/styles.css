@@ -324,3 +324,53 @@
 .tenant-whatsapp-notice{grid-column:1/-1}
 @media(max-width:760px){.tenant-whatsapp-settings{grid-template-columns:1fr 1fr}.tenant-whatsapp-copy,.tenant-whatsapp-notice{grid-column:1/-1}.tenant-whatsapp-settings>button{width:100%}}
 @media(max-width:420px){.tenant-whatsapp-settings{grid-template-columns:1fr}.tenant-whatsapp-toggle{min-height:34px}}
+
+
+.company-auth{min-height:100vh;display:grid;place-items:center;padding:22px;background:radial-gradient(circle at 20% 10%,#202638 0,#0b0f17 48%)}
+.company-auth-card{width:min(100%,440px);padding:32px;background:#131a26;border:1px solid #2a3444;border-radius:18px;box-shadow:0 24px 80px #0008}
+.company-auth-brand,.company-logo{display:flex;align-items:center;gap:12px;color:#e5b85f}
+.company-auth-brand b,.company-logo b{display:block;color:#f2f4f8;letter-spacing:.7px}
+.company-auth-brand i,.company-logo i{font-style:normal;color:#e4b45b}
+.company-auth-brand small,.company-logo small{display:block;color:#8c98aa;font-size:9px;letter-spacing:1.5px;margin-top:4px}
+.company-auth-card h1{font-size:25px;margin:28px 0 8px;color:#f3f5f8}
+.company-auth-card p{color:#9aa6b8;font-size:13px;line-height:1.6}
+.company-auth-card form{display:grid;gap:14px;margin-top:20px}
+.company-auth-card label,.company-form label{display:grid;gap:7px;color:#aeb9c9;font-size:12px}
+.company-auth-card input,.company-form input,.company-form select,.company-form textarea,.company-top select,.company-table-wrap select{width:100%;min-width:0;background:#0d131d;border:1px solid #303b4d;border-radius:8px;padding:11px;color:#edf1f7;font:inherit;outline:none}
+.company-auth-card input:focus,.company-form input:focus,.company-form textarea:focus{border-color:#d6a94f}
+.company-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:8px;padding:11px 15px;background:linear-gradient(135deg,#e8c16d,#bd8a35);color:#17130b;font-weight:750;cursor:pointer}
+.company-primary:disabled{opacity:.55;cursor:wait}
+.company-link,.company-secondary{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:transparent;border:1px solid #303b4d;border-radius:8px;padding:10px 13px;color:#cbd4e2;cursor:pointer}
+.company-auth-card>.company-link{width:100%;margin-top:14px;border:0}
+.company-error{color:#ff9b9b!important}.company-notice{color:#8ce0b1!important}
+.company-select-list{display:grid;gap:9px;margin-top:20px}
+.company-select-list button{display:flex;align-items:center;gap:12px;text-align:left;padding:14px;border-radius:9px;border:1px solid #303b4d;background:#0d131d;color:#e9edf5;cursor:pointer}
+.company-select-list small{display:block;color:#9aa6b8;margin-top:4px}
+.company-app{min-height:100vh;background:#0b1018;color:#e9edf5;display:flex}
+.company-sidebar{width:255px;flex:none;background:#111925;border-right:1px solid #273244;padding:24px 17px;display:flex;flex-direction:column}
+.company-logo{padding:0 5px 25px}.company-logo>span{width:40px;height:40px;border-radius:11px;background:#e2b45c;color:#17130b;display:grid;place-items:center}
+.company-current{padding:12px;border:1px solid #303b4d;border-radius:8px;color:#d6b46f;font-size:12px;overflow-wrap:anywhere}
+.company-sidebar nav{display:grid;gap:7px;margin-top:25px}
+.company-sidebar nav button{display:flex;align-items:center;gap:10px;padding:12px;border:0;border-radius:8px;background:transparent;color:#aab5c5;text-align:left;cursor:pointer}
+.company-sidebar nav button.active{background:#2b281f;color:#edc36d}
+.company-user{margin-top:auto;border-top:1px solid #293548;padding-top:15px;overflow-wrap:anywhere}
+.company-user b,.company-user small{display:block;font-size:11px}.company-user small{color:#8491a4;margin-top:5px}
+.company-user button{display:flex;align-items:center;gap:8px;margin-top:14px;background:transparent;border:0;color:#cbd4e2;cursor:pointer}
+.company-main{flex:1;min-width:0;padding:30px;max-width:1600px;margin:0 auto;width:100%}
+.company-top{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:24px}
+.company-top small{color:#9aa6b8;letter-spacing:1.5px;font-size:10px}.company-top h1{font-size:27px;margin:6px 0 0}
+.company-top-actions{display:flex;gap:9px;align-items:center}.company-icon-button{background:#1a2432;color:#dbe2ec;border:1px solid #344155;border-radius:8px;padding:10px;cursor:pointer}
+.company-panel{background:#131b28;border:1px solid #293548;border-radius:13px;padding:20px;min-width:0}
+.company-panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+.company-panel-head b{display:block;font-size:15px}.company-panel-head small{display:block;color:#8f9caf;font-size:11px;margin-top:5px}
+.company-form{display:grid;gap:14px;background:#0e1520;border:1px solid #2c394c;border-radius:10px;padding:18px;margin:15px 0 22px}
+.company-form h3{margin:0;font-size:15px}.company-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.company-form textarea{resize:vertical}.company-form-actions{display:flex;justify-content:flex-end;gap:9px}
+.company-table-wrap{width:100%;overflow:auto}.company-table-wrap table{width:100%;border-collapse:collapse;min-width:700px;text-align:left}
+.company-table-wrap th{font-size:10px;letter-spacing:.8px;color:#8d9aaf;padding:12px;border-bottom:1px solid #303b4d}
+.company-table-wrap td{padding:13px 12px;border-bottom:1px solid #263244;font-size:12px;vertical-align:middle}
+.company-table-wrap td small{display:block;color:#8996aa;margin-top:4px}.company-table-wrap select{padding:7px;font-size:11px}
+.company-empty{padding:28px;text-align:center;color:#8f9caf;font-size:13px}
+.company-error-banner,.company-notice-banner{padding:12px 14px;border-radius:8px;margin-bottom:14px;background:#382126;color:#ffb5b5;font-size:12px}
+.company-notice-banner{background:#1b342b;color:#9be0b8}.company-footer{padding:18px 3px;color:#748196;font-size:10px}
+@media(max-width:760px){.company-app{display:block}.company-sidebar{width:100%;padding:14px;position:relative}.company-logo{padding:0 3px 13px}.company-current{display:none}.company-sidebar nav{display:flex;margin-top:12px}.company-sidebar nav button{flex:1;justify-content:center;padding:10px 7px;font-size:12px}.company-user{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:10px}.company-user small{display:none}.company-user button{margin:0 0 0 auto}.company-main{padding:17px 12px}.company-top{align-items:flex-start;flex-direction:column}.company-top h1{font-size:23px}.company-top-actions{width:100%}.company-top-actions select{flex:1}.company-panel{padding:14px}.company-panel-head{align-items:flex-start}.company-form-grid{grid-template-columns:1fr}.company-auth-card{padding:24px 19px}}
