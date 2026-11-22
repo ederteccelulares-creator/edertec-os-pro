@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Building2, CheckCircle2, LoaderCircle, LogOut, Mail, ShieldCheck, Smartphone, UserRound } from 'lucide-react'
+import { Building2, CheckCircle2, LoaderCircle, LogOut, Mail, ShieldCheck, Smartphone } from 'lucide-react'
 import type { Session } from '@supabase/supabase-js'
 import { isSupabaseConfigured, supabase, type Organization, type OrganizationRole } from '../lib/supabase'
 
