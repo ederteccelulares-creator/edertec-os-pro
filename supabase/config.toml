@@ -9,3 +9,6 @@ verify_jwt = true
 
 [functions.restore-organization-backup]
 verify_jwt = true
+
+[functions.respond-service-order-quote]
+verify_jwt = false
