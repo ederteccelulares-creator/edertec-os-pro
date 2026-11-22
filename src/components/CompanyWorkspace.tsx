@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent, type ChangeEvent } from 'react'
-import { Building2, ClipboardList, Users, Package, Truck, ShoppingCart, Wallet, Plus, RefreshCw, LogOut, Database, Download, LayoutDashboard, Menu, X } from 'lucide-react'
+import { Building2, ClipboardList, Users, Package, Truck, ShoppingCart, Wallet, Plus, RefreshCw, LogOut, Database, Download, LayoutDashboard, Menu, X, Smartphone } from 'lucide-react'
 import CompanyInventoryPanel from './CompanyInventoryPanel'
 import CompanySuppliersPanel from './CompanySuppliersPanel'
 import CompanyPurchasesPanel from './CompanyPurchasesPanel'
