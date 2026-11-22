@@ -130,3 +130,16 @@ A chamada deve ser feita com método POST, token Bearer do usuário autenticado 
 A resposta é o arquivo JSON de backup. Guarde-o em local privado e criptografado, pois contém dados pessoais e comerciais. Não compartilhe o arquivo publicamente.
 
 **Limitações desta versão:** exporta até 10.000 registros por tabela e não inclui credenciais, contas de autenticação, convites pendentes, assinaturas ou dados globais da plataforma. Ainda não há restauração automática pelo painel. Para restaurar, use procedimento assistido em ambiente separado, validando relações, IDs e usuários antes de qualquer importação. Não importe o arquivo diretamente em produção.
+
+
+## Validação de arquivo de backup
+
+A função `validate-organization-backup` permite que proprietário ou administrador valide um JSON antes de iniciar uma restauração assistida. Ela confere formato, versão, empresa de origem, tabelas esperadas e `organization_id` de cada registro. A validação é somente leitura: não insere, atualiza nem exclui dados.
+
+Publique com:
+
+```bash
+supabase functions deploy validate-organization-backup
+```
+
+No painel da empresa, use **Backup e restauração → Validar arquivo JSON**. O arquivo deve ter até 10 MB e pertencer à mesma empresa selecionada. Um resultado válido significa apenas que a estrutura e a separação por empresa passaram nas verificações básicas; não comprova integridade de todas as relações nem executa uma restauração. A restauração automática continua desabilitada até a implementação de importação transacional e testes em homologação.
