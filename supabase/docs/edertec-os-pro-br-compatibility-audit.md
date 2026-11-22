@@ -138,3 +138,6 @@ O Supabase Security Advisor ainda sinaliza:
 2. `register_company(text,text,text)` é SECURITY DEFINER e executável por usuários autenticados. A chamada autenticada é necessária ao cadastro de empresa; revisar e restringir explicitamente grants a PUBLIC/anon, mantendo apenas o acesso intencional a authenticated, após confirmar o fluxo.
 
 Esta seção registra alterações já aplicadas no banco BR; não é um arquivo de migração executável.
+
+- O módulo de consulta de OS usa nomes explícitos das relações antigas (`service_orders_customer_id_fkey` e `service_orders_assigned_employee_id_fkey`) para evitar ambiguidade no PostgREST após a adição das chaves estrangeiras compostas.
+- Grants da função `register_company(text,text,text)` verificados: `anon` não pode executar; `authenticated` pode executar; o privilégio herdado de `PUBLIC` está ausente. A permissão autenticada é intencional para permitir o cadastro da empresa. O Advisor continua alertando por ser SECURITY DEFINER, então o corpo e o escopo devem permanecer sob revisão.
