@@ -1,7 +1,7 @@
 import {useCallback,useEffect,useMemo,useState} from 'react'
 import {Barcode,Minus,Plus,RefreshCw,Search,ShoppingCart,Trash2,Wallet} from 'lucide-react'
 import {listCompanyProducts,recordCompanyStockMovement,type CompanyProduct} from '../lib/company-inventory'
-import {createCompanyCashTransaction} from '../lib/company-cash'
+import {createCompanyCashTransaction,getOpenCompanyCashSession} from '../lib/company-cash'
 import {listCompanyBranches,type Company,type CompanyBranch} from '../lib/company-data'
 
 type CartLine={product:CompanyProduct;quantity:number}
@@ -32,6 +32,8 @@ export default function CompanyPOSPanel({company}:{company:Company}){
  async function finishSale(){if(!cart.length){setError('Adicione produtos ao carrinho.');return}if(cart.some(x=>x.quantity>Number(x.product.stock_quantity))){setError('Há produtos com estoque insuficiente. Atualize o estoque e tente novamente.');return}if(total<=0){setError('O total da venda precisa ser maior que zero.');return}if(method==='cash'&&Number(received)<total){setError('O valor recebido é menor que o total da venda.');return}
   setBusy(true);setError('');setNotice('')
   try{
+   const openSession=await getOpenCompanyCashSession(company.id,branchId||null)
+   if(!openSession)throw new Error('Abra o caixa desta filial antes de finalizar uma venda no PDV.')
    const lines=cart.map(x=>x.quantity+'x '+x.product.name).join(', ')
    for(const line of cart){await recordCompanyStockMovement({companyId:company.id,productId:line.product.id,movementType:'out',quantity:line.quantity,unitCost:line.product.cost_price,branchId:branchId||null,reason:'Venda PDV · '+lines})}
    await createCompanyCashTransaction({companyId:company.id,branchId:branchId||null,direction:'in',category:'Venda PDV',description:'Venda PDV: '+lines+(discountValue>0?' · Desconto '+money(discountValue):''),amount:total,paymentMethod:method})
