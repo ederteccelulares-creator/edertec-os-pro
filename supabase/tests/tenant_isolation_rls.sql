@@ -48,7 +48,7 @@ DO $$
 BEGIN
   BEGIN
     INSERT INTO public.customers(organization_id,name,phone)
-    VALUES (:'org_b'::uuid, 'Cross-tenant attempt', '999');
+    VALUES (current_setting('test.org_b')::uuid, 'Cross-tenant attempt', '999');
     RAISE EXCEPTION 'Cross-tenant customer insert unexpectedly succeeded';
   EXCEPTION WHEN insufficient_privilege THEN
     NULL;
@@ -63,7 +63,7 @@ DO $$
 BEGIN
   BEGIN
     INSERT INTO public.devices(organization_id,customer_id,brand,model)
-    VALUES (:'org_b'::uuid, 'a0000000-0000-4000-8000-000000000001', 'Teste', 'Cross Tenant');
+    VALUES (current_setting('test.org_b')::uuid, 'a0000000-0000-4000-8000-000000000001', 'Teste', 'Cross Tenant');
     RAISE EXCEPTION 'Cross-tenant device/customer relationship unexpectedly succeeded';
   EXCEPTION WHEN foreign_key_violation THEN
     NULL;
@@ -77,7 +77,7 @@ DO $$
 BEGIN
   BEGIN
     UPDATE public.organization_members SET role='owner'
-    WHERE organization_id=:'org_b'::uuid
+    WHERE organization_id=current_setting('test.org_b')::uuid
       AND user_id='10000000-0000-4000-8000-000000000001';
     RAISE EXCEPTION 'Direct membership role update unexpectedly succeeded';
   EXCEPTION WHEN insufficient_privilege THEN
@@ -91,9 +91,9 @@ DO $$
 BEGIN
   BEGIN
     INSERT INTO public.service_orders(organization_id,branch_id,customer_id,reported_issue)
-    SELECT :'org_b'::uuid, b.id, 'b0000000-0000-4000-8000-000000000002', 'Direct insert attempt'
+    SELECT current_setting('test.org_b')::uuid, b.id, 'b0000000-0000-4000-8000-000000000002', 'Direct insert attempt'
     FROM public.branches b
-    WHERE b.organization_id=:'org_b'::uuid
+    WHERE b.organization_id=current_setting('test.org_b')::uuid
     LIMIT 1;
     RAISE EXCEPTION 'Direct service order insert unexpectedly succeeded';
   EXCEPTION WHEN insufficient_privilege THEN
