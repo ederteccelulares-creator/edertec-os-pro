@@ -303,6 +303,33 @@ export async function assignServiceOrderTechnician(
   return data
 }
 
+export type ServiceOrderWhatsAppSettings = {
+  recipient_phone: string
+  enabled: boolean
+}
+
+export async function getServiceOrderWhatsAppSettings(organizationId: string): Promise<ServiceOrderWhatsAppSettings> {
+  const { data, error } = await client().rpc('get_service_order_whatsapp_settings', {
+    p_organization_id: organizationId,
+  })
+  if (error) throw error
+  return (data ?? { recipient_phone: '', enabled: false }) as ServiceOrderWhatsAppSettings
+}
+
+export async function saveServiceOrderWhatsAppSettings(
+  organizationId: string,
+  recipientPhone: string,
+  enabled: boolean,
+): Promise<ServiceOrderWhatsAppSettings> {
+  const { data, error } = await client().rpc('save_service_order_whatsapp_settings', {
+    p_organization_id: organizationId,
+    p_recipient_phone: recipientPhone,
+    p_enabled: enabled,
+  })
+  if (error) throw error
+  return data as ServiceOrderWhatsAppSettings
+}
+
 export type ServiceOrderNotification = {
   id: string
   organization_id: string
