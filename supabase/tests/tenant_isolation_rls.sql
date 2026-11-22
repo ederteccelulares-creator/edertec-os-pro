@@ -15,11 +15,13 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 SET ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false);
 SELECT public.create_organization('Tenant A','tenant-a') AS org_a \gset
+SELECT set_config('test.org_a', :'org_a', false);
 INSERT INTO public.customers(id,organization_id,name,phone)
 VALUES ('a0000000-0000-4000-8000-000000000001', :'org_a'::uuid, 'Cliente A', '111');
 
 SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000002',false);
 SELECT public.create_organization('Tenant B','tenant-b') AS org_b \gset
+SELECT set_config('test.org_b', :'org_b', false);
 INSERT INTO public.customers(id,organization_id,name,phone)
 VALUES ('b0000000-0000-4000-8000-000000000002', :'org_b'::uuid, 'Cliente B', '222');
 
