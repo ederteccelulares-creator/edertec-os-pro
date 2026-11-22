@@ -42,6 +42,8 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   const [backupBusy,setBackupBusy] = useState(false)
   const [error,setError] = useState('')
   const [notice,setNotice] = useState('')
+  useEffect(()=>{if(!notice)return;const timer=window.setTimeout(()=>setNotice(''),5000);return()=>window.clearTimeout(timer)},[notice])
+  useEffect(()=>{if(!error)return;const timer=window.setTimeout(()=>setError(''),8000);return()=>window.clearTimeout(timer)},[error])
   const [showOrder,setShowOrder] = useState(false)
   const [editingOrder,setEditingOrder] = useState<CompanyServiceOrder|null>(null)
   const [customerSearch,setCustomerSearch] = useState('')
