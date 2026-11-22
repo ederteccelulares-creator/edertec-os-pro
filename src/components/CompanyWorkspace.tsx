@@ -10,7 +10,7 @@ import CustomerPortalAdminPanel from './CustomerPortalAdminPanel'
 import CompanySupportPanel from './CompanySupportPanel'
 import CompanyTeamPanel from './CompanyTeamPanel'
 import { recordCompanyServiceOrderPayment, type PaymentMethod } from '../lib/company-service-order-payments'
-import { invoiceServiceOrderNet30 } from '../lib/company-financial-entries'
+import { invoiceServiceOrderNet30, listCustomerOverdueReceivables, type OverdueReceivable } from '../lib/company-financial-entries'
 import { listCompanyBranches, listCompanyCustomers, saveCompanyCustomer, type Company, type CompanyBranch, type CompanyCustomer, type CompanyRole, updateCompanyProfile } from '../lib/company-data'
 import { createCompanyServiceOrder, createCompanyServiceOrderTrackingLink, listCompanyServiceOrders, updateCompanyServiceOrder, updateCompanyServiceOrderStatus, type CompanyServiceOrder } from '../lib/company-service-orders'
 import { downloadCompanyBackup, restoreCompanyBackup } from '../lib/company-backups'
@@ -49,6 +49,10 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   const [paymentAmount,setPaymentAmount] = useState('0')
   const [paymentMethod,setPaymentMethod] = useState<PaymentMethod>('pix')
   const [paymentNotes,setPaymentNotes] = useState('')
+  const [overdueReceivables,setOverdueReceivables]=useState<OverdueReceivable[]>([])
+  const [overdueDetailsOpen,setOverdueDetailsOpen]=useState(false)
+  const [checkingCustomerDebt,setCheckingCustomerDebt]=useState(false)
+  const [customerDebtError,setCustomerDebtError]=useState('')
   const [customerForm,setCustomerForm] = useState({name:'',phone:'',email:'',document:'',notes:''})
   const [orderPhotos,setOrderPhotos] = useState<File[]>([])
   const [orderForm,setOrderForm] = useState({customerId:'',deviceType:'Celular',brand:'',model:'',color:'',serial:'',issue:'',condition:'',accessories:'',priority:'normal' as 'low'|'normal'|'high'|'urgent',price:'0',finalPrice:'0',diagnosis:'',promisedAt:''})
@@ -158,6 +162,15 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
       (copies==='both'?copy("1ª VIA · ASSISTÊNCIA",false)+copy("2ª VIA · CLIENTE",true):copies==='customer'?copy("VIA · CLIENTE",true):copy("VIA · ASSISTÊNCIA",false))
       +'<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script>window.onload=()=>{document.querySelectorAll(".qr-code").forEach(el=>{if(window.QRCode)new QRCode(el,{text:'+JSON.stringify(trackingUrl)+',width:512,height:512,correctLevel:QRCode.CorrectLevel.M})});window.focus();setTimeout(()=>window.print(),700)}</script></body></html>'
     popup.document.open();popup.document.write(html);popup.document.close()
+  }
+
+  async function checkSelectedCustomerDebt(customerId:string) {
+    setOrderForm(current=>({...current,customerId}));setOverdueReceivables([]);setOverdueDetailsOpen(false);setCustomerDebtError('')
+    if(!customerId)return
+    setCheckingCustomerDebt(true)
+    try{setOverdueReceivables(await listCustomerOverdueReceivables(company.id,customerId))}
+    catch(e){setCustomerDebtError(e instanceof Error?e.message:'Não foi possível consultar as contas em atraso.')}
+    finally{setCheckingCustomerDebt(false)}
   }
 
   async function submitOrder(event:FormEvent) {
@@ -271,8 +284,11 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
         {showOrder&&<form className="company-form" onSubmit={submitOrder}>
           <h3>{editingOrder ? 'Editar ordem de serviço #' + editingOrder.order_number : 'Dados do atendimento'}</h3>
           <label>Buscar cliente<input type="search" placeholder="Digite nome, telefone ou CPF/CNPJ..." value={customerSearch} onChange={e=>setCustomerSearch(e.target.value)}/></label>
-          <label>Selecionar cliente<select value={orderForm.customerId} onChange={e=>setOrderForm({...orderForm,customerId:e.target.value})}><option value="">Cliente não selecionado</option>{customers.filter(c=>!customerSearch.trim()||[c.name,c.phone,c.document].some(v=>String(v||"").toLowerCase().includes(customerSearch.trim().toLowerCase()))).map(c=><option key={c.id} value={c.id}>{c.name} · {c.phone||"sem telefone"}</option>)}</select></label>
+          <label>Selecionar cliente<select value={orderForm.customerId} onChange={e=>void checkSelectedCustomerDebt(e.target.value)}><option value="">Cliente não selecionado</option>{customers.filter(c=>!customerSearch.trim()||[c.name,c.phone,c.document].some(v=>String(v||"").toLowerCase().includes(customerSearch.trim().toLowerCase()))).map(c=><option key={c.id} value={c.id}>{c.name} · {c.phone||"sem telefone"}</option>)}</select></label>
           {customerSearch.trim()&&customers.filter(c=>[c.name,c.phone,c.document].some(v=>String(v||"").toLowerCase().includes(customerSearch.trim().toLowerCase()))).length===0&&<small>Nenhum cliente encontrado. Cadastre o cliente na aba Clientes.</small>}
+          {checkingCustomerDebt&&<div className="company-debt-checking">Consultando contas em atraso do cliente...</div>}
+          {customerDebtError&&<div className="company-error-banner">{customerDebtError}</div>}
+          {overdueReceivables.length>0&&<div className="company-overdue-alert"><div className="company-overdue-alert-head"><b>⚠ Cliente possui dívida em atraso</b><strong>{money(overdueReceivables.reduce((sum,item)=>sum+Number(item.amount),0))}</strong></div><p>Existem {overdueReceivables.length} conta(s) a receber vencida(s) para este cliente.</p><div className="company-inline-actions"><button type="button" className="company-secondary company-small-action" onClick={()=>setOverdueDetailsOpen(v=>!v)}>{overdueDetailsOpen?'Ocultar detalhes':'Ver detalhes da dívida'}</button><button type="button" className="company-primary company-small-action" onClick={()=>setOverdueReceivables([])}>Prosseguir com a nova OS</button></div>{overdueDetailsOpen&&<div className="company-overdue-details">{overdueReceivables.map(item=><div key={item.id}><b>{item.source_order_number?'OS #'+item.source_order_number:item.description}</b><span>{item.description}</span><strong>{money(item.amount)}</strong><small>Vencimento: {new Date(item.due_date+'T12:00:00').toLocaleDateString('pt-BR')}</small></div>)}</div>}</div>}
           <div className="company-form-grid"><label>Tipo<input value={orderForm.deviceType} onChange={e=>setOrderForm({...orderForm,deviceType:e.target.value})}/></label><label>Marca<input value={orderForm.brand} onChange={e=>setOrderForm({...orderForm,brand:e.target.value})}/></label><label>Modelo<input required value={orderForm.model} onChange={e=>setOrderForm({...orderForm,model:e.target.value})}/></label><label>Cor<input value={orderForm.color} onChange={e=>setOrderForm({...orderForm,color:e.target.value})}/></label><label>IMEI / Série<input value={orderForm.serial} onChange={e=>setOrderForm({...orderForm,serial:e.target.value})}/></label><label>Prioridade<select value={orderForm.priority} onChange={e=>setOrderForm({...orderForm,priority:e.target.value as typeof orderForm.priority})}><option value="low">Baixa</option><option value="normal">Normal</option><option value="high">Alta</option><option value="urgent">Urgente</option></select></label></div>
           <label>Defeito informado<textarea required rows={3} value={orderForm.issue} onChange={e=>setOrderForm({...orderForm,issue:e.target.value})}/></label>{role!=='attendant'&&<label>Diagnóstico / serviço a realizar<textarea rows={3} value={orderForm.diagnosis} onChange={e=>setOrderForm({...orderForm,diagnosis:e.target.value})}/></label>}
           <div className="company-form-grid"><label>Condição de entrada<input value={orderForm.condition} onChange={e=>setOrderForm({...orderForm,condition:e.target.value})}/></label><label>Acessórios<input value={orderForm.accessories} onChange={e=>setOrderForm({...orderForm,accessories:e.target.value})}/></label>{canManage&&<><label>Valor estimado (R$)<input type="number" min="0" step="0.01" value={orderForm.price} onChange={e=>setOrderForm({...orderForm,price:e.target.value})}/></label><label>Valor final do orçamento (R$)<input type="number" min="0" step="0.01" value={orderForm.finalPrice} onChange={e=>setOrderForm({...orderForm,finalPrice:e.target.value})}/></label></>}<label>Previsão de entrega<input type="datetime-local" value={orderForm.promisedAt} onChange={e=>setOrderForm({...orderForm,promisedAt:e.target.value})}/></label></div>
