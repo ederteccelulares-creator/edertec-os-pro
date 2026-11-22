@@ -115,8 +115,61 @@ export async function updateCompanyServiceOrderStatus(
   return data
 }
 
+
+export type CreateCompanyServiceOrderInput = {
+  companyId: string
+  branchId?: string | null
+  customerId?: string | null
+  assignedEmployeeId?: string | null
+  deviceType?: string
+  deviceBrand?: string
+  deviceModel?: string
+  deviceColor?: string
+  serialNumber?: string
+  reportedIssue: string
+  intakeCondition?: string
+  includedAccessories?: string
+  priority?: 'low' | 'normal' | 'high' | 'urgent'
+  estimatedPrice?: number
+  promisedAt?: string | null
+  notes?: string
+}
+
 /**
- * Criação de OS está intencionalmente pendente de uma rotina atômica
- * para gerar order_number. Não gerar o número com MAX()+1 no navegador,
- * pois acessos simultâneos podem produzir números duplicados.
+ * Insere uma OS usando o DEFAULT do banco para order_number.
+ * Requer a migração company_service_order_number_default antes de uso.
  */
+export async function createCompanyServiceOrder(input: CreateCompanyServiceOrderInput) {
+  const reportedIssue = input.reportedIssue.trim()
+  if (!reportedIssue) throw new Error('Descreva o defeito informado pelo cliente.')
+  const estimatedPrice = Math.max(0, Number(input.estimatedPrice ?? 0))
+  if (!Number.isFinite(estimatedPrice)) throw new Error('Valor estimado inválido.')
+
+  const payload = {
+    company_id: input.companyId,
+    branch_id: input.branchId || null,
+    customer_id: input.customerId || null,
+    assigned_employee_id: input.assignedEmployeeId || null,
+    device_type: input.deviceType?.trim() || null,
+    device_brand: input.deviceBrand?.trim() || null,
+    device_model: input.deviceModel?.trim() || null,
+    device_color: input.deviceColor?.trim() || null,
+    serial_number: input.serialNumber?.trim() || null,
+    reported_issue: reportedIssue,
+    intake_condition: input.intakeCondition?.trim() || null,
+    included_accessories: input.includedAccessories?.trim() || null,
+    priority: input.priority ?? 'normal',
+    estimated_price: estimatedPrice,
+    promised_at: input.promisedAt || null,
+    notes: input.notes?.trim() || null,
+  }
+
+  const { data, error } = await db()
+    .from('service_orders')
+    .insert(payload)
+    .select('*')
+    .single()
+
+  if (error) throw error
+  return data as CompanyServiceOrder
+}
