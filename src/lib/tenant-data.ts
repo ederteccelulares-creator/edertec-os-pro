@@ -158,35 +158,27 @@ export async function createServiceOrder(context: TenantContext, input: ServiceO
 export async function updateServiceOrderStatus(
   context: TenantContext,
   orderId: string,
-  status: ServiceOrderInput['status'],
+  status: ServiceOrderStatus,
   description?: string,
 ) {
-  if (!status) throw new Error('Status inválido.')
-  const db = client()
-  const { data: current, error: readError } = await db.from('service_orders')
-    .select('id, status')
-    .eq('organization_id', context.organizationId)
-    .eq('branch_id', context.branchId)
-    .eq('id', orderId)
-    .single()
-  if (readError) throw readError
-
-  const { data, error } = await db.from('service_orders')
-    .update({ status, ...(status === 'delivered' ? { delivered_at: new Date().toISOString() } : {}) })
-    .eq('organization_id', context.organizationId)
-    .eq('branch_id', context.branchId)
-    .eq('id', orderId)
-    .select()
-    .single()
-  if (error) throw error
-
-  const { error: eventError } = await db.from('service_order_events').insert({
-    organization_id: context.organizationId,
-    service_order_id: orderId,
-    from_status: current.status,
-    to_status: status,
-    description: description?.trim() || null,
+  const { data, error } = await client().rpc('update_service_order_status', {
+    p_organization_id: context.organizationId,
+    p_branch_id: context.branchId,
+    p_order_id: orderId,
+    p_status: status,
+    p_description: description?.trim() || null,
   })
-  if (eventError) throw eventError
+  if (error) throw error
   return data
+}
+
+export async function listServiceOrderEvents(context: TenantContext, orderId: string) {
+  const { data, error } = await client().from('service_order_events')
+    .select('id, from_status, to_status, description, changed_by, created_at')
+    .eq('organization_id', context.organizationId)
+    .eq('service_order_id', orderId)
+    .order('created_at', { ascending: false })
+    .limit(100)
+  if (error) throw error
+  return data ?? []
 }
