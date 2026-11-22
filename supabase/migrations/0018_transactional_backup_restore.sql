@@ -32,6 +32,7 @@ declare
   row_value jsonb;
   user_field text;
   user_fields text[];
+  column_names text[];
   column_list text;
   select_list text;
   identity_clause text := '';
@@ -43,22 +44,21 @@ begin
   end if;
 
   select array_agg(column_name order by ordinal_position),
-         array_agg('x.' || quote_ident(column_name) order by ordinal_position),
          coalesce(bool_or(is_identity = 'YES' and identity_generation = 'ALWAYS'), false)
-    into column_list, select_list, has_identity
+    into column_names, has_identity
   from information_schema.columns
   where table_schema = 'public'
     and table_name = p_table
     and is_generated = 'NEVER';
 
-  if column_list is null then
+  if column_names is null then
     raise exception 'Unsupported restore table: %', p_table;
   end if;
 
   select string_agg(quote_ident(value), ',' order by ordinality),
          string_agg('x.' || quote_ident(value), ',' order by ordinality)
     into column_list, select_list
-  from unnest(column_list) with ordinality as cols(value, ordinality);
+  from unnest(column_names) with ordinality as cols(value, ordinality);
 
   if has_identity then identity_clause := 'OVERRIDING SYSTEM VALUE'; end if;
 
@@ -249,7 +249,7 @@ begin
   end if;
   select array_agg(value::uuid) into mapped_targets from jsonb_each_text(p_branch_mapping);
   if coalesce(array_length(mapped_targets,1),0) <> coalesce(array_length(source_branch_ids,1),0)
-     or (select count(distinct value) from unnest(mapped_targets) value) <> coalesce(array_length(mapped_targets,1),0) then
+     or (select count(distinct t.value) from unnest(mapped_targets) as t(value)) <> coalesce(array_length(mapped_targets,1),0) then
     raise exception 'Branch mapping targets must be unique';
   end if;
   foreach source_id in array source_branch_ids
@@ -284,7 +284,7 @@ begin
       loop
         if row_value->>user_field is not null then
           source_id := (row_value->>user_field)::uuid;
-          if not source_id = any(source_user_ids) then
+          if not (source_id = any(source_user_ids)) then
             source_user_ids := array_append(source_user_ids, source_id);
           end if;
         end if;
@@ -332,15 +332,15 @@ begin
   -- Reconcile GENERATED ALWAYS identity sequences after preserving source
   -- order numbers, sale numbers and audit log IDs.
   identity_sequence := pg_get_serial_sequence('public.service_orders','order_number');
-  execute 'select max(order_number) from public.service_orders where organization_id = $1'
-    into max_identity using p_organization_id;
+  execute 'select max(order_number) from public.service_orders'
+    into max_identity;
   if identity_sequence is not null then
     if max_identity is null then perform setval(identity_sequence,1,false);
     else perform setval(identity_sequence,max_identity,true); end if;
   end if;
 
   identity_sequence := pg_get_serial_sequence('public.sales','sale_number');
-  execute 'select max(sale_number) from public.sales where organization_id = $1'
+  execute 'select max(sale_number) from public.sales'
     into max_identity using p_organization_id;
   if identity_sequence is not null then
     if max_identity is null then perform setval(identity_sequence,1,false);
@@ -348,7 +348,7 @@ begin
   end if;
 
   identity_sequence := pg_get_serial_sequence('public.audit_logs','id');
-  execute 'select max(id) from public.audit_logs where organization_id = $1'
+  execute 'select max(id) from public.audit_logs'
     into max_identity using p_organization_id;
   if identity_sequence is not null then
     if max_identity is null then perform setval(identity_sequence,1,false);
