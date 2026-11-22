@@ -64,7 +64,7 @@ begin
     'id','ab000000-0000-4000-8000-000000000001',
     'company_id','a3000000-0000-4000-8000-000000000001',
     'service_order_id','aa000000-0000-4000-8000-000000000001',
-    'item_type','service','description','Troca de tela','quantity',1,'unit_price',150
+    'item_type','service','description','Troca de tela','quantity',1,'unit_price',150,'created_at',now()
    )),
    'stock_movements','[]'::jsonb,'payments','[]'::jsonb,'suppliers','[]'::jsonb,
    'purchases','[]'::jsonb,'purchase_items','[]'::jsonb,'cash_sessions','[]'::jsonb,
