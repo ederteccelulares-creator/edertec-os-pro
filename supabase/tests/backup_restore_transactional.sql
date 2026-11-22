@@ -166,7 +166,10 @@ begin
       'sale_items','[]'::jsonb,
       'service_catalog','[]'::jsonb,
       'service_order_lines','[]'::jsonb,
-      'audit_logs','[]'::jsonb
+      'audit_logs',jsonb_build_array(jsonb_build_object(
+        'id',999001,'organization_id',org_b,'actor_id',source_user_b,'action','restore.rollback.test',
+        'entity','organization','entity_id',org_b::text,'metadata','{}'::jsonb,'created_at',now()
+      ))
     )
   );
 
