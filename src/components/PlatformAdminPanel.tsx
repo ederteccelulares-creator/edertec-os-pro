@@ -10,9 +10,12 @@ type SubscriptionRow = { id:string; company_id:string; plan_id:string; status:st
 type Props = { email:string; onSignOut:()=>void }
 const money=(value:number)=>Number(value||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 const intervalLabels:Record<string,string>={monthly:'Mensal',yearly:'Anual',six_months:'Semestral',lifetime:'Vitalício'}
+const BILLING_DRAFT_KEY='edertec-platform-billing-draft-v1'
+const PLATFORM_TAB_KEY='edertec-platform-admin-tab-v1'
+function readBillingDraft(){try{const value=sessionStorage.getItem(BILLING_DRAFT_KEY);return value?{accessToken:'',webhookSecret:'',...JSON.parse(value)}:{accessToken:'',webhookSecret:''}}catch{return {accessToken:'',webhookSecret:''}}}
 
 export default function PlatformAdminPanel({email,onSignOut}:Props) {
-  const [tab,setTab]=useState<'companies'|'plans'|'subscriptions'|'support'|'billing'>('companies')
+  const [tab,setTab]=useState<'companies'|'plans'|'subscriptions'|'support'|'billing'>(()=>{try{const saved=sessionStorage.getItem(PLATFORM_TAB_KEY);return saved==='billing'||saved==='plans'||saved==='subscriptions'||saved==='support'||saved==='companies'?saved:'companies'}catch{return 'companies'}})
   const [menuOpen,setMenuOpen]=useState(false)
   const [companies,setCompanies]=useState<CompanyRow[]>([])
   const [plans,setPlans]=useState<PlanRow[]>([])
@@ -26,7 +29,7 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
   const [showCompany,setShowCompany]=useState(false)
   const [companyForm,setCompanyForm]=useState({name:'',taxId:'',phone:''})
   const [planForm,setPlanForm]=useState({code:'',name:'',description:'',price:'0',billing_interval:'monthly',max_branches:'',max_users:''})
-  const [billingForm,setBillingForm]=useState({accessToken:'',webhookSecret:''})
+  const [billingForm,setBillingForm]=useState(readBillingDraft)
   const [billingStatus,setBillingStatus]=useState<{access_token_configured?:boolean;webhook_secret_configured?:boolean;updated_at?:string}|null>(null)
   const [billingLoading,setBillingLoading]=useState(false)
   const [activation,setActivation]=useState({companyId:'',planId:'',status:'active',startsAt:new Date().toISOString().slice(0,10),endsAt:''})
@@ -48,6 +51,10 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
   },[])
 
   useEffect(()=>{void load()},[load])
+
+  // Keep the billing screen and its unfinished fields when the user switches tabs/apps.
+  useEffect(()=>{try{sessionStorage.setItem(PLATFORM_TAB_KEY,tab)}catch{}},[tab])
+  useEffect(()=>{try{sessionStorage.setItem(BILLING_DRAFT_KEY,JSON.stringify(billingForm))}catch{}},[billingForm])
 
   useEffect(()=>{
     const client=supabase
@@ -166,6 +173,7 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
       if(error)throw error
       if(data?.error)throw new Error(data.error)
       setBillingForm({accessToken:'',webhookSecret:''})
+      try{sessionStorage.removeItem(BILLING_DRAFT_KEY)}catch{}
       setBillingStatus({access_token_configured:true,webhook_secret_configured:true,updated_at:new Date().toISOString()})
       setNotice('Credenciais do Mercado Pago salvas com segurança.')
     }catch(e){setError(e instanceof Error?e.message:'Falha ao salvar credenciais.')}
