@@ -3,6 +3,43 @@
 -- This first release only restores into an operationally empty organization.
 -- Existing active destination branches are reused through an explicit one-to-one map.
 
+-- Each operational insert takes a key-share lock on its tenant row.
+-- The restore RPC takes FOR UPDATE on that same row, preventing new records
+-- from racing the empty-destination check for this organization only.
+create or replace function public.lock_organization_for_restore()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $
+begin
+  perform 1 from public.organizations
+  where id = new.organization_id
+  for key share;
+  if not found then raise exception 'Organization not found for operational record'; end if;
+  return new;
+end;
+$;
+
+do $
+declare table_name text;
+begin
+  foreach table_name in array array[
+    'branches','customers','devices','service_orders','service_order_events',
+    'inventory_items','branch_inventory','stock_movements','financial_categories',
+    'financial_entries','sales','sale_items','service_catalog','service_order_lines',
+    'audit_logs'
+  ]
+  loop
+    execute format('drop trigger if exists %I on public.%I', table_name || '_restore_tenant_lock', table_name);
+    execute format(
+      'create trigger %I before insert on public.%I for each row execute function public.lock_organization_for_restore()',
+      table_name || '_restore_tenant_lock', table_name
+    );
+  end loop;
+end;
+$;
+
 create table if not exists public.backup_restore_runs (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
@@ -184,13 +221,13 @@ begin
   -- Serialize restores for this organization and recheck authorization.
   perform 1 from public.organizations where id = p_organization_id for update;
   if not found then raise exception 'Organization not found'; end if;
-  if not exists (
-    select 1 from public.organization_members
-    where organization_id = p_organization_id
-      and user_id = p_actor_user_id
-      and active = true
-      and role in ('owner','admin')
-  ) then
+  perform 1 from public.organization_members
+  where organization_id = p_organization_id
+    and user_id = p_actor_user_id
+    and active = true
+    and role in ('owner','admin')
+  for share;
+  if not found then
     raise exception 'Only an active owner or admin can restore a backup';
   end if;
 
@@ -258,10 +295,10 @@ begin
   end loop;
   foreach target_id in array mapped_targets
   loop
-    if not exists (
-      select 1 from public.branches
-      where id = target_id and organization_id = p_organization_id and active = true
-    ) then raise exception 'Mapped destination branch is missing or inactive: %', target_id; end if;
+    perform 1 from public.branches
+    where id = target_id and organization_id = p_organization_id and active = true
+    for share;
+    if not found then raise exception 'Mapped destination branch is missing or inactive: %', target_id; end if;
   end loop;
 
   -- Collect every Auth reference and require a complete one-to-one mapping
@@ -305,10 +342,10 @@ begin
   end loop;
   foreach target_id in array mapped_targets
   loop
-    if not exists (
-      select 1 from public.organization_members
-      where organization_id = p_organization_id and user_id = target_id and active = true
-    ) then raise exception 'Mapped user is not an active member of this organization: %', target_id; end if;
+    perform 1 from public.organization_members
+    where organization_id = p_organization_id and user_id = target_id and active = true
+    for share;
+    if not found then raise exception 'Mapped user is not an active member of this organization: %', target_id; end if;
   end loop;
 
   insert into public.backup_restore_runs(organization_id,idempotency_key,backup_hash,restored_by)
