@@ -125,7 +125,7 @@ export default function AuthGate() {
     event.preventDefault(); setBusy(true); setError(''); setNotice('')
     try {
       if (mode === 'signup') {
-        const appUrl = (import.meta.env.VITE_APP_URL as string | undefined)?.trim().replace(/\\/$/, '') || 'https://edertecospro.com.br'
+        const appUrl = (import.meta.env.VITE_APP_URL as string | undefined)?.trim() || 'https://edertecospro.com.br'
         const { data, error: authError } = await db.auth.signUp({
           email,
           password,
