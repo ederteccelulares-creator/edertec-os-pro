@@ -10,6 +10,10 @@ language plpgsql
 set search_path = public
 as $$
 begin
+  if new.id is distinct from old.id then
+    raise exception 'Record identifiers are immutable';
+  end if;
+
   if new.organization_id is distinct from old.organization_id then
     raise exception 'A record cannot be moved between organizations';
   end if;
