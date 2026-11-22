@@ -1,0 +1,190 @@
+import { supabase } from './supabase'
+
+export type TenantContext = {
+  organizationId: string
+  branchId: string
+}
+
+export type CustomerInput = {
+  name: string
+  phone: string
+  email?: string
+  document?: string
+  notes?: string
+}
+
+export type DeviceInput = {
+  customerId: string
+  brand: string
+  model: string
+  color?: string
+  storage?: string
+  imei?: string
+  serialNumber?: string
+  notes?: string
+}
+
+export type ServiceOrderInput = {
+  customerId: string
+  deviceId?: string
+  reportedIssue: string
+  diagnosis?: string
+  accessories?: string
+  physicalCondition?: string
+  estimatedAmount?: number
+  status?: 'received' | 'diagnosing' | 'waiting_approval' | 'waiting_parts' | 'repairing' | 'ready' | 'delivered' | 'cancelled'
+  warrantyDays?: number
+  internalNotes?: string
+}
+
+function client() {
+  if (!supabase) throw new Error('Supabase não está configurado.')
+  return supabase
+}
+
+function required(value: string, label: string) {
+  const normalized = value.trim()
+  if (!normalized) throw new Error(`Informe ${label}.`)
+  return normalized
+}
+
+export async function listBranches(organizationId: string) {
+  const { data, error } = await client().from('branches')
+    .select('id, organization_id, name, code, active')
+    .eq('organization_id', organizationId)
+    .eq('active', true)
+    .order('name')
+  if (error) throw error
+  return data ?? []
+}
+
+export async function listCustomers(context: TenantContext) {
+  const { data, error } = await client().from('customers')
+    .select('id, organization_id, name, phone, email, document, address, notes, created_at, updated_at')
+    .eq('organization_id', context.organizationId)
+    .order('name')
+    .limit(500)
+  if (error) throw error
+  return data ?? []
+}
+
+export async function saveCustomer(context: TenantContext, input: CustomerInput) {
+  const payload = {
+    organization_id: context.organizationId,
+    name: required(input.name, 'o nome do cliente'),
+    phone: required(input.phone, 'o telefone'),
+    email: input.email?.trim() || null,
+    document: input.document?.trim() || null,
+    notes: input.notes?.trim() || null,
+  }
+  const { data: existing, error: lookupError } = await client().from('customers')
+    .select('id')
+    .eq('organization_id', context.organizationId)
+    .eq('phone', payload.phone)
+    .limit(1)
+    .maybeSingle()
+  if (lookupError) throw lookupError
+
+  const query = existing
+    ? client().from('customers').update(payload).eq('organization_id', context.organizationId).eq('id', existing.id)
+    : client().from('customers').insert(payload)
+  const { data, error } = await query.select().single()
+  if (error) throw error
+  return data
+}
+
+export async function listDevices(context: TenantContext, customerId?: string) {
+  let query = client().from('devices')
+    .select('id, organization_id, customer_id, brand, model, color, storage, imei, serial_number, notes, created_at')
+    .eq('organization_id', context.organizationId)
+  if (customerId) query = query.eq('customer_id', customerId)
+  const { data, error } = await query.order('created_at', { ascending: false }).limit(500)
+  if (error) throw error
+  return data ?? []
+}
+
+export async function saveDevice(context: TenantContext, input: DeviceInput) {
+  const payload = {
+    organization_id: context.organizationId,
+    customer_id: required(input.customerId, 'o cliente do aparelho'),
+    brand: required(input.brand, 'a marca'),
+    model: required(input.model, 'o modelo'),
+    color: input.color?.trim() || null,
+    storage: input.storage?.trim() || null,
+    imei: input.imei?.trim() || null,
+    serial_number: input.serialNumber?.trim() || null,
+    notes: input.notes?.trim() || null,
+  }
+  const { data, error } = await client().from('devices').insert(payload).select().single()
+  if (error) throw error
+  return data
+}
+
+export async function listServiceOrders(context: TenantContext) {
+  const { data, error } = await client().from('service_orders')
+    .select('id, organization_id, branch_id, customer_id, device_id, order_number, status, reported_issue, diagnosis, accessories, physical_condition, estimated_amount, approved_amount, technician_id, opened_by, received_at, delivered_at, warranty_days, internal_notes, created_at, updated_at, customers(name, phone), devices(brand, model, imei)')
+    .eq('organization_id', context.organizationId)
+    .eq('branch_id', context.branchId)
+    .order('created_at', { ascending: false })
+    .limit(500)
+  if (error) throw error
+  return data ?? []
+}
+
+export async function createServiceOrder(context: TenantContext, input: ServiceOrderInput) {
+  const amount = input.estimatedAmount ?? 0
+  if (!Number.isFinite(amount) || amount < 0) throw new Error('O valor estimado deve ser zero ou maior.')
+  const payload = {
+    organization_id: context.organizationId,
+    branch_id: context.branchId,
+    customer_id: required(input.customerId, 'o cliente'),
+    device_id: input.deviceId || null,
+    reported_issue: required(input.reportedIssue, 'o defeito informado'),
+    diagnosis: input.diagnosis?.trim() || null,
+    accessories: input.accessories?.trim() || null,
+    physical_condition: input.physicalCondition?.trim() || null,
+    estimated_amount: amount,
+    status: input.status || 'received',
+    warranty_days: input.warrantyDays ?? 90,
+    internal_notes: input.internalNotes?.trim() || null,
+  }
+  const { data, error } = await client().from('service_orders').insert(payload).select().single()
+  if (error) throw error
+  return data
+}
+
+export async function updateServiceOrderStatus(
+  context: TenantContext,
+  orderId: string,
+  status: ServiceOrderInput['status'],
+  description?: string,
+) {
+  if (!status) throw new Error('Status inválido.')
+  const db = client()
+  const { data: current, error: readError } = await db.from('service_orders')
+    .select('id, status')
+    .eq('organization_id', context.organizationId)
+    .eq('branch_id', context.branchId)
+    .eq('id', orderId)
+    .single()
+  if (readError) throw readError
+
+  const { data, error } = await db.from('service_orders')
+    .update({ status, ...(status === 'delivered' ? { delivered_at: new Date().toISOString() } : {}) })
+    .eq('organization_id', context.organizationId)
+    .eq('branch_id', context.branchId)
+    .eq('id', orderId)
+    .select()
+    .single()
+  if (error) throw error
+
+  const { error: eventError } = await db.from('service_order_events').insert({
+    organization_id: context.organizationId,
+    service_order_id: orderId,
+    from_status: current.status,
+    to_status: status,
+    description: description?.trim() || null,
+  })
+  if (eventError) throw eventError
+  return data
+}
