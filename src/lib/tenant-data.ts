@@ -303,6 +303,19 @@ export async function assignServiceOrderTechnician(
   return data
 }
 
+export async function createServiceOrderPortalLink(context: TenantContext, orderId: string) {
+  const { data, error } = await client().rpc('create_service_order_portal_link', {
+    p_organization_id: context.organizationId,
+    p_branch_id: context.branchId,
+    p_order_id: orderId,
+  })
+  if (error) throw error
+  if (typeof data !== 'string' || !/^[0-9a-f]{64}$/.test(data)) {
+    throw new Error('O banco não retornou um link válido para o portal.')
+  }
+  return data
+}
+
 export async function listServiceOrderEvents(context: TenantContext, orderId: string) {
   const { data, error } = await client().from('service_order_events')
     .select('id, from_status, to_status, description, changed_by, created_at')
