@@ -1390,3 +1390,15 @@ td b { font-weight:650; }
 .company-overdue-details span,.company-overdue-details small{color:#c8b99f}
 .company-overdue-details small{grid-column:1/-1}
 .company-debt-checking{padding:10px;color:#aeb6c0;font-size:13px}
+
+
+.company-cash-register{display:grid;gap:14px;margin:16px 0;padding:16px;border:1px solid var(--company-border,#30394a);border-radius:14px;background:rgba(255,255,255,.025)}
+.company-cash-register .company-panel-head{align-items:center}
+.company-cash-register label{display:grid;gap:6px;min-width:0;color:var(--muted,#9aa4b2);font-size:13px}
+.company-cash-register input,.company-cash-register select{width:100%;min-width:0}
+.company-cash-session-open{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end;padding:14px;border-radius:12px;background:rgba(255,255,255,.035)}
+.company-cash-session-open>div{display:grid;gap:5px}
+.company-cash-session-open>div b,.company-cash-session-history>b{font-size:14px}
+.company-cash-session-open>div small{color:var(--muted,#9aa4b2);font-size:12px}
+.company-cash-session-history{display:grid;gap:10px}
+@media(max-width:640px){.company-cash-register{padding:12px}.company-cash-session-open{grid-template-columns:1fr}.company-cash-register .company-panel-head{align-items:stretch;flex-direction:column}}
