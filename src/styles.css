@@ -1424,3 +1424,16 @@ td b { font-weight:650; }
   .platform-admin .platform-tabs { overflow: visible; flex-wrap: wrap; }
   .platform-admin .platform-tabs button { flex: 1 1 auto; }
 }
+
+
+/* Super Admin hamburger navigation */
+.platform-menu-wrap { margin:0 0 18px; }
+.platform-menu-toggle { width:100%; min-height:50px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; border:1px solid #39485d; border-radius:12px; background:linear-gradient(145deg,#1b293a,#121b29); color:#f0c978; cursor:pointer; }
+.platform-menu-toggle span { display:flex; align-items:center; gap:11px; }
+.platform-menu-toggle b { font-size:14px; }
+.platform-menu-toggle small { color:#9eabbd; font-size:11px; }
+.platform-menu-wrap .platform-tabs[hidden] { display:none !important; }
+.platform-menu-wrap .platform-tabs { margin-top:9px; padding:9px; border:1px solid #2d3a4c; border-radius:12px; background:#111a27; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+.platform-menu-wrap .platform-tabs button { min-height:46px; border:1px solid #2e3b4e; border-radius:9px; background:#172231; color:#bdc8d7; justify-content:flex-start; padding:0 12px; text-align:left; }
+.platform-menu-wrap .platform-tabs button.active { border-color:#8c7040; background:linear-gradient(145deg,#342b1d,#211d18); color:#f3cf82; }
+@media(max-width:420px) { .platform-menu-wrap .platform-tabs { grid-template-columns:1fr; } }
