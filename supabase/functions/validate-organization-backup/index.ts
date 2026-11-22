@@ -267,7 +267,8 @@ Deno.serve(async (req) => {
   const totalRecords = Object.values(counts).reduce((sum, count) => sum + count, 0);
   const restoreBlockers = [
     "A restauração transacional com rollback ainda não foi implementada.",
-    ...(sourceBranches.length > 0 && !branchMappingValid ? ["As associações das filiais ainda não foram validadas com sucesso no servidor."] : []),\n    "A importação ainda não implementa a substituição dos IDs de filiais nas referências relacionadas.",
+    ...(sourceBranches.length > 0 && !branchMappingValid ? ["As associações das filiais ainda não foram validadas com sucesso no servidor."] : []),
+    "A importação ainda não implementa a substituição dos IDs de filiais nas referências relacionadas.",
     ...(requiresUserMapping && !mappingValid ? ["As associações de usuários ainda não foram validadas com sucesso no servidor."] : []),
     ...(!destinationEmpty ? ["O destino contém registros operacionais; uma estratégia segura de mesclagem ainda não foi implementada."] : []),
   ];
