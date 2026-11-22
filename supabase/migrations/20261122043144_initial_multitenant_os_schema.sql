@@ -4,7 +4,7 @@ create extension if not exists pgcrypto;
 
 -- Keep the original organization-based tables and their foreign keys/data intact.
 -- The current company-scoped application uses the canonical names below.
-do $
+do $migration$
 declare t text;
 begin
  foreach t in array array['branches','customers','service_orders','service_catalog','stock_movements','audit_logs','platform_admins'] loop
@@ -12,7 +12,7 @@ begin
    execute format('alter table public.%I rename to %I',t,'legacy_'||t);
   end if;
  end loop;
-end $;
+end $migration$;
 
 
 create table public.companies (
