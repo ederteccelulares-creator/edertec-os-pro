@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !anonKey || !serviceRoleKey) return response({ error: "Função não configurada." }, 500);
 
-  let body: { organization_id?: string; backup?: Record<string, unknown>; user_mapping?: Record<string, string> };
+  let body: { organization_id?: string; backup?: Record<string, unknown>; user_mapping?: Record<string, string>; branch_mapping?: Record<string, string> };
   try {
     const rawBody = await req.text();
     if (new TextEncoder().encode(rawBody).length > 10 * 1024 * 1024) return response({ error: "Arquivo maior que 10 MB. Solicite análise assistida." }, 413);
@@ -211,6 +211,41 @@ Deno.serve(async (req) => {
   if (new Set(mappedTargets).size !== mappedTargets.length) mappingErrors.push("Cada usuário de origem deve ser associado a um membro diferente do destino.");
   const mappingValid = mappingProvided && mappingErrors.length === 0 && Object.keys(submittedMapping).length === expectedSourceIds.size;
 
+  const sourceBranches = (Array.isArray(tables.branches) ? tables.branches as Array<Record<string, unknown>> : []).map(branch => {
+    const id = String(branch.id ?? "");
+    const referenceFields = [
+      ["service_orders", "branch_id"], ["branch_inventory", "branch_id"],
+      ["stock_movements", "branch_id"], ["financial_entries", "branch_id"],
+      ["sales", "branch_id"], ["service_order_lines", "branch_id"],
+    ] as const;
+    const references = referenceFields.map(([table, field]) => ({
+      table, field,
+      records: (Array.isArray(tables[table]) ? tables[table] as Array<Record<string, unknown>> : [])
+        .filter(row => row?.[field] === id).length,
+    })).filter(item => item.records > 0);
+    return { source_branch_id: id, name: String(branch.name ?? ""), code: String(branch.code ?? ""), active: branch.active !== false, references };
+  });
+  const { data: destinationBranches, error: destinationBranchesError } = await adminClient
+    .from("branches").select("id,name,code,active").eq("organization_id", organizationId);
+  if (destinationBranchesError) errors.push("Não foi possível consultar as filiais do destino.");
+  const destinationBranchList = destinationBranches ?? [];
+  const submittedBranchMapping = body.branch_mapping ?? {};
+  const branchMappingProvided = Object.keys(submittedBranchMapping).length > 0;
+  const branchMappingErrors: string[] = [];
+  const expectedSourceBranchIds = new Set(sourceBranches.map(branch => branch.source_branch_id));
+  const destinationBranchIds = new Set(destinationBranchList.filter(branch => branch.active).map(branch => branch.id));
+  for (const sourceId of expectedSourceBranchIds) {
+    const targetId = submittedBranchMapping[sourceId];
+    if (branchMappingProvided && !targetId) branchMappingErrors.push("Filial de origem sem associação: " + sourceId);
+    else if (targetId && !destinationBranchIds.has(targetId)) branchMappingErrors.push("A filial de destino selecionada não existe ou está inativa: " + targetId);
+  }
+  for (const sourceId of Object.keys(submittedBranchMapping)) {
+    if (!expectedSourceBranchIds.has(sourceId)) branchMappingErrors.push("Mapeamento contém filial de origem não reconhecida: " + sourceId);
+  }
+  const mappedBranchTargets = Object.values(submittedBranchMapping).filter(Boolean);
+  if (new Set(mappedBranchTargets).size !== mappedBranchTargets.length) branchMappingErrors.push("Cada filial de origem deve ser associada a uma filial diferente do destino.");
+  const branchMappingValid = branchMappingProvided && branchMappingErrors.length === 0 && Object.keys(submittedBranchMapping).length === expectedSourceBranchIds.size;
+
   const unknownTables = Object.keys(tables).filter(name => !TABLES.includes(name as typeof TABLES[number]));
   if (unknownTables.length) errors.push("O arquivo contém tabelas não reconhecidas: " + unknownTables.join(", "));
   const targetCounts: Record<string, number> = {};
@@ -232,7 +267,7 @@ Deno.serve(async (req) => {
   const totalRecords = Object.values(counts).reduce((sum, count) => sum + count, 0);
   const restoreBlockers = [
     "A restauração transacional com rollback ainda não foi implementada.",
-    "A reconciliação e eventual remapeamento dos IDs das filiais ainda não foi implementada.",
+    ...(sourceBranches.length > 0 && !branchMappingValid ? ["As associações das filiais ainda não foram validadas com sucesso no servidor."] : []),\n    "A importação ainda não implementa a substituição dos IDs de filiais nas referências relacionadas.",
     ...(requiresUserMapping && !mappingValid ? ["As associações de usuários ainda não foram validadas com sucesso no servidor."] : []),
     ...(!destinationEmpty ? ["O destino contém registros operacionais; uma estratégia segura de mesclagem ainda não foi implementada."] : []),
   ];
