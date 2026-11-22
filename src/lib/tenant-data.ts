@@ -558,3 +558,13 @@ export async function updatePlatformSubscription(input: {
   })
   if (error) throw error
 }
+
+
+export async function exportOrganizationBackup(organizationId: string) {
+  const { data, error } = await client().functions.invoke('export-organization', {
+    body: { organization_id: organizationId },
+  })
+  if (error) throw error
+  if (data?.error) throw new Error(data.error)
+  return data as Record<string, unknown>
+}
