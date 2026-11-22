@@ -5,7 +5,7 @@ import PlatformSupportPanel from './PlatformSupportPanel'
 
 type CompanyRow = { id:string; name:string; tax_id:string|null; status:string; created_at:string }
 type PlanRow = { id:string; code:string; name:string; description:string|null; price:number; billing_interval:string; max_branches:number|null; max_users:number|null; is_active:boolean }
-type SubscriptionRow = { id:string; company_id:string; plan_id:string; status:string; starts_at:string; ends_at:string|null; companies?:{name:string}|{name:string}[]|null; subscription_plans?:{name:string}|{name:string}[]|null }
+type SubscriptionRow = { id:string; company_id:string; plan_id:string; status:string; starts_at:string; ends_at:string|null; trial_ends_at?:string|null; companies?:{name:string}|{name:string}[]|null; subscription_plans?:{name:string}|{name:string}[]|null }
 
 type Props = { email:string; onSignOut:()=>void }
 const money=(value:number)=>Number(value||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
@@ -24,6 +24,7 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
   const [showCompany,setShowCompany]=useState(false)
   const [companyForm,setCompanyForm]=useState({name:'',taxId:'',phone:''})
   const [planForm,setPlanForm]=useState({code:'',name:'',description:'',price:'0',billing_interval:'monthly',max_branches:'',max_users:''})
+  const [activation,setActivation]=useState({companyId:'',planId:'',status:'active',startsAt:new Date().toISOString().slice(0,10),endsAt:''})
 
   const load=useCallback(async()=>{
     if(!supabase)return
@@ -32,7 +33,7 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
       const [c,p,s]=await Promise.all([
         supabase.from('companies').select('id,name,tax_id,status,created_at').order('created_at',{ascending:false}).limit(500),
         supabase.from('subscription_plans').select('id,code,name,description,price,billing_interval,max_branches,max_users,is_active').order('price'),
-        supabase.from('company_subscriptions').select('id,company_id,plan_id,status,starts_at,ends_at,companies(name),subscription_plans(name)').order('created_at',{ascending:false}).limit(500),
+        supabase.from('company_subscriptions').select('id,company_id,plan_id,status,starts_at,ends_at,trial_ends_at,companies(name),subscription_plans(name)').order('created_at',{ascending:false}).limit(500),
       ])
       if(c.error)throw c.error;if(p.error)throw p.error;if(s.error)throw s.error
       setCompanies((c.data||[]) as CompanyRow[]);setPlans((p.data||[]) as PlanRow[]);setSubscriptions((s.data||[]) as SubscriptionRow[])
@@ -93,6 +94,24 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
     finally{setBusy(false)}
   }
 
+  async function saveCompanyActivation(event:FormEvent){
+    event.preventDefault();if(!supabase)return
+    if(!activation.companyId||!activation.planId){setError('Selecione a empresa e o plano.');return}
+    if(activation.endsAt&&activation.endsAt<activation.startsAt){setError('O vencimento não pode ser anterior ao início.');return}
+    setBusy(true);setError('');setNotice('')
+    try{
+      const existing=subscriptions.find(s=>s.company_id===activation.companyId)
+      const payload={company_id:activation.companyId,plan_id:activation.planId,status:activation.status,starts_at:new Date(activation.startsAt+'T00:00:00').toISOString(),ends_at:activation.endsAt?new Date(activation.endsAt+'T23:59:59').toISOString():null,trial_ends_at:activation.status==='trial'&&activation.endsAt?new Date(activation.endsAt+'T23:59:59').toISOString():null}
+      const result=existing
+        ? await supabase.from('company_subscriptions').update(payload).eq('id',existing.id)
+        : await supabase.from('company_subscriptions').insert(payload)
+      if(result.error)throw result.error
+      setNotice(existing?'Plano e período da empresa atualizados.':'Plano ativado para a empresa.')
+      await load()
+    }catch(e){setError(e instanceof Error?e.message:'Falha ao salvar a ativação.')}
+    finally{setBusy(false)}
+  }
+
   async function updateSubscriptionStatus(sub:SubscriptionRow,status:string){
     if(!supabase)return
     setBusy(true);setError('');setNotice('')
@@ -117,7 +136,17 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
           {showPlan&&<form className="platform-form" onSubmit={createPlan}><label>Código<input required value={planForm.code} onChange={e=>setPlanForm({...planForm,code:e.target.value})} placeholder="basico"/></label><label>Nome<input required value={planForm.name} onChange={e=>setPlanForm({...planForm,name:e.target.value})} placeholder="Plano Básico"/></label><label>Preço (R$)<input required type="number" min="0" step="0.01" value={planForm.price} onChange={e=>setPlanForm({...planForm,price:e.target.value})}/></label><label>Periodicidade<select value={planForm.billing_interval} onChange={e=>setPlanForm({...planForm,billing_interval:e.target.value})}><option value="monthly">Mensal</option><option value="six_months">Semestral</option><option value="yearly">Anual</option><option value="lifetime">Vitalício</option></select></label><label>Limite de filiais<input type="number" min="1" value={planForm.max_branches} onChange={e=>setPlanForm({...planForm,max_branches:e.target.value})} placeholder="Sem limite"/></label><label>Limite de usuários<input type="number" min="1" value={planForm.max_users} onChange={e=>setPlanForm({...planForm,max_users:e.target.value})} placeholder="Sem limite"/></label><label className="platform-wide">Descrição<input value={planForm.description} onChange={e=>setPlanForm({...planForm,description:e.target.value})}/></label><div className="platform-form-actions"><button type="button" onClick={()=>setShowPlan(false)}>Cancelar</button><button type="submit" disabled={busy}>{busy?'Salvando...':'Criar plano'}</button></div></form>}
           <div className="platform-table-wrap"><table><thead><tr><th>PLANO</th><th>VALOR</th><th>PERÍODO</th><th>LIMITES</th><th>STATUS</th></tr></thead><tbody>{plans.map(p=><tr key={p.id}><td><b>{p.name}</b><small>{p.code}</small></td><td>{money(p.price)}</td><td>{intervalLabels[p.billing_interval]||p.billing_interval}</td><td>{p.max_branches??'∞'} filiais · {p.max_users??'∞'} usuários</td><td><button className="platform-toggle" disabled={busy} onClick={()=>void togglePlan(p)}>{p.is_active?'Ativo':'Inativo'}</button></td></tr>)}</tbody></table></div>
         </section>}
-        {tab==='subscriptions'&&<section className="platform-panel"><h2>Assinaturas das empresas</h2><div className="platform-table-wrap"><table><thead><tr><th>EMPRESA</th><th>PLANO</th><th>INÍCIO</th><th>VENCIMENTO</th><th>SITUAÇÃO</th></tr></thead><tbody>{subscriptions.map(s=><tr key={s.id}><td>{(Array.isArray(s.companies)?s.companies[0]?.name:s.companies?.name)||s.company_id}</td><td>{(Array.isArray(s.subscription_plans)?s.subscription_plans[0]?.name:s.subscription_plans?.name)||'—'}</td><td>{new Date(s.starts_at).toLocaleDateString('pt-BR')}</td><td>{s.ends_at?new Date(s.ends_at).toLocaleDateString('pt-BR'):'—'}</td><td><select disabled={busy} value={s.status} onChange={e=>void updateSubscriptionStatus(s,e.target.value)}><option value="trial">Teste</option><option value="active">Ativa</option><option value="past_due">Em atraso</option><option value="cancelled">Cancelada</option><option value="expired">Expirada</option></select></td></tr>)}</tbody></table></div></section>}
+        {tab==='subscriptions'&&<section className="platform-panel"><h2>Gerenciar plano e ativação por empresa</h2>
+          <form className="platform-form" onSubmit={saveCompanyActivation}>
+            <label className="platform-wide">Empresa<select required value={activation.companyId} onChange={e=>setActivation(v=>({...v,companyId:e.target.value}))}><option value="">Selecione a empresa</option>{companies.map(company=><option key={company.id} value={company.id}>{company.name} · {company.id.slice(0,8)}</option>)}</select></label>
+            <label>Plano<select required value={activation.planId} onChange={e=>setActivation(v=>({...v,planId:e.target.value}))}><option value="">Selecione o plano</option>{plans.map(plan=><option key={plan.id} value={plan.id} disabled={!plan.is_active}>{plan.name} · {money(plan.price)} / {intervalLabels[plan.billing_interval]||plan.billing_interval}{!plan.is_active?' (inativo)':''}</option>)}</select></label>
+            <label>Status<select value={activation.status} onChange={e=>setActivation(v=>({...v,status:e.target.value}))}><option value="trial">Período de teste</option><option value="active">Ativa</option><option value="past_due">Em atraso</option><option value="cancelled">Cancelada</option><option value="expired">Expirada</option></select></label>
+            <label>Início da ativação<input type="date" required value={activation.startsAt} onChange={e=>setActivation(v=>({...v,startsAt:e.target.value}))}/></label>
+            <label>Vencimento / fim do teste<input type="date" value={activation.endsAt} onChange={e=>setActivation(v=>({...v,endsAt:e.target.value}))}/></label>
+            <div className="platform-form-actions"><button type="submit" disabled={busy||!companies.length||!plans.length}>{busy?'Salvando...':'Salvar ativação da empresa'}</button></div>
+          </form>
+          <p className="platform-hint">Deixe o vencimento vazio para uma ativação sem data final. Ao salvar, a assinatura existente da empresa será atualizada em vez de criar outra.</p>
+          <h2>Assinaturas e vencimentos</h2><div className="platform-table-wrap"><table><thead><tr><th>EMPRESA</th><th>PLANO</th><th>INÍCIO</th><th>VENCIMENTO</th><th>FIM DO TESTE</th><th>SITUAÇÃO</th></tr></thead><tbody>{subscriptions.map(s=><tr key={s.id}><td>{(Array.isArray(s.companies)?s.companies[0]?.name:s.companies?.name)||s.company_id}</td><td>{(Array.isArray(s.subscription_plans)?s.subscription_plans[0]?.name:s.subscription_plans?.name)||'—'}</td><td>{new Date(s.starts_at).toLocaleDateString('pt-BR')}</td><td>{s.ends_at?new Date(s.ends_at).toLocaleDateString('pt-BR'):'Sem vencimento'}</td><td>{s.trial_ends_at?new Date(s.trial_ends_at).toLocaleDateString('pt-BR'):'—'}</td><td><select disabled={busy} value={s.status} onChange={e=>void updateSubscriptionStatus(s,e.target.value)}><option value="trial">Teste</option><option value="active">Ativa</option><option value="past_due">Em atraso</option><option value="cancelled">Cancelada</option><option value="expired">Expirada</option></select></td></tr>)}</tbody></table></div></section>}
       </>}
       <footer className="platform-footer">Ações administrativas protegidas por autorização verificada no banco de dados.</footer>
     </section>
