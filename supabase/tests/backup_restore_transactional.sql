@@ -142,6 +142,40 @@ begin
     raise exception 'Idempotency replay duplicated or changed restored data';
   end if;
 
+  -- A second operation key cannot merge into an occupied destination.
+  begin
+    perform public.restore_organization_backup(
+      org_a,owner_a,'48000000-0000-4000-8000-000000000003',payload,
+      jsonb_build_object(source_branch_a::text,branch_a),
+      jsonb_build_object(source_user_a::text,owner_a)
+    );
+    raise exception 'Test failure: occupied destination unexpectedly accepted a merge';
+  exception when raise_exception then
+    if SQLERRM like 'Test failure:%' then raise; end if;
+  end;
+
+  -- Cross-tenant branch and user maps must be rejected before any insert.
+  begin
+    perform public.restore_organization_backup(
+      org_b,owner_b,'48000000-0000-4000-8000-000000000004',bad_payload,
+      jsonb_build_object(source_branch_b::text,branch_a),
+      jsonb_build_object(source_user_b::text,owner_b)
+    );
+    raise exception 'Test failure: cross-tenant branch mapping unexpectedly succeeded';
+  exception when raise_exception then
+    if SQLERRM like 'Test failure:%' then raise; end if;
+  end;
+  begin
+    perform public.restore_organization_backup(
+      org_b,owner_b,'48000000-0000-4000-8000-000000000005',bad_payload,
+      jsonb_build_object(source_branch_b::text,branch_b),
+      jsonb_build_object(source_user_b::text,owner_a)
+    );
+    raise exception 'Test failure: cross-tenant user mapping unexpectedly succeeded';
+  exception when raise_exception then
+    if SQLERRM like 'Test failure:%' then raise; end if;
+  end;
+
   -- Force an FK failure after the customer insert. The whole function call
   -- must roll back, including the early customer row and idempotency record.
   bad_payload := jsonb_build_object(
