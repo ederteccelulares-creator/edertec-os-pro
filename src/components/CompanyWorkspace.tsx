@@ -6,7 +6,7 @@ import CompanyPurchasesPanel from './CompanyPurchasesPanel'
 import CompanyCashPanel from './CompanyCashPanel'
 import CompanyFinancialEntriesPanel from './CompanyFinancialEntriesPanel'
 import { recordCompanyServiceOrderPayment, type PaymentMethod } from '../lib/company-service-order-payments'
-import { listCompanyBranches, listCompanyCustomers, saveCompanyCustomer, type Company, type CompanyBranch, type CompanyCustomer, type CompanyRole } from '../lib/company-data'
+import { listCompanyBranches, listCompanyCustomers, saveCompanyCustomer, type Company, type CompanyBranch, type CompanyCustomer, type CompanyRole, updateCompanyProfile } from '../lib/company-data'
 import { createCompanyServiceOrder, listCompanyServiceOrders, updateCompanyServiceOrderStatus, type CompanyServiceOrder } from '../lib/company-service-orders'
 import { downloadCompanyBackup, restoreCompanyBackup } from '../lib/company-backups'
 
@@ -18,6 +18,9 @@ const money = (n:number) => Number(n||0).toLocaleString('pt-BR',{style:'currency
 export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   const [tab,setTab] = useState<'dashboard'|'orders'|'customers'|'inventory'|'suppliers'|'purchases'|'cash'|'entries'|'backup'|'settings'>('dashboard')
   const [menuOpen,setMenuOpen] = useState(false)
+  const [companyInfo,setCompanyInfo] = useState(company)
+  const [companySaving,setCompanySaving] = useState(false)
+  const [companyForm,setCompanyForm] = useState({name:companyInfo.name,legalName:company.legal_name||'',taxId:company.tax_id||'',email:company.email||'',phone:company.phone||''})
   const [printFormat,setPrintFormat] = useState<'a4'|'thermal80'>(() => { try { return localStorage.getItem('edertec-os-print-format')==='thermal80'?'thermal80':'a4' } catch { return 'a4' } })
   const [branches,setBranches] = useState<CompanyBranch[]>([])
   const [branchId,setBranchId] = useState('')
@@ -53,6 +56,18 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   },[company.id,branchId])
 
   useEffect(()=>{void load()},[load])
+
+
+  async function saveCompanyDetails(event:FormEvent) {
+    event.preventDefault(); setCompanySaving(true); setError(''); setNotice('')
+    try {
+      const updated = await updateCompanyProfile({companyId:company.id,...companyForm})
+      setCompanyInfo(updated)
+      setCompanyForm({name:updated.name,legalName:updated.legal_name||'',taxId:updated.tax_id||'',email:updated.email||'',phone:updated.phone||''})
+      setNotice('Dados da empresa atualizados com sucesso.')
+    } catch(e) { setError(e instanceof Error?e.message:'Não foi possível salvar os dados da empresa.') }
+    finally { setCompanySaving(false) }
+  }
 
   async function restoreBackup(event:ChangeEvent<HTMLInputElement>) {
     const file=event.target.files?.[0]
@@ -96,12 +111,12 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
     if(!popup){setError("Permita janelas pop-up para gerar as duas vias da ordem de serviço.");return}
     const printedAt=safe(new Date().toLocaleString("pt-BR"))
     const copy=(label:string,customerCopy:boolean)=>'<section class="copy"><div class="copy-label">'+label+'</div>'
-      +'<header><div><h1>'+safe(company.name)+'</h1><div class="muted">ORDEM DE SERVIÇO · ASSISTÊNCIA TÉCNICA</div></div><div class="number">OS #'+safe(order.order_number)+'<div class="muted small">Entrada: '+safe(date(order.received_at))+'</div></div></header>'
+      +'<header><div><h1>'+safe(companyInfo.name)+'</h1><div class="muted">ORDEM DE SERVIÇO · ASSISTÊNCIA TÉCNICA</div></div><div class="number">OS #'+safe(order.order_number)+'<div class="muted small">Entrada: '+safe(date(order.received_at))+'</div></div></header>'
       +'<h2>Dados do cliente</h2><div class="grid"><div class="field"><b>Nome</b>'+safe(customer?.name)+'</div><div class="field"><b>Telefone</b>'+safe(customer?.phone)+'</div></div>'
       +'<h2>Equipamento</h2><div class="grid"><div class="field"><b>Tipo</b>'+safe(order.device_type)+'</div><div class="field"><b>Marca</b>'+safe(order.device_brand)+'</div><div class="field"><b>Modelo</b>'+safe(order.device_model)+'</div><div class="field"><b>Cor</b>'+safe(order.device_color)+'</div><div class="field"><b>IMEI / Série</b>'+safe(order.serial_number)+'</div><div class="field"><b>Status</b>'+safe(statusLabels[order.status]||order.status)+'</div><div class="field wide"><b>Defeito informado</b>'+safe(order.reported_issue)+'</div><div class="field wide"><b>Condição de entrada</b>'+safe(order.intake_condition)+'</div><div class="field wide"><b>Acessórios recebidos</b>'+safe(order.included_accessories)+'</div><div class="field"><b>Previsão de entrega</b>'+safe(date(order.promised_at))+'</div><div class="field"><b>Valor estimado</b>'+safe(money(order.final_price>0?order.final_price:order.estimated_price))+'</div>'
       +(customerCopy?'':'<div class="field wide"><b>Diagnóstico / Observações internas</b>'+safe(order.diagnosis||order.notes)+'</div>')+'</div>'
       +(customerCopy?'<div class="terms"><b>Comprovante do cliente:</b> guarde esta via para acompanhar e retirar seu equipamento. A entrega será realizada mediante identificação e quitação dos valores aprovados.</div>':'<div class="terms"><b>Via da assistência:</b> manter anexada ao equipamento e atualizar o andamento do serviço no sistema.</div>')
-      +'<div class="signature"><div>Assinatura do cliente</div><div>Assinatura do responsável</div></div><footer>Via '+label+' · Edertec OS Pro · '+safe(company.name)+' · Emitido em '+printedAt+'</footer></section>'
+      +'<div class="signature"><div>Assinatura do cliente</div><div>Assinatura do responsável</div></div><footer>Via '+label+' · Edertec OS Pro · '+safe(companyInfo.name)+' · Emitido em '+printedAt+'</footer></section>'
     const html=format==='thermal80' ? '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>OS #'+safe(order.order_number)+' — 80mm</title><style>*{box-sizing:border-box}body{font:12px monospace;color:#111;width:72mm;margin:0 auto;padding:3mm} .copy{padding:4mm 0 7mm;border-bottom:1px dashed #333;page-break-after:always;break-after:page}.copy:last-child{page-break-after:auto;break-after:auto}.copy-label{text-align:center;font-weight:bold;border:1px solid #111;padding:5px;margin-bottom:8px}header{text-align:center;border-bottom:1px dashed #111;padding-bottom:8px}h1{font-size:16px;margin:0 0 4px}h2{font-size:12px;margin:10px 0 5px;border-bottom:1px solid #777;padding-bottom:3px}.number{font-size:16px;font-weight:bold;text-align:center;margin-top:6px}.muted{font-size:10px}.grid{display:block}.field{padding:4px 0;border-bottom:1px dotted #bbb;overflow-wrap:anywhere}.field b{display:block;font-size:9px;text-transform:uppercase}.wide{grid-column:auto}.terms{margin-top:8px;font-size:10px}.signature{margin-top:24px;text-align:center}.signature div{border-top:1px solid #111;margin:22px 0 0;padding-top:4px}footer{font-size:9px;text-align:center;margin-top:10px}@page{size:80mm auto;margin:3mm}</style></head><body>'+copy('1ª VIA · ASSISTÊNCIA',false)+copy('2ª VIA · CLIENTE',true)+'<script>window.onload=()=>{window.focus();window.print()}</script></body></html>' : '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>OS #'+safe(order.order_number)+' — duas vias</title><style>*{box-sizing:border-box}body{font:12px Arial,sans-serif;color:#171717;margin:0;padding:0}.copy{position:relative;min-height:265mm;padding:12mm 13mm;page-break-after:always;break-after:page}.copy:last-child{page-break-after:auto;break-after:auto}.copy-label{display:inline-block;background:#202020;color:#fff;padding:6px 12px;font-weight:bold;letter-spacing:1px;font-size:10px;margin-bottom:12px}header{display:flex;justify-content:space-between;border-bottom:3px solid #222;padding-bottom:12px;margin-bottom:14px}h1{font-size:20px;margin:0 0 5px}h2{font-size:13px;margin:17px 0 7px;padding-bottom:5px;border-bottom:1px solid #aaa}.muted{color:#555}.small{font-size:10px;font-weight:normal}.number{font-size:21px;font-weight:bold;text-align:right}.grid{display:grid;grid-template-columns:1fr 1fr;gap:7px 18px}.field{padding:5px 0;border-bottom:1px solid #ddd;min-height:27px;overflow-wrap:anywhere}.field b{display:block;font-size:9px;text-transform:uppercase;color:#555;margin-bottom:3px}.wide{grid-column:1/-1}.terms{margin-top:17px;padding:10px;border:1px solid #bbb;border-radius:5px;line-height:1.5}.signature{display:grid;grid-template-columns:1fr 1fr;gap:45px;margin-top:48px}.signature div{border-top:1px solid #333;text-align:center;padding-top:6px;font-size:10px}footer{position:absolute;bottom:9mm;left:13mm;right:13mm;border-top:1px solid #aaa;padding-top:7px;font-size:9px;color:#555}@page{size:A4;margin:0}@media print{body{padding:0}}</style></head><body>'
       +copy("1ª VIA · ASSISTÊNCIA",false)+copy("2ª VIA · CLIENTE",true)
       +'<script>window.onload=()=>{window.focus();window.print()}</script></body></html>'
@@ -149,7 +164,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
     <button className={menuOpen?'company-drawer-scrim visible':'company-drawer-scrim'} onClick={()=>setMenuOpen(false)} aria-label="Fechar menu"/>
     <aside className={menuOpen?'company-sidebar drawer-open':'company-sidebar'}>
       <div className="company-logo"><span><Smartphone/></span><div><b>EDERTEC <i>OS PRO</i></b><small>GESTÃO DE ASSISTÊNCIAS</small></div><button className="company-drawer-close" onClick={()=>setMenuOpen(false)} aria-label="Fechar menu"><X/></button></div>
-      <div className="company-current">{company.name}</div>
+      <div className="company-current">{companyInfo.name}</div>
       <div className="company-branch-switch">
         <label htmlFor="company-branch-select">FILIAL / MATRIZ</label>
         <select id="company-branch-select" value={branchId} onChange={e=>setBranchId(e.target.value)}>
@@ -172,7 +187,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
       <div className="company-user"><b>{email}</b><small>Perfil: {role}</small><button onClick={onSignOut}><LogOut size={15}/> Sair</button></div>
     </aside>
     <main className="company-main">
-      <div className="company-mobilebar"><button onClick={()=>setMenuOpen(true)} aria-label="Abrir menu"><Menu/></button><div><b>EDERTEC <i>OS PRO</i></b><small>{company.name}</small></div><span className="company-mobile-avatar">{(email[0]||'U').toUpperCase()}</span></div>
+      <div className="company-mobilebar"><button onClick={()=>setMenuOpen(true)} aria-label="Abrir menu"><Menu/></button><div><b>EDERTEC <i>OS PRO</i></b><small>{companyInfo.name}</small></div><span className="company-mobile-avatar">{(email[0]||'U').toUpperCase()}</span></div>
       <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='backup'?'Backup de dados':tab==='settings'?'Configurações':'Financeiro'}</h1></div><div className="company-top-actions"><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
       {tab==='dashboard'&&<section className="company-dashboard">
         <p className="company-dashboard-subtitle">Visão geral da assistência técnica</p>
@@ -208,7 +223,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
         <div className="company-panel-head"><div><b>Backup da assistência</b><small>Exportação segura dos dados operacionais desta empresa</small></div><Database size={22}/></div>
         <div className="company-backup-content">
           <p>Gere um arquivo JSON com filiais, clientes, funcionários, serviços, produtos, ordens de serviço, estoque, compras e registros financeiros.</p>
-          <p>O backup pertence exclusivamente a <strong>{company.name}</strong>. Dados de acesso, senhas, usuários de autenticação e assinaturas não são incluídos.</p>
+          <p>O backup pertence exclusivamente a <strong>{companyInfo.name}</strong>. Dados de acesso, senhas, usuários de autenticação e assinaturas não são incluídos.</p>
           <button className="company-primary" disabled={backupBusy} onClick={()=>void createBackup()}><Download size={16}/>{backupBusy?'Processando...':'Baixar backup agora'}</button>
           <div className="company-backup-restore"><b>Restaurar backup</b><p>Use somente um arquivo JSON desta mesma empresa. A restauração é bloqueada se já existirem dados operacionais para evitar mesclagem ou duplicação.</p><label className="company-secondary">Selecionar arquivo JSON<input type="file" accept="application/json,.json" disabled={backupBusy} onChange={restoreBackup}/></label></div>
           <small>Recomendação: guarde uma cópia em local seguro e faça novos backups regularmente.</small>
@@ -243,7 +258,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
         </div>
         </div>
       </section>}
-      <footer className="company-footer">Dados protegidos por políticas de acesso do banco · {company.name}</footer>
+      <footer className="company-footer">Dados protegidos por políticas de acesso do banco · {companyInfo.name}</footer>
     </main>
   </div>
 }
