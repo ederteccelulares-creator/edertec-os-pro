@@ -18,6 +18,14 @@ declare
   device_a uuid := '45000000-0000-4000-8000-000000000001';
   order_a uuid := '46000000-0000-4000-8000-000000000001';
   event_a uuid := '47000000-0000-4000-8000-000000000001';
+  inventory_a uuid := '49000000-0000-4000-8000-000000000001';
+  movement_a uuid := '49000000-0000-4000-8000-000000000002';
+  category_a uuid := '4a000000-0000-4000-8000-000000000001';
+  finance_a uuid := '4b000000-0000-4000-8000-000000000001';
+  sale_a uuid := '4c000000-0000-4000-8000-000000000001';
+  sale_item_a uuid := '4d000000-0000-4000-8000-000000000001';
+  service_a uuid := '4e000000-0000-4000-8000-000000000001';
+  service_line_a uuid := '4f000000-0000-4000-8000-000000000001';
   bad_customer uuid := '44000000-0000-4000-8000-000000000002';
   bad_device uuid := '45000000-0000-4000-8000-000000000002';
   missing_customer uuid := '44000000-0000-4000-8000-000000000099';
@@ -87,16 +95,54 @@ begin
         'id',event_a,'organization_id',org_a,'service_order_id',order_a,'from_status',null,
         'to_status','received','description','OS restaurada','changed_by',source_user_a,'created_at',now()
       )),
-      'inventory_items','[]'::jsonb,
-      'branch_inventory','[]'::jsonb,
-      'stock_movements','[]'::jsonb,
-      'financial_categories','[]'::jsonb,
-      'financial_entries','[]'::jsonb,
-      'sales','[]'::jsonb,
-      'sale_items','[]'::jsonb,
-      'service_catalog','[]'::jsonb,
-      'service_order_lines','[]'::jsonb,
-      'audit_logs','[]'::jsonb
+      'inventory_items',jsonb_build_array(jsonb_build_object(
+        'id',inventory_a,'organization_id',org_a,'sku','RESTORE-001','name','Produto restaurado',
+        'category','Peças','description',null,'cost_price',12.34,'sale_price',45.67,'min_stock',1,
+        'active',true,'created_at',now(),'updated_at',now()
+      )),
+      'branch_inventory',jsonb_build_array(jsonb_build_object(
+        'id','49000000-0000-4000-8000-000000000003','organization_id',org_a,
+        'branch_id',source_branch_a,'item_id',inventory_a,'quantity',5,'updated_at',now()
+      )),
+      'stock_movements',jsonb_build_array(jsonb_build_object(
+        'id',movement_a,'organization_id',org_a,'branch_id',source_branch_a,'item_id',inventory_a,
+        'movement_type','in','quantity',5,'previous_quantity',0,'new_quantity',5,
+        'reason','Saldo inicial importado','actor_id',source_user_a,'created_at',now()
+      )),
+      'financial_categories',jsonb_build_array(jsonb_build_object(
+        'id',category_a,'organization_id',org_a,'name','Receita de teste','entry_type','income',
+        'active',true,'created_at',now()
+      )),
+      'financial_entries',jsonb_build_array(jsonb_build_object(
+        'id',finance_a,'organization_id',org_a,'branch_id',source_branch_a,'category_id',category_a,
+        'entry_type','income','description','Receita restaurada','amount',45.67,'payment_method','pix',
+        'status','paid','due_date',null,'paid_at',now(),'notes',null,'created_by',source_user_a,
+        'created_at',now(),'updated_at',now()
+      )),
+      'sales',jsonb_build_array(jsonb_build_object(
+        'id',sale_a,'organization_id',org_a,'branch_id',source_branch_a,'customer_id',customer_a,
+        'sale_number',888,'subtotal',45.67,'discount',0,'total',45.67,'payment_method','pix',
+        'payment_status','paid','notes','Venda snapshot','sold_by',source_user_a,'created_at',now()
+      )),
+      'sale_items',jsonb_build_array(jsonb_build_object(
+        'id',sale_item_a,'organization_id',org_a,'sale_id',sale_a,'item_id',inventory_a,
+        'product_name','Nome histórico do produto','quantity',1,'unit_price',45.67,
+        'unit_cost',12.34,'line_total',45.67,'created_at',now()
+      )),
+      'service_catalog',jsonb_build_array(jsonb_build_object(
+        'id',service_a,'organization_id',org_a,'name','Troca de tela','description',null,
+        'category','Reparo','price',150,'estimated_minutes',60,'active',true,
+        'created_at',now(),'updated_at',now()
+      )),
+      'service_order_lines',jsonb_build_array(jsonb_build_object(
+        'id',service_line_a,'organization_id',org_a,'branch_id',source_branch_a,
+        'service_order_id',order_a,'service_id',service_a,'service_name','Serviço histórico',
+        'quantity',1,'unit_price',150,'line_total',150,'created_by',source_user_a,'created_at',now()
+      )),
+      'audit_logs',jsonb_build_array(jsonb_build_object(
+        'id',999000,'organization_id',org_a,'actor_id',source_user_a,'action','restore.source.event',
+        'entity','service_order','entity_id',order_a::text,'metadata','{}'::jsonb,'created_at',now()
+      ))
     )
   );
 
@@ -112,7 +158,17 @@ begin
   if (select count(*) from public.customers where organization_id=org_a) <> 1
      or (select count(*) from public.devices where organization_id=org_a) <> 1
      or (select count(*) from public.service_orders where organization_id=org_a) <> 1
-     or (select count(*) from public.service_order_events where organization_id=org_a) <> 1 then
+     or (select count(*) from public.service_order_events where organization_id=org_a) <> 1
+     or (select count(*) from public.inventory_items where organization_id=org_a) <> 1
+     or (select count(*) from public.branch_inventory where organization_id=org_a) <> 1
+     or (select count(*) from public.stock_movements where organization_id=org_a) <> 1
+     or (select count(*) from public.financial_categories where organization_id=org_a) <> 1
+     or (select count(*) from public.financial_entries where organization_id=org_a) <> 1
+     or (select count(*) from public.sales where organization_id=org_a) <> 1
+     or (select count(*) from public.sale_items where organization_id=org_a) <> 1
+     or (select count(*) from public.service_catalog where organization_id=org_a) <> 1
+     or (select count(*) from public.service_order_lines where organization_id=org_a) <> 1
+     or (select count(*) from public.audit_logs where organization_id=org_a) <> 2 then
     raise exception 'Restore success test did not import all expected records';
   end if;
   if not exists (
@@ -130,6 +186,35 @@ begin
   end if;
   if nextval(pg_get_serial_sequence('public.service_orders','order_number')::regclass) <= 777 then
     raise exception 'Restore did not advance the service-order identity sequence';
+  end if;
+  if nextval(pg_get_serial_sequence('public.sales','sale_number')::regclass) <= 888 then
+    raise exception 'Restore did not advance the sales identity sequence';
+  end if;
+  if not exists (
+    select 1 from public.sale_items
+    where id=sale_item_a and product_name='Nome histórico do produto'
+      and unit_cost=12.34 and unit_price=45.67
+  ) then
+    raise exception 'Restore did not preserve sale item snapshots';
+  end if;
+  if not exists (
+    select 1 from public.service_order_lines
+    where id=service_line_a and service_name='Serviço histórico' and line_total=150
+      and branch_id=branch_a and created_by=owner_a
+  ) then
+    raise exception 'Restore did not preserve service line snapshot or generated total';
+  end if;
+  if not exists (
+    select 1 from public.stock_movements
+    where id=movement_a and branch_id=branch_a and actor_id=owner_a and new_quantity=5
+  ) then
+    raise exception 'Restore did not preserve stock movement history or mappings';
+  end if;
+  if not exists (
+    select 1 from public.financial_entries
+    where id=finance_a and branch_id=branch_a and created_by=owner_a and amount=45.67
+  ) then
+    raise exception 'Restore did not remap financial entry references';
   end if;
 
   replay_value := public.restore_organization_backup(
