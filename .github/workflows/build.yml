@@ -18,3 +18,48 @@ jobs:
         run: npm install
       - name: Build application
         run: npm run build
+
+  database-migrations:
+    name: PostgreSQL migration and security checks
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: edertec_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d edertec_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      - name: Create isolated Supabase Auth test harness
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/edertec_test
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/postgres_auth_harness.sql
+      - name: Apply all database migrations
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/edertec_test
+        run: |
+          for migration in supabase/migrations/*.sql; do
+            echo "Applying $migration"
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$migration"
+          done
+      - name: Run database security regression checks
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/edertec_test
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/security_regression.sql
+      - name: Run backup and restore schema contract checks
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/edertec_test
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/backup_restore_schema_contract.sql
