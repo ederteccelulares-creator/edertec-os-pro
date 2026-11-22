@@ -169,6 +169,13 @@ export async function createCompanyServiceOrder(input: CreateCompanyServiceOrder
   const estimatedPrice = Math.max(0, Number(input.estimatedPrice ?? 0))
   if (!Number.isFinite(estimatedPrice)) throw new Error('Valor estimado inválido.')
 
+  const photos = input.photos || []
+  if (photos.length > 10) throw new Error('Anexe no máximo 10 fotos por ordem de serviço.')
+  for (const file of photos) {
+    if (!['image/jpeg','image/png','image/webp'].includes(file.type)) throw new Error('As fotos devem estar em JPG, PNG ou WebP.')
+    if (file.size > 8 * 1024 * 1024) throw new Error('Cada foto pode ter no máximo 8 MB.')
+  }
+
   const payload = {
     company_id: input.companyId,
     branch_id: input.branchId || null,
