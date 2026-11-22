@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Building2, ClipboardList, LogOut, Plus, RefreshCw, Smartphone, Users, Boxes, ArrowDownUp, Wallet, ShoppingCart, Trash2 } from 'lucide-react'
-import { changeInventoryStock, createInventoryItem, createFinancialEntry, createSale, createServiceOrderWithDevice, listBranches, listCustomers, listFinancialEntries, listInventory, listSales, listServiceOrderEvents, listServiceOrders, saveCustomer, updateFinancialEntryStatus, updateServiceOrderStatus } from '../lib/tenant-data'
+import { Building2, ClipboardList, LogOut, Plus, RefreshCw, Smartphone, Users, Boxes, ArrowDownUp, Wallet, ShoppingCart, Trash2, ShieldCheck, UserCog } from 'lucide-react'
+import { changeInventoryStock, createInventoryItem, createFinancialEntry, createSale, createServiceOrderWithDevice, listBranches, listCustomers, listFinancialEntries, listInventory, listSales, listServiceOrderEvents, listServiceOrders, saveCustomer, listOrganizationTeam, setOrganizationMemberActive, setOrganizationMemberRole, updateFinancialEntryStatus, updateServiceOrderStatus } from '../lib/tenant-data'
 import type { Organization, Branch } from '../lib/supabase'
-import type { ServiceOrderStatus } from '../lib/tenant-data'
+import type { ServiceOrderStatus, TeamMember } from '../lib/tenant-data'
 
 type Props = { organization: Organization; role: import('../lib/supabase').OrganizationRole; email: string; onSignOut: () => void }
 type Customer = { id: string; name: string; phone: string }
@@ -23,7 +23,7 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
   const [branchId, setBranchId] = useState('')
   const [customers, setCustomers] = useState<Customer[]>([])
   const [orders, setOrders] = useState<Order[]>([])
-  const [tab, setTab] = useState<'orders' | 'customers' | 'inventory' | 'finance' | 'sales'>('orders')
+  const [tab, setTab] = useState<'orders' | 'customers' | 'inventory' | 'finance' | 'sales' | 'team'>('orders')
   const [inventory, setInventory] = useState<Array<{item_id:string;quantity:number;inventory_items:Array<{id:string;sku:string|null;name:string;category:string;cost_price:number;sale_price:number;min_stock:number;active:boolean}>}>>([])
   const [showInventoryForm, setShowInventoryForm] = useState(false)
   const [inventoryForm, setInventoryForm] = useState({name:'',sku:'',category:'Acessórios',costPrice:'0',salePrice:'0',minStock:'0'})
@@ -38,6 +38,9 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
   const [showSaleForm, setShowSaleForm] = useState(false)
   const [saleForm, setSaleForm] = useState({itemId:'',quantity:'1',customerId:'',paymentMethod:'pix' as 'cash'|'pix'|'debit_card'|'credit_card'|'bank_transfer'|'boleto'|'other',paymentStatus:'paid' as 'paid'|'pending',discount:'0',notes:''})
   const [saleCart, setSaleCart] = useState<Array<{itemId:string;name:string;quantity:number;unitPrice:number;costPrice:number}>>([])
+  const canViewTeam = ['owner','admin','manager'].includes(role)
+  const canManageTeam = ['owner','admin'].includes(role)
+  const [teamRows, setTeamRows] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -61,12 +64,13 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
     setLoading(true); setError('')
     try {
       const context = { organizationId: organization.id, branchId: targetBranch }
-      const [customerRows, orderRows, stockRows, financeData, salesData] = await Promise.all([listCustomers(context), listServiceOrders(context), listInventory(context), canManageFinance ? listFinancialEntries(context) : Promise.resolve([]), listSales(context)])
+      const [customerRows, orderRows, stockRows, financeData, salesData, teamData] = await Promise.all([listCustomers(context), listServiceOrders(context), listInventory(context), canManageFinance ? listFinancialEntries(context) : Promise.resolve([]), listSales(context), canViewTeam ? listOrganizationTeam(organization.id) : Promise.resolve([])])
       setCustomers(customerRows as Customer[])
       setOrders(orderRows as unknown as Order[])
       setInventory(stockRows as typeof inventory)
       setFinanceRows(financeData as typeof financeRows)
       setSalesRows(salesData as typeof salesRows)
+      setTeamRows(teamData)
     } catch (e) { setError(e instanceof Error ? e.message : 'Não foi possível carregar os dados.') }
     finally { setLoading(false) }
   }
@@ -138,6 +142,21 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
     finally { setBusy(false) }
   }
 
+  async function updateTeamRole(member: TeamMember, nextRole: TeamMember['member_role']) {
+    if (member.member_role===nextRole) return
+    setBusy(true);setError('')
+    try { await setOrganizationMemberRole(organization.id,member.member_id,nextRole);setTeamRows(await listOrganizationTeam(organization.id)) }
+    catch(e) { setError(e instanceof Error ? e.message : 'Não foi possível alterar a função.') }
+    finally { setBusy(false) }
+  }
+
+  async function toggleTeamAccess(member: TeamMember) {
+    setBusy(true);setError('')
+    try { await setOrganizationMemberActive(organization.id,member.member_id,!member.is_active);setTeamRows(await listOrganizationTeam(organization.id)) }
+    catch(e) { setError(e instanceof Error ? e.message : 'Não foi possível alterar o acesso.') }
+    finally { setBusy(false) }
+  }
+
   async function submitCustomer(event: React.FormEvent) {
     event.preventDefault(); setBusy(true); setError('')
     try {
@@ -193,7 +212,7 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
     <section className="tenant-content">
       <div className="tenant-heading"><div><small>AMBIENTE EMPRESARIAL</small><h1>{organization.name}</h1><p>Gestão de atendimentos e clientes</p></div><label className="branch-select"><Building2 size={16}/><select value={branchId} onChange={e=>setBranchId(e.target.value)}>{branches.map(branch=><option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label></div>
       <div className="tenant-stats"><article><span>Ordens nesta filial</span><b>{orders.length}</b></article><article><span>Clientes cadastrados</span><b>{customers.length}</b></article><article><span>Em andamento</span><b>{orders.filter(item=>!['delivered','cancelled'].includes(item.status)).length}</b></article></div>
-      <div className="tenant-tabs"><button className={tab==='orders'?'selected':''} onClick={()=>setTab('orders')}><ClipboardList size={17}/> Ordens de serviço</button><button className={tab==='customers'?'selected':''} onClick={()=>setTab('customers')}><Users size={17}/> Clientes</button><button className={tab==='inventory'?'selected':''} onClick={()=>setTab('inventory')}><Boxes size={17}/> Estoque</button>{canManageFinance&&<button className={tab==='finance'?'selected':''} onClick={()=>setTab('finance')}><Wallet size={17}/> Financeiro</button>}<button className={tab==='sales'?'selected':''} onClick={()=>setTab('sales')}><ShoppingCart size={17}/> Vendas</button><button className="refresh" onClick={()=>loadWorkspace()}><RefreshCw size={16}/> Atualizar</button></div>
+      <div className="tenant-tabs"><button className={tab==='orders'?'selected':''} onClick={()=>setTab('orders')}><ClipboardList size={17}/> Ordens de serviço</button><button className={tab==='customers'?'selected':''} onClick={()=>setTab('customers')}><Users size={17}/> Clientes</button><button className={tab==='inventory'?'selected':''} onClick={()=>setTab('inventory')}><Boxes size={17}/> Estoque</button>{canManageFinance&&<button className={tab==='finance'?'selected':''} onClick={()=>setTab('finance')}><Wallet size={17}/> Financeiro</button>}<button className={tab==='sales'?'selected':''} onClick={()=>setTab('sales')}><ShoppingCart size={17}/> Vendas</button>{canViewTeam&&<button className={tab==='team'?'selected':''} onClick={()=>setTab('team')}><ShieldCheck size={17}/> Equipe</button>}<button className="refresh" onClick={()=>loadWorkspace()}><RefreshCw size={16}/> Atualizar</button></div>
       {error&&<div className="tenant-error">{error}</div>}
       {tab==='orders'&&<section className="tenant-panel"><div className="tenant-panel-head"><div><b>Ordens de serviço</b><small>Atendimentos registrados na filial selecionada</small></div><button className="tenant-primary" onClick={()=>setShowOrder(v=>!v)}><Plus size={16}/> Nova OS</button></div>
         {showOrder&&<form className="tenant-form" onSubmit={submitOrder}><label>Cliente<select required value={order.customerId} onChange={e=>setOrder({...order,customerId:e.target.value})}><option value="">Selecione um cliente</option>{customers.map(c=><option key={c.id} value={c.id}>{c.name} · {c.phone}</option>)}</select></label><div className="tenant-grid"><label>Marca<select value={order.brand} onChange={e=>setOrder({...order,brand:e.target.value})}>{['Apple','Samsung','Motorola','Xiaomi','Realme','Infinix','Outra'].map(v=><option key={v}>{v}</option>)}</select></label><label>Modelo<input required value={order.model} onChange={e=>setOrder({...order,model:e.target.value})}/></label><label>IMEI / Série<input value={order.imei} onChange={e=>setOrder({...order,imei:e.target.value})}/></label><label>Valor estimado (R$)<input type="number" min="0" step="0.01" value={order.amount} onChange={e=>setOrder({...order,amount:e.target.value})}/></label><label className="wide">Defeito informado<textarea required value={order.issue} onChange={e=>setOrder({...order,issue:e.target.value})}/></label><label>Acessórios<input value={order.accessories} onChange={e=>setOrder({...order,accessories:e.target.value})}/></label><label>Condição física<input value={order.condition} onChange={e=>setOrder({...order,condition:e.target.value})}/></label></div><div className="tenant-form-actions"><button type="button" onClick={()=>setShowOrder(false)}>Cancelar</button><button className="tenant-primary" disabled={busy}>Salvar ordem</button></div></form>}
@@ -211,6 +230,11 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
       </section>}
 
 
+
+      {tab==='team'&&canViewTeam&&<section className="tenant-panel"><div className="tenant-panel-head"><div><b>Equipe e permissões</b><small>Gerencie as funções e os acessos dos usuários já vinculados a esta empresa</small></div><button className="tenant-history-button" onClick={()=>listOrganizationTeam(organization.id).then(setTeamRows).catch(e=>setError(e.message||'Falha ao atualizar equipe.'))}><RefreshCw size={14}/> Atualizar equipe</button></div>
+        <div className="tenant-team-notice"><UserCog size={17}/><span>Convites para novos usuários por e-mail serão habilitados em uma etapa de backend seguro. Esta tela administra apenas contas que já fazem parte da empresa.</span></div>
+        {teamRows.length===0?<p className="tenant-empty">Nenhum membro encontrado ou a migração 0007 ainda não foi aplicada.</p>:<div className="tenant-table-wrap"><table><thead><tr><th>MEMBRO</th><th>FUNÇÃO</th><th>ENTRADA</th><th>ACESSO</th><th>AÇÃO</th></tr></thead><tbody>{teamRows.map(member=><tr key={member.member_id}><td><b>{member.full_name||'Usuário sem nome'}</b><small>{member.phone||member.user_id}</small></td><td>{canManageTeam?<select value={member.member_role} disabled={busy||!member.is_active||member.user_id===undefined} onChange={e=>updateTeamRole(member,e.target.value as TeamMember['member_role'])}><option value="owner">Proprietário</option><option value="admin">Administrador</option><option value="manager">Gerente</option><option value="attendant">Atendente</option><option value="technician">Técnico</option></select>:({owner:'Proprietário',admin:'Administrador',manager:'Gerente',attendant:'Atendente',technician:'Técnico'}[member.member_role])}</td><td>{new Date(member.joined_at).toLocaleDateString('pt-BR')}</td><td><span className={member.is_active?'tenant-stock-ok':'tenant-stock-low'}>{member.is_active?'Ativo':'Inativo'}</span></td><td>{canManageTeam&&member.member_role!=='owner'&&member.user_id!==undefined?<button className="tenant-history-button" disabled={busy} onClick={()=>toggleTeamAccess(member)}>{member.is_active?'Desativar':'Reativar'}</button>:<span>—</span>}</td></tr>)}</tbody></table></div>}
+      </section>}
       {tab==='sales'&&<section className="tenant-panel"><div className="tenant-panel-head"><div><b>Vendas</b><small>Venda de produtos com baixa automática no estoque e lançamento no financeiro</small></div>{canSell&&<button className="tenant-primary" onClick={()=>setShowSaleForm(v=>!v)}><Plus size={16}/> Nova venda</button>}</div>
         {showSaleForm&&canSell&&<form className="tenant-form" onSubmit={submitSale}>
           <div className="tenant-grid"><label className="wide">Produto<select value={saleForm.itemId} onChange={e=>setSaleForm({...saleForm,itemId:e.target.value})}><option value="">Selecione um produto</option>{inventory.map(row=>{const item=row.inventory_items?.[0];return item?<option key={item.id} value={item.id}>{item.name} · estoque {Number(row.quantity).toLocaleString('pt-BR')} · {money(Number(item.sale_price))}</option>:null})}</select></label><label>Quantidade<input type="number" min="0.001" step="0.001" value={saleForm.quantity} onChange={e=>setSaleForm({...saleForm,quantity:e.target.value})}/></label><label><span> </span><button type="button" className="tenant-primary" onClick={addSaleCartItem}><Plus size={14}/> Adicionar item</button></label></div>
