@@ -27,7 +27,7 @@ begin
 
   if exists (
     select 1 from pg_policies
-    where schemaname='public' and tablename='service_orders'
+    where schemaname='public' and tablename='legacy_service_orders'
       and cmd='UPDATE' and roles @> array['authenticated']::name[]
   ) then
     missing := array_append(missing, 'Direct authenticated UPDATE policy remains on service_orders');
@@ -35,7 +35,7 @@ begin
 
   if exists (
     select 1 from pg_policies
-    where schemaname='public' and tablename='service_orders'
+    where schemaname='public' and tablename='legacy_service_orders'
       and cmd='INSERT' and roles @> array['authenticated']::name[]
   ) then
     missing := array_append(missing, 'Direct authenticated INSERT policy remains on service_orders');
@@ -180,7 +180,7 @@ begin
   end if;
 
   if not has_column_privilege('anon',
-    'public.service_orders', 'customer_quote_decision', 'UPDATE') then
+    'public.legacy_service_orders', 'customer_quote_decision', 'UPDATE') then
     -- The public role must not directly modify order decisions.
     null;
   else
@@ -204,7 +204,7 @@ do $$
 begin
   if not exists (
     select 1 from pg_trigger
-    where tgrelid='public.service_orders'::regclass
+    where tgrelid='public.legacy_service_orders'::regclass
       and tgname='service_orders_quote_decision_default'
       and not tgisinternal
   ) then
