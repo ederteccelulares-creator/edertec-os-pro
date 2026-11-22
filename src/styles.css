@@ -1410,3 +1410,10 @@ td b { font-weight:650; }
 .company-plan-period small{font-size:10px;color:#d8b66a}
 .company-top-actions{display:flex;align-items:center;gap:10px}
 @media(max-width:640px){.company-plan-period{align-items:flex-start;padding:5px 7px;max-width:155px}.company-plan-period b{max-width:140px;font-size:10px}.company-plan-period span{font-size:9px}.company-plan-period small{font-size:9px}.company-top-actions{gap:6px}}
+
+
+.company-brasilia-clock{display:flex;flex-direction:column;align-items:flex-end;gap:2px;padding:6px 10px;border:1px solid var(--company-border,#30394a);border-radius:10px;background:rgba(255,255,255,.035);min-width:0}
+.company-brasilia-clock b{font-size:15px;font-variant-numeric:tabular-nums;letter-spacing:.4px;color:var(--text,#f5f6fa)}
+.company-brasilia-clock span{font-size:11px;color:var(--muted,#9aa4b2);white-space:nowrap}
+.company-brasilia-clock small{font-size:10px;color:#d8b66a}
+@media(max-width:640px){.company-brasilia-clock{padding:5px 6px}.company-brasilia-clock b{font-size:12px}.company-brasilia-clock span{font-size:9px}.company-brasilia-clock small{font-size:8px}}
