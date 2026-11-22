@@ -33,7 +33,7 @@ create table public.service_order_lines (
   constraint service_lines_branch_fk foreign key(branch_id,organization_id)
     references public.branches(id,organization_id) on delete restrict,
   constraint service_lines_service_fk foreign key(service_id,organization_id)
-    references public.service_catalog(id,organization_id) on delete set null
+    references public.service_catalog(id,organization_id) on delete restrict
 );
 create index service_order_lines_order_idx on public.service_order_lines(service_order_id,created_at);
 
