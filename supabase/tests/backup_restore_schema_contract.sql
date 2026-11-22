@@ -10,10 +10,10 @@ begin
   -- Every exported operational table must carry the tenant key.
   for expected in
     select unnest(array[
-      'branches','customers','devices','service_orders','service_order_events',
-      'inventory_items','branch_inventory','stock_movements','financial_categories',
-      'financial_entries','sales','sale_items','service_catalog','service_order_lines',
-      'audit_logs'
+      'legacy_branches','legacy_customers','devices','legacy_service_orders','service_order_events',
+      'inventory_items','branch_inventory','legacy_stock_movements','financial_categories',
+      'financial_entries','sales','sale_items','legacy_service_catalog','service_order_lines',
+      'legacy_audit_logs'
     ]) as table_name
   loop
     if not exists (
@@ -30,24 +30,24 @@ begin
   -- part of the SAME composite FK (not merely present on both tables).
   for expected in
     select * from (values
-      ('devices','customer_id','customers','id'),
-      ('service_orders','branch_id','branches','id'),
-      ('service_orders','customer_id','customers','id'),
-      ('service_orders','device_id','devices','id'),
-      ('service_order_events','service_order_id','service_orders','id'),
-      ('branch_inventory','branch_id','branches','id'),
+      ('devices','customer_id','legacy_customers','id'),
+      ('legacy_service_orders','branch_id','legacy_branches','id'),
+      ('legacy_service_orders','customer_id','legacy_customers','id'),
+      ('legacy_service_orders','device_id','devices','id'),
+      ('service_order_events','service_order_id','legacy_service_orders','id'),
+      ('branch_inventory','branch_id','legacy_branches','id'),
       ('branch_inventory','item_id','inventory_items','id'),
-      ('stock_movements','branch_id','branches','id'),
-      ('stock_movements','item_id','inventory_items','id'),
-      ('financial_entries','branch_id','branches','id'),
+      ('legacy_stock_movements','branch_id','legacy_branches','id'),
+      ('legacy_stock_movements','item_id','inventory_items','id'),
+      ('financial_entries','branch_id','legacy_branches','id'),
       ('financial_entries','category_id','financial_categories','id'),
-      ('sales','branch_id','branches','id'),
-      ('sales','customer_id','customers','id'),
+      ('sales','branch_id','legacy_branches','id'),
+      ('sales','customer_id','legacy_customers','id'),
       ('sale_items','sale_id','sales','id'),
       ('sale_items','item_id','inventory_items','id'),
-      ('service_order_lines','service_order_id','service_orders','id'),
-      ('service_order_lines','branch_id','branches','id'),
-      ('service_order_lines','service_id','service_catalog','id')
+      ('service_order_lines','service_order_id','legacy_service_orders','id'),
+      ('service_order_lines','branch_id','legacy_branches','id'),
+      ('service_order_lines','service_id','legacy_service_catalog','id')
     ) as edges(source_table,source_column,target_table,target_column)
   loop
     if not exists (
@@ -108,7 +108,7 @@ begin
     from pg_constraint c
     cross join lateral unnest(c.conkey) with ordinality k(attnum, position)
     join pg_attribute a on a.attrelid=c.conrelid and a.attnum=k.attnum
-    where c.contype='u' and c.conrelid='public.branches'::regclass
+    where c.contype='u' and c.conrelid='public.legacy_branches'::regclass
     group by c.oid
     having array_agg(a.attname order by k.position)=array['organization_id','code']::name[]
   ) then
@@ -152,10 +152,10 @@ begin
   -- restore's organization FOR UPDATE lock blocks same-tenant concurrent writes.
   for expected in
     select unnest(array[
-      'branches','customers','devices','service_orders','service_order_events',
-      'inventory_items','branch_inventory','stock_movements','financial_categories',
-      'financial_entries','sales','sale_items','service_catalog','service_order_lines',
-      'audit_logs'
+      'legacy_branches','legacy_customers','devices','legacy_service_orders','service_order_events',
+      'inventory_items','branch_inventory','legacy_stock_movements','financial_categories',
+      'financial_entries','sales','sale_items','legacy_service_catalog','service_order_lines',
+      'legacy_audit_logs'
     ]) as table_name
   loop
     if not exists (
@@ -163,7 +163,7 @@ begin
       join pg_class r on r.oid=t.tgrelid
       join pg_namespace n on n.oid=r.relnamespace
       where n.nspname='public' and r.relname=expected.table_name
-        and t.tgname=expected.table_name || '_restore_tenant_lock'
+        and t.tgname=regexp_replace(expected.table_name, '^legacy_', '') || '_restore_tenant_lock'
         and not t.tgisinternal
     ) then
       raise exception 'Backup restore schema contract failed: tenant insert lock is missing on %', expected.table_name;
@@ -183,7 +183,7 @@ begin
   -- their sequences reconciled after a successful transaction.
   select exists (
     select 1 from information_schema.columns
-    where table_schema='public' and table_name='service_orders'
+    where table_schema='public' and table_name='legacy_service_orders'
       and column_name='order_number' and is_identity='YES'
       and identity_generation='ALWAYS'
   ) into identity_ok;
