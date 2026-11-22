@@ -214,3 +214,64 @@ export async function listServiceOrderEvents(context: TenantContext, orderId: st
   if (error) throw error
   return data ?? []
 }
+
+
+export type InventoryItemInput = {
+  name: string
+  sku?: string
+  category?: string
+  costPrice?: number
+  salePrice?: number
+  minStock?: number
+}
+
+export async function listInventory(context: TenantContext) {
+  const { data, error } = await client().from('branch_inventory')
+    .select('id, item_id, quantity, inventory_items(id, sku, name, category, cost_price, sale_price, min_stock, active)')
+    .eq('organization_id', context.organizationId)
+    .eq('branch_id', context.branchId)
+    .order('updated_at', { ascending: false })
+    .limit(500)
+  if (error) throw error
+  return data ?? []
+}
+
+export async function createInventoryItem(context: TenantContext, input: InventoryItemInput) {
+  const cost = input.costPrice ?? 0
+  const sale = input.salePrice ?? 0
+  const minimum = input.minStock ?? 0
+  if (![cost, sale, minimum].every(value => Number.isFinite(value) && value >= 0)) {
+    throw new Error('Preços e estoque mínimo devem ser zero ou maiores.')
+  }
+  const { data, error } = await client().from('inventory_items').insert({
+    organization_id: context.organizationId,
+    name: required(input.name, 'o nome do produto'),
+    sku: input.sku?.trim() || null,
+    category: input.category?.trim() || 'Geral',
+    cost_price: cost,
+    sale_price: sale,
+    min_stock: minimum,
+  }).select().single()
+  if (error) throw error
+  return data
+}
+
+export async function changeInventoryStock(
+  context: TenantContext,
+  itemId: string,
+  movementType: 'in' | 'out' | 'adjustment',
+  quantity: number,
+  reason?: string,
+) {
+  if (!Number.isFinite(quantity) || quantity <= 0) throw new Error('Informe uma quantidade maior que zero.')
+  const { data, error } = await client().rpc('adjust_branch_stock', {
+    p_organization_id: context.organizationId,
+    p_branch_id: context.branchId,
+    p_item_id: itemId,
+    p_movement_type: movementType,
+    p_quantity: quantity,
+    p_reason: reason?.trim() || null,
+  })
+  if (error) throw error
+  return data
+}
