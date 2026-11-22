@@ -12,7 +12,7 @@ const money=(value:number)=>Number(value||0).toLocaleString('pt-BR',{style:'curr
 const intervalLabels:Record<string,string>={monthly:'Mensal',yearly:'Anual',six_months:'Semestral',lifetime:'Vitalício'}
 
 export default function PlatformAdminPanel({email,onSignOut}:Props) {
-  const [tab,setTab]=useState<'companies'|'plans'|'subscriptions'|'support'>('companies')
+  const [tab,setTab]=useState<'companies'|'plans'|'subscriptions'|'support'|'billing'>('companies')
   const [companies,setCompanies]=useState<CompanyRow[]>([])
   const [plans,setPlans]=useState<PlanRow[]>([])
   const [subscriptions,setSubscriptions]=useState<SubscriptionRow[]>([])
@@ -24,6 +24,9 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
   const [showCompany,setShowCompany]=useState(false)
   const [companyForm,setCompanyForm]=useState({name:'',taxId:'',phone:''})
   const [planForm,setPlanForm]=useState({code:'',name:'',description:'',price:'0',billing_interval:'monthly',max_branches:'',max_users:''})
+  const [billingForm,setBillingForm]=useState({accessToken:'',webhookSecret:''})
+  const [billingStatus,setBillingStatus]=useState<{access_token_configured?:boolean;webhook_secret_configured?:boolean;updated_at?:string}|null>(null)
+  const [billingLoading,setBillingLoading]=useState(false)
   const [activation,setActivation]=useState({companyId:'',planId:'',status:'active',startsAt:new Date().toISOString().slice(0,10),endsAt:''})
 
   const load=useCallback(async()=>{
@@ -120,15 +123,65 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
     finally{setBusy(false)}
   }
 
+  useEffect(()=>{
+    if(tab!=='billing'||!supabase)return
+    let alive=true
+    setBillingLoading(true)
+    supabase.functions.invoke('mercadopago-billing',{method:'GET',headers:{'x-billing-action':'settings'},body:undefined})
+      .then(({data,error})=>{
+        if(!alive)return
+        if(error)throw error
+        setBillingStatus(data||{})
+      })
+      .catch(e=>{if(alive)setError(e instanceof Error?e.message:'Não foi possível carregar as configurações de cobrança.')})
+      .finally(()=>{if(alive)setBillingLoading(false)})
+    return()=>{alive=false}
+  },[tab])
+
+  async function saveBillingSettings(event:FormEvent){
+    event.preventDefault();if(!supabase)return
+    if(billingForm.accessToken.trim().length<20||billingForm.webhookSecret.trim().length<12){
+      setError('Informe o Access Token e a assinatura secreta do Webhook.');return
+    }
+    setBusy(true);setError('');setNotice('')
+    try{
+      const {data,error}=await supabase.functions.invoke('mercadopago-billing?action=settings',{
+        body:{access_token:billingForm.accessToken.trim(),webhook_secret:billingForm.webhookSecret.trim()}
+      })
+      if(error)throw error
+      if(data?.error)throw new Error(data.error)
+      setBillingForm({accessToken:'',webhookSecret:''})
+      setBillingStatus({access_token_configured:true,webhook_secret_configured:true,updated_at:new Date().toISOString()})
+      setNotice('Credenciais do Mercado Pago salvas com segurança.')
+    }catch(e){setError(e instanceof Error?e.message:'Falha ao salvar credenciais.')}
+    finally{setBusy(false)}
+  }
+
   return <main className="platform-admin">
     <header className="platform-head"><div className="platform-brand"><ShieldCheck/><span><b>EDERTEC OS PRO</b><small>SUPER ADMIN · PAINEL DA PLATAFORMA</small></span></div><div className="platform-user"><span>{email}</span><button onClick={onSignOut}><LogOut size={15}/> Sair</button></div></header>
     <section className="platform-content">
       <div className="platform-title"><div><small>CONTROLE CENTRAL</small><h1>Super Admin</h1><p>Gerencie empresas, planos e assinaturas da plataforma.</p></div><button className="platform-refresh" onClick={()=>void load()}><RefreshCw size={15}/> Atualizar</button></div>
       {error&&<div className="platform-error">{error}</div>}{notice&&<div className="platform-notice">{notice}</div>}
       <div className="platform-stats"><article><Building2/><small>Empresas cadastradas</small><b>{companies.length}</b></article><article><Package/><small>Planos disponíveis</small><b>{plans.filter(p=>p.is_active).length}</b></article><article><CreditCard/><small>Assinaturas</small><b>{subscriptions.length}</b></article></div>
-      <nav className="platform-tabs"><button className={tab==='companies'?'active':''} onClick={()=>setTab('companies')}>Empresas</button><button className={tab==='plans'?'active':''} onClick={()=>setTab('plans')}>Planos</button><button className={tab==='subscriptions'?'active':''} onClick={()=>setTab('subscriptions')}>Assinaturas</button><button className={tab==='support'?'active':''} onClick={()=>setTab('support')}><LifeBuoy size={15}/> Chamados</button></nav>
+      <nav className="platform-tabs"><button className={tab==='companies'?'active':''} onClick={()=>setTab('companies')}>Empresas</button><button className={tab==='plans'?'active':''} onClick={()=>setTab('plans')}>Planos</button><button className={tab==='subscriptions'?'active':''} onClick={()=>setTab('subscriptions')}>Assinaturas</button><button className={tab==='support'?'active':''} onClick={()=>setTab('support')}><LifeBuoy size={15}/> Chamados</button><button className={tab==='billing'?'active':''} onClick={()=>setTab('billing')}><CreditCard size={15}/> Cobrança</button></nav>
       {loading?<p className="platform-empty">Carregando dados da plataforma...</p>:<>
         {tab==='support'&&<PlatformSupportPanel/>}
+        {tab==='billing'&&<section className="platform-panel">
+          <div className="platform-panel-title"><h2>Configuração do Mercado Pago</h2><span className="platform-hint">Credenciais protegidas</span></div>
+          <p className="platform-hint">Cadastre as credenciais da sua aplicação Mercado Pago aqui. Os valores são armazenados criptografados no Supabase Vault e nunca são exibidos novamente na tela.</p>
+          {billingLoading?<p className="platform-empty">Verificando configuração...</p>:<div className="platform-stats">
+            <article><ShieldCheck/><small>Access Token</small><b>{billingStatus?.access_token_configured?'Configurado':'Pendente'}</b></article>
+            <article><ShieldCheck/><small>Webhook Secret</small><b>{billingStatus?.webhook_secret_configured?'Configurado':'Pendente'}</b></article>
+          </div>}
+          <form className="platform-form" onSubmit={saveBillingSettings}>
+            <label className="platform-wide">Mercado Pago Access Token<input type="password" autoComplete="new-password" value={billingForm.accessToken} onChange={e=>setBillingForm(v=>({...v,accessToken:e.target.value}))} placeholder={billingStatus?.access_token_configured?'Já configurado — digite para substituir':'APP_USR-...'} required minLength={20}/></label>
+            <label className="platform-wide">Segredo de assinatura do Webhook<input type="password" autoComplete="new-password" value={billingForm.webhookSecret} onChange={e=>setBillingForm(v=>({...v,webhookSecret:e.target.value}))} placeholder={billingStatus?.webhook_secret_configured?'Já configurado — digite para substituir':'Chave secreta do Webhook'} required minLength={12}/></label>
+            <div className="platform-form-actions"><button type="submit" disabled={busy}>{busy?'Salvando...':'Salvar credenciais com segurança'}</button></div>
+          </form>
+          <p className="platform-hint">Configure também o Webhook no painel do Mercado Pago usando a URL abaixo e habilite o evento Pagamentos.</p>
+          <div className="platform-form"><label className="platform-wide">URL do Webhook<input readOnly value="https://btouoeftgatyrvuobicr.supabase.co/functions/v1/mercadopago-billing?action=webhook"/></label><div className="platform-form-actions"><button type="button" onClick={()=>{void navigator.clipboard.writeText('https://btouoeftgatyrvuobicr.supabase.co/functions/v1/mercadopago-billing?action=webhook');setNotice('URL do Webhook copiada.')}}>Copiar URL</button></div></div>
+        </section>}
+
         {tab==='companies'&&<section className="platform-panel"><div className="platform-panel-title"><h2>Empresas cadastradas</h2><button onClick={()=>setShowCompany(v=>!v)}><Plus size={15}/> Nova empresa</button></div>
           {showCompany&&<form className="platform-form" onSubmit={createCompany}><label className="platform-wide">Nome da empresa<input required minLength={2} value={companyForm.name} onChange={e=>setCompanyForm(v=>({...v,name:e.target.value}))} placeholder="Ex.: Edertec Assistência Técnica"/></label><label>CNPJ ou CPF<input value={companyForm.taxId} onChange={e=>setCompanyForm(v=>({...v,taxId:e.target.value}))} placeholder="Opcional"/></label><label>Telefone<input value={companyForm.phone} onChange={e=>setCompanyForm(v=>({...v,phone:e.target.value}))} placeholder="(00) 00000-0000"/></label><div className="platform-form-actions"><button type="button" onClick={()=>setShowCompany(false)}>Cancelar</button><button type="submit" disabled={busy}>{busy?'Cadastrando...':'Criar empresa'}</button></div></form>}
           <div className="platform-table-wrap"><table><thead><tr><th>EMPRESA</th><th>DOCUMENTO</th><th>CADASTRO</th><th>SITUAÇÃO</th></tr></thead><tbody>{companies.map(c=><tr key={c.id}><td><b>{c.name}</b><small>{c.id}</small></td><td>{c.tax_id||'—'}</td><td>{new Date(c.created_at).toLocaleDateString('pt-BR')}</td><td><select disabled={busy} value={c.status} onChange={e=>void updateCompanyStatus(c,e.target.value)}><option value="active">Ativa</option><option value="suspended">Suspensa</option><option value="cancelled">Cancelada</option></select></td></tr>)}</tbody></table></div></section>}
