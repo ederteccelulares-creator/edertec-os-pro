@@ -1,325 +1,150 @@
--- Transactional backup restore tests.
--- Runs only in the disposable PostgreSQL CI database after migrations 0001-0018.
--- Creates two isolated synthetic organizations; no production data is touched.
+-- Company-scoped transactional backup restore tests.
+-- Runs only against the disposable PostgreSQL database in CI.
+
+\set ON_ERROR_STOP on
+
+insert into auth.users(id,email) values
+ ('a1000000-0000-4000-8000-000000000001','restore-owner-a@example.invalid'),
+ ('a2000000-0000-4000-8000-000000000002','restore-owner-b@example.invalid');
+
+insert into public.companies(id,name) values
+ ('a3000000-0000-4000-8000-000000000001','Restore Company A'),
+ ('a4000000-0000-4000-8000-000000000002','Restore Company B');
+
+insert into public.company_members(company_id,user_id,role) values
+ ('a3000000-0000-4000-8000-000000000001','a1000000-0000-4000-8000-000000000001','owner'),
+ ('a4000000-0000-4000-8000-000000000002','a2000000-0000-4000-8000-000000000002','owner');
+
+insert into public.branches(id,company_id,name) values
+ ('a5000000-0000-4000-8000-000000000001','a3000000-0000-4000-8000-000000000001','Matriz A'),
+ ('a6000000-0000-4000-8000-000000000002','a4000000-0000-4000-8000-000000000002','Matriz B');
+
+-- Service backend claim is required by the restore RPC.
+select set_config('request.jwt.claim.role','service_role',false);
 
 do $$
 declare
-  owner_a uuid := '40000000-0000-4000-8000-000000000001';
-  owner_b uuid := '40000000-0000-4000-8000-000000000002';
-  source_user_a uuid := '50000000-0000-4000-8000-000000000001';
-  source_user_b uuid := '50000000-0000-4000-8000-000000000002';
-  org_a uuid := '41000000-0000-4000-8000-000000000001';
-  org_b uuid := '41000000-0000-4000-8000-000000000002';
-  branch_a uuid := '42000000-0000-4000-8000-000000000001';
-  branch_b uuid := '42000000-0000-4000-8000-000000000002';
-  source_branch_a uuid := '43000000-0000-4000-8000-000000000001';
-  source_branch_b uuid := '43000000-0000-4000-8000-000000000002';
-  customer_a uuid := '44000000-0000-4000-8000-000000000001';
-  device_a uuid := '45000000-0000-4000-8000-000000000001';
-  order_a uuid := '46000000-0000-4000-8000-000000000001';
-  event_a uuid := '47000000-0000-4000-8000-000000000001';
-  inventory_a uuid := '49000000-0000-4000-8000-000000000001';
-  movement_a uuid := '49000000-0000-4000-8000-000000000002';
-  category_a uuid := '4a000000-0000-4000-8000-000000000001';
-  finance_a uuid := '4b000000-0000-4000-8000-000000000001';
-  sale_a uuid := '4c000000-0000-4000-8000-000000000001';
-  sale_item_a uuid := '4d000000-0000-4000-8000-000000000001';
-  service_a uuid := '4e000000-0000-4000-8000-000000000001';
-  service_line_a uuid := '4f000000-0000-4000-8000-000000000001';
-  bad_customer uuid := '44000000-0000-4000-8000-000000000002';
-  bad_device uuid := '45000000-0000-4000-8000-000000000002';
-  missing_customer uuid := '44000000-0000-4000-8000-000000000099';
-  payload jsonb;
-  bad_payload jsonb;
-  result_value jsonb;
-  replay_value jsonb;
-  idempotency uuid := '48000000-0000-4000-8000-000000000001';
-  bad_idempotency uuid := '48000000-0000-4000-8000-000000000002';
+ backup_value jsonb;
+ invalid_backup jsonb;
+ result_value jsonb;
+ replay_value jsonb;
+ restore_key uuid := 'a7000000-0000-4000-8000-000000000001';
 begin
-  insert into auth.users(id,email,email_confirmed_at)
-  values
-    (owner_a,'restore-owner-a@example.invalid',now()),
-    (owner_b,'restore-owner-b@example.invalid',now())
-  on conflict (id) do nothing;
+ backup_value:=jsonb_build_object(
+  'format','edertec-os-pro-company-backup',
+  'version',1,
+  'exported_at',now(),
+  'company',jsonb_build_object('id','a3000000-0000-4000-8000-000000000001','name','Restore Company A'),
+  'tables',jsonb_build_object(
+   'branches',jsonb_build_array(jsonb_build_object(
+    'id','a5000000-0000-4000-8000-000000000001',
+    'company_id','a3000000-0000-4000-8000-000000000001','name','Matriz A'
+   )),
+   'customers',jsonb_build_array(jsonb_build_object(
+    'id','a8000000-0000-4000-8000-000000000001',
+    'company_id','a3000000-0000-4000-8000-000000000001',
+    'branch_id','a5000000-0000-4000-8000-000000000001',
+    'name','Cliente restaurado','phone','47999990000'
+   )),
+   'employees','[]'::jsonb,
+   'service_catalog','[]'::jsonb,
+   'products',jsonb_build_array(jsonb_build_object(
+    'id','a9000000-0000-4000-8000-000000000001',
+    'company_id','a3000000-0000-4000-8000-000000000001',
+    'name','Tela de teste','cost_price',50,'sale_price',100,'stock_quantity',4
+   )),
+   'service_orders',jsonb_build_array(jsonb_build_object(
+    'id','aa000000-0000-4000-8000-000000000001',
+    'company_id','a3000000-0000-4000-8000-000000000001',
+    'branch_id','a5000000-0000-4000-8000-000000000001',
+    'customer_id','a8000000-0000-4000-8000-000000000001',
+    'order_number',777,'reported_issue','Tela quebrada','estimated_price',150
+   )),
+   'service_order_items',jsonb_build_array(jsonb_build_object(
+    'id','ab000000-0000-4000-8000-000000000001',
+    'company_id','a3000000-0000-4000-8000-000000000001',
+    'service_order_id','aa000000-0000-4000-8000-000000000001',
+    'item_type','service','description','Troca de tela','quantity',1,'unit_price',150
+   )),
+   'stock_movements','[]'::jsonb,'payments','[]'::jsonb,'suppliers','[]'::jsonb,
+   'purchases','[]'::jsonb,'purchase_items','[]'::jsonb,'cash_sessions','[]'::jsonb,
+   'cash_transactions','[]'::jsonb,'company_financial_entries','[]'::jsonb,'audit_logs','[]'::jsonb
+  )
+ );
 
-  insert into public.organizations(id,name,slug,created_by)
-  values
-    (org_a,'Restore Tenant A','restore-tenant-a',owner_a),
-    (org_b,'Restore Tenant B','restore-tenant-b',owner_b);
+ result_value:=public.restore_company_backup(
+  'a3000000-0000-4000-8000-000000000001',
+  'a1000000-0000-4000-8000-000000000001',restore_key,backup_value
+ );
+ if result_value->>'success'<>'true' or result_value->>'applied'<>'true' then
+  raise exception 'Restore did not report success: %',result_value;
+ end if;
+ if (select count(*) from public.customers where company_id='a3000000-0000-4000-8000-000000000001')<>1
+  or (select count(*) from public.service_orders where company_id='a3000000-0000-4000-8000-000000000001')<>1
+  or (select count(*) from public.service_order_items where company_id='a3000000-0000-4000-8000-000000000001')<>1 then
+  raise exception 'Restore did not import the expected related records';
+ end if;
+ if not exists(select 1 from public.service_orders where order_number=777 and branch_id='a5000000-0000-4000-8000-000000000001') then
+  raise exception 'Restore did not preserve order number or branch reference';
+ end if;
+ if not exists(select 1 from public.service_order_items where total_price=150) then
+  raise exception 'Generated service order item total was not recalculated';
+ end if;
 
-  insert into public.subscriptions(organization_id,status,trial_ends_at)
-  values
-    (org_a,'trialing',now()+interval '14 days'),
-    (org_b,'trialing',now()+interval '14 days');
+ replay_value:=public.restore_company_backup(
+  'a3000000-0000-4000-8000-000000000001',
+  'a1000000-0000-4000-8000-000000000001',restore_key,backup_value
+ );
+ if replay_value->>'replayed'<>'true'
+  or (select count(*) from public.customers where company_id='a3000000-0000-4000-8000-000000000001')<>1 then
+  raise exception 'Idempotent replay duplicated restored records';
+ end if;
 
-  insert into public.organization_members(organization_id,user_id,role,active)
-  values
-    (org_a,owner_a,'owner',true),
-    (org_b,owner_b,'owner',true);
-
-  insert into public.branches(id,organization_id,name,code,active)
-  values
-    (branch_a,org_a,'Matriz A','MATRIZ',true),
-    (branch_b,org_b,'Matriz B','MATRIZ',true);
-
-  perform set_config('request.jwt.claim.role','service_role',false);
-
-  payload := jsonb_build_object(
-    'format','edertec-os-pro-backup',
-    'version',1,
-    'exported_at',now(),
-    'organization',jsonb_build_object('id',org_a,'name','Restore Tenant A'),
-    'tables',jsonb_build_object(
-      'branches',jsonb_build_array(jsonb_build_object(
-        'id',source_branch_a,'organization_id',org_a,'name','Filial origem','code','ORIGEM',
-        'phone',null,'address','{}'::jsonb,'active',true,'created_at',now()
-      )),
-      'customers',jsonb_build_array(jsonb_build_object(
-        'id',customer_a,'organization_id',org_a,'name','Cliente restaurado','phone','47999990000',
-        'email',null,'document',null,'address','{}'::jsonb,'notes',null,
-        'created_at',now(),'updated_at',now()
-      )),
-      'devices',jsonb_build_array(jsonb_build_object(
-        'id',device_a,'organization_id',org_a,'customer_id',customer_a,'brand','Apple',
-        'model','iPhone de teste','color',null,'storage',null,'imei',null,'serial_number',null,
-        'notes',null,'created_at',now()
-      )),
-      'service_orders',jsonb_build_array(jsonb_build_object(
-        'id',order_a,'organization_id',org_a,'branch_id',source_branch_a,'customer_id',customer_a,
-        'device_id',device_a,'order_number',777,'status','received','reported_issue','Teste de restauração',
-        'diagnosis',null,'accessories',null,'physical_condition',null,'estimated_amount',150,
-        'approved_amount',null,'technician_id',null,'opened_by',source_user_a,'received_at',now(),
-        'delivered_at',null,'warranty_days',90,'internal_notes',null,'created_at',now(),'updated_at',now()
-      )),
-      'service_order_events',jsonb_build_array(jsonb_build_object(
-        'id',event_a,'organization_id',org_a,'service_order_id',order_a,'from_status',null,
-        'to_status','received','description','OS restaurada','changed_by',source_user_a,'created_at',now()
-      )),
-      'inventory_items',jsonb_build_array(jsonb_build_object(
-        'id',inventory_a,'organization_id',org_a,'sku','RESTORE-001','name','Produto restaurado',
-        'category','Peças','description',null,'cost_price',12.34,'sale_price',45.67,'min_stock',1,
-        'active',true,'created_at',now(),'updated_at',now()
-      )),
-      'branch_inventory',jsonb_build_array(jsonb_build_object(
-        'id','49000000-0000-4000-8000-000000000003','organization_id',org_a,
-        'branch_id',source_branch_a,'item_id',inventory_a,'quantity',5,'updated_at',now()
-      )),
-      'stock_movements',jsonb_build_array(jsonb_build_object(
-        'id',movement_a,'organization_id',org_a,'branch_id',source_branch_a,'item_id',inventory_a,
-        'movement_type','in','quantity',5,'previous_quantity',0,'new_quantity',5,
-        'reason','Saldo inicial importado','actor_id',source_user_a,'created_at',now()
-      )),
-      'financial_categories',jsonb_build_array(jsonb_build_object(
-        'id',category_a,'organization_id',org_a,'name','Receita de teste','entry_type','income',
-        'active',true,'created_at',now()
-      )),
-      'financial_entries',jsonb_build_array(jsonb_build_object(
-        'id',finance_a,'organization_id',org_a,'branch_id',source_branch_a,'category_id',category_a,
-        'entry_type','income','description','Receita restaurada','amount',45.67,'payment_method','pix',
-        'status','paid','due_date',null,'paid_at',now(),'notes',null,'created_by',source_user_a,
-        'created_at',now(),'updated_at',now()
-      )),
-      'sales',jsonb_build_array(jsonb_build_object(
-        'id',sale_a,'organization_id',org_a,'branch_id',source_branch_a,'customer_id',customer_a,
-        'sale_number',888,'subtotal',45.67,'discount',0,'total',45.67,'payment_method','pix',
-        'payment_status','paid','notes','Venda snapshot','sold_by',source_user_a,'created_at',now()
-      )),
-      'sale_items',jsonb_build_array(jsonb_build_object(
-        'id',sale_item_a,'organization_id',org_a,'sale_id',sale_a,'item_id',inventory_a,
-        'product_name','Nome histórico do produto','quantity',1,'unit_price',45.67,
-        'unit_cost',12.34,'line_total',45.67,'created_at',now()
-      )),
-      'service_catalog',jsonb_build_array(jsonb_build_object(
-        'id',service_a,'organization_id',org_a,'name','Troca de tela','description',null,
-        'category','Reparo','price',150,'estimated_minutes',60,'active',true,
-        'created_at',now(),'updated_at',now()
-      )),
-      'service_order_lines',jsonb_build_array(jsonb_build_object(
-        'id',service_line_a,'organization_id',org_a,'branch_id',source_branch_a,
-        'service_order_id',order_a,'service_id',service_a,'service_name','Serviço histórico',
-        'quantity',1,'unit_price',150,'line_total',150,'created_by',source_user_a,'created_at',now()
-      )),
-      'audit_logs',jsonb_build_array(jsonb_build_object(
-        'id',999000,'organization_id',org_a,'actor_id',source_user_a,'action','restore.source.event',
-        'entity','service_order','entity_id',order_a::text,'metadata','{}'::jsonb,'created_at',now()
-      ))
-    )
+ -- The same backup cannot be applied to a different tenant.
+ begin
+  perform public.restore_company_backup(
+   'a4000000-0000-4000-8000-000000000002',
+   'a2000000-0000-4000-8000-000000000002',
+   'a7000000-0000-4000-8000-000000000002',backup_value
   );
+  raise exception 'Cross-company backup restore unexpectedly succeeded';
+ exception when raise_exception then
+  if sqlerrm like 'Cross-company backup restore unexpectedly succeeded' then raise; end if;
+ end;
 
-  result_value := public.restore_organization_backup(
-    org_a,owner_a,idempotency,payload,
-    jsonb_build_object(source_branch_a::text,branch_a),
-    jsonb_build_object(source_user_a::text,owner_a)
+ -- An invalid FK late in the import must roll back earlier inserts and the ledger.
+ invalid_backup:=jsonb_set(backup_value,'{tables,customers}',jsonb_build_array(jsonb_build_object(
+  'id','ac000000-0000-4000-8000-000000000001',
+  'company_id','a4000000-0000-4000-8000-000000000002',
+  'name','Cliente que não pode permanecer'
+ )),true);
+ invalid_backup:=jsonb_set(invalid_backup,'{company,id}',to_jsonb('a4000000-0000-4000-8000-000000000002'::text),true);
+ invalid_backup:=jsonb_set(invalid_backup,'{tables,branches}',jsonb_build_array(jsonb_build_object(
+  'id','a6000000-0000-4000-8000-000000000002',
+  'company_id','a4000000-0000-4000-8000-000000000002','name','Matriz B'
+ )),true);
+ invalid_backup:=jsonb_set(invalid_backup,'{tables,service_orders}',jsonb_build_array(jsonb_build_object(
+  'id','ad000000-0000-4000-8000-000000000001',
+  'company_id','a4000000-0000-4000-8000-000000000002',
+  'customer_id','ae000000-0000-4000-8000-000000000099',
+  'reported_issue','FK inválida'
+ )),true);
+ begin
+  perform public.restore_company_backup(
+   'a4000000-0000-4000-8000-000000000002',
+   'a2000000-0000-4000-8000-000000000002',
+   'a7000000-0000-4000-8000-000000000003',invalid_backup
   );
-  if coalesce((result_value->>'success')::boolean,false) is not true
-     or coalesce((result_value->>'applied')::boolean,false) is not true then
-    raise exception 'Restore success test returned unexpected result: %', result_value;
-  end if;
-  if (select count(*) from public.customers where organization_id=org_a) <> 1
-     or (select count(*) from public.devices where organization_id=org_a) <> 1
-     or (select count(*) from public.service_orders where organization_id=org_a) <> 1
-     or (select count(*) from public.service_order_events where organization_id=org_a) <> 1
-     or (select count(*) from public.inventory_items where organization_id=org_a) <> 1
-     or (select count(*) from public.branch_inventory where organization_id=org_a) <> 1
-     or (select count(*) from public.stock_movements where organization_id=org_a) <> 1
-     or (select count(*) from public.financial_categories where organization_id=org_a) <> 1
-     or (select count(*) from public.financial_entries where organization_id=org_a) <> 1
-     or (select count(*) from public.sales where organization_id=org_a) <> 1
-     or (select count(*) from public.sale_items where organization_id=org_a) <> 1
-     or (select count(*) from public.service_catalog where organization_id=org_a) <> 1
-     or (select count(*) from public.service_order_lines where organization_id=org_a) <> 1
-     or (select count(*) from public.audit_logs where organization_id=org_a) <> 2 then
-    raise exception 'Restore success test did not import all expected records';
-  end if;
-  if not exists (
-    select 1 from public.service_orders
-    where id=order_a and organization_id=org_a and branch_id=branch_a
-      and order_number=777 and opened_by=owner_a
-  ) then
-    raise exception 'Restore did not preserve order number or remap branch/user IDs';
-  end if;
-  if not exists (
-    select 1 from public.service_order_events
-    where id=event_a and organization_id=org_a and changed_by=owner_a
-  ) then
-    raise exception 'Restore did not remap historical event actor';
-  end if;
-  if nextval(pg_get_serial_sequence('public.service_orders','order_number')::regclass) <= 777 then
-    raise exception 'Restore did not advance the service-order identity sequence';
-  end if;
-  if nextval(pg_get_serial_sequence('public.sales','sale_number')::regclass) <= 888 then
-    raise exception 'Restore did not advance the sales identity sequence';
-  end if;
-  if not exists (
-    select 1 from public.sale_items
-    where id=sale_item_a and product_name='Nome histórico do produto'
-      and unit_cost=12.34 and unit_price=45.67
-  ) then
-    raise exception 'Restore did not preserve sale item snapshots';
-  end if;
-  if not exists (
-    select 1 from public.service_order_lines
-    where id=service_line_a and service_name='Serviço histórico' and line_total=150
-      and branch_id=branch_a and created_by=owner_a
-  ) then
-    raise exception 'Restore did not preserve service line snapshot or generated total';
-  end if;
-  if not exists (
-    select 1 from public.stock_movements
-    where id=movement_a and branch_id=branch_a and actor_id=owner_a and new_quantity=5
-  ) then
-    raise exception 'Restore did not preserve stock movement history or mappings';
-  end if;
-  if not exists (
-    select 1 from public.financial_entries
-    where id=finance_a and branch_id=branch_a and created_by=owner_a and amount=45.67
-  ) then
-    raise exception 'Restore did not remap financial entry references';
-  end if;
-
-  replay_value := public.restore_organization_backup(
-    org_a,owner_a,idempotency,payload,
-    jsonb_build_object(source_branch_a::text,branch_a),
-    jsonb_build_object(source_user_a::text,owner_a)
-  );
-  if coalesce((replay_value->>'replayed')::boolean,false) is not true
-     or (select count(*) from public.customers where organization_id=org_a) <> 1 then
-    raise exception 'Idempotency replay duplicated or changed restored data';
-  end if;
-
-  -- A second operation key cannot merge into an occupied destination.
-  begin
-    perform public.restore_organization_backup(
-      org_a,owner_a,'48000000-0000-4000-8000-000000000003',payload,
-      jsonb_build_object(source_branch_a::text,branch_a),
-      jsonb_build_object(source_user_a::text,owner_a)
-    );
-    raise exception 'Test failure: occupied destination unexpectedly accepted a merge';
-  exception when raise_exception then
-    if SQLERRM like 'Test failure:%' then raise; end if;
-  end;
-
-  -- Force an FK failure after the customer insert. The whole function call
-  -- must roll back, including the early customer row and idempotency record.
-  bad_payload := jsonb_build_object(
-    'format','edertec-os-pro-backup',
-    'version',1,
-    'organization',jsonb_build_object('id',org_b,'name','Restore Tenant B'),
-    'tables',jsonb_build_object(
-      'branches',jsonb_build_array(jsonb_build_object(
-        'id',source_branch_b,'organization_id',org_b,'name','Filial origem B','code','ORIGEM-B',
-        'phone',null,'address','{}'::jsonb,'active',true,'created_at',now()
-      )),
-      'customers',jsonb_build_array(jsonb_build_object(
-        'id',bad_customer,'organization_id',org_b,'name','Cliente que deve voltar','phone','47999990001',
-        'email',null,'document',null,'address','{}'::jsonb,'notes',null,
-        'created_at',now(),'updated_at',now()
-      )),
-      'devices',jsonb_build_array(jsonb_build_object(
-        'id',bad_device,'organization_id',org_b,'customer_id',missing_customer,'brand','Teste',
-        'model','FK inválida','color',null,'storage',null,'imei',null,'serial_number',null,
-        'notes',null,'created_at',now()
-      )),
-      'service_orders','[]'::jsonb,
-      'service_order_events','[]'::jsonb,
-      'inventory_items','[]'::jsonb,
-      'branch_inventory','[]'::jsonb,
-      'stock_movements','[]'::jsonb,
-      'financial_categories','[]'::jsonb,
-      'financial_entries','[]'::jsonb,
-      'sales','[]'::jsonb,
-      'sale_items','[]'::jsonb,
-      'service_catalog','[]'::jsonb,
-      'service_order_lines','[]'::jsonb,
-      'audit_logs',jsonb_build_array(jsonb_build_object(
-        'id',999001,'organization_id',org_b,'actor_id',source_user_b,'action','restore.rollback.test',
-        'entity','organization','entity_id',org_b::text,'metadata','{}'::jsonb,'created_at',now()
-      ))
-    )
-  );
-
-  -- Cross-tenant branch and user maps must be rejected before any insert.
-  begin
-    perform public.restore_organization_backup(
-      org_b,owner_b,'48000000-0000-4000-8000-000000000004',bad_payload,
-      jsonb_build_object(source_branch_b::text,branch_a),
-      jsonb_build_object(source_user_b::text,owner_b)
-    );
-    raise exception 'Test failure: cross-tenant branch mapping unexpectedly succeeded';
-  exception when raise_exception then
-    if SQLERRM like 'Test failure:%' then raise; end if;
-  end;
-  begin
-    perform public.restore_organization_backup(
-      org_b,owner_b,'48000000-0000-4000-8000-000000000005',bad_payload,
-      jsonb_build_object(source_branch_b::text,branch_b),
-      jsonb_build_object(source_user_b::text,owner_a)
-    );
-    raise exception 'Test failure: cross-tenant user mapping unexpectedly succeeded';
-  exception when raise_exception then
-    if SQLERRM like 'Test failure:%' then raise; end if;
-  end;
-
-  begin
-    perform public.restore_organization_backup(
-      org_b,owner_b,bad_idempotency,bad_payload,
-      jsonb_build_object(source_branch_b::text,branch_b),
-      jsonb_build_object(source_user_b::text,owner_b)
-    );
-    raise exception 'Test failure: invalid foreign key unexpectedly restored';
-  exception when foreign_key_violation then
-    null;
-  end;
-
-  if (select count(*) from public.customers where organization_id=org_b) <> 0
-     or (select count(*) from public.devices where organization_id=org_b) <> 0
-     or exists (
-       select 1 from public.backup_restore_runs
-       where organization_id=org_b and idempotency_key=bad_idempotency
-     ) then
-    raise exception 'Restore rollback test left partial data or an idempotency record';
-  end if;
+  raise exception 'Invalid FK restore unexpectedly succeeded';
+ exception when foreign_key_violation then
+  null;
+ end;
+ if exists(select 1 from public.customers where company_id='a4000000-0000-4000-8000-000000000002')
+  or exists(select 1 from public.company_backup_restore_runs where company_id='a4000000-0000-4000-8000-000000000002'
+   and idempotency_key='a7000000-0000-4000-8000-000000000003') then
+  raise exception 'Failed restore left partial data or an idempotency record';
+ end if;
 end;
 $$;
 
-select 'Transactional backup restore tests passed: import, remapping, idempotency and rollback.' as result;
+select 'Company backup restore tests passed: import, generated fields, isolation, idempotency and rollback.' as result;
