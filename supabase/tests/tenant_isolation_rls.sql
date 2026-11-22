@@ -142,13 +142,13 @@ SELECT public.assign_service_order_technician(
 SELECT set_config('request.jwt.claim.sub','30000000-0000-4000-8000-000000000003',false);
 SELECT public.update_service_order_status(
   current_setting('test.org_a')::uuid,
-  (SELECT branch_id FROM public.service_orders WHERE id=current_setting('test.assigned_order_id')::uuid),
+  current_setting('test.branch_a')::uuid,
   current_setting('test.assigned_order_id')::uuid,
   'diagnosing',
   'Técnico iniciou o diagnóstico'
 );
 
-DO $
+DO $$
 BEGIN
   BEGIN
     PERFORM public.update_service_order_status(
@@ -163,9 +163,9 @@ BEGIN
     IF SQLERRM LIKE 'Test failure:%' THEN RAISE; END IF;
   END;
 END;
-$;
+$$;
 
-DO $
+DO $$
 BEGIN
   BEGIN
     PERFORM public.assign_service_order_technician(
@@ -179,10 +179,10 @@ BEGIN
     IF SQLERRM LIKE 'Test failure:%' THEN RAISE; END IF;
   END;
 END;
-$;
+$$;
 
 SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000002',false);
-DO $
+DO $$
 BEGIN
   BEGIN
     PERFORM public.assign_service_order_technician(
@@ -196,7 +196,7 @@ BEGIN
     IF SQLERRM LIKE 'Test failure:%' THEN RAISE; END IF;
   END;
 END;
-$;
+$$;
 
 RESET ROLE;
 \echo 'Tenant isolation RLS smoke tests passed for two synthetic tenants.'
