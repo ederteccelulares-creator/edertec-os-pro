@@ -14,7 +14,7 @@ export default function PlatformSupportPanel(){
    .on('postgres_changes',{event:'INSERT',schema:'public',table:'support_tickets'},()=>{if(soundOn)playSupportNotification();void load()})
    .on('postgres_changes',{event:'INSERT',schema:'public',table:'support_ticket_messages'},payload=>{
     const row=payload.new as SupportMessage
-    if(!row.is_internal&&soundOn)playSupportNotification()
+    if(!row.is_internal&&soundOn){void supabase.auth.getUser().then(({data})=>{if(row.author_id!==data.user?.id)playSupportNotification()})}
     void load()
     if(active?.id===row.ticket_id)void listSupportMessages(row.ticket_id).then(setMessages).catch(()=>{})
    })
