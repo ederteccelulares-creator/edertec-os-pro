@@ -9,7 +9,8 @@ export async function listCompanyCashTransactions(companyId:string):Promise<Cash
 export async function createCompanyCashTransaction(input:{companyId:string;branchId?:string|null;direction:'in'|'out';category:string;description:string;amount:number;paymentMethod:string}){
  const amount=Number(input.amount),description=input.description.trim(),category=input.category.trim()
  if(!Number.isFinite(amount)||amount<=0||!description||!category)throw new Error('Informe descrição, categoria e valor válido.')
- const {data,error}=await db().from('cash_transactions').insert({company_id:input.companyId,branch_id:input.branchId||null,direction:input.direction,category,description,amount,payment_method:input.paymentMethod}).select('id').single()
+ const {data:session}=await db().from('cash_sessions').select('id').eq('company_id',input.companyId).eq('status','open').eq('branch_id',input.branchId||null).maybeSingle()
+ const {data,error}=await db().from('cash_transactions').insert({company_id:input.companyId,branch_id:input.branchId||null,cash_session_id:session?.id||null,direction:input.direction,category,description,amount,payment_method:input.paymentMethod}).select('id').single()
  if(error)throw error
  return data
 }
