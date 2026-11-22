@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Building2, ClipboardList, LogOut, Plus, RefreshCw, Smartphone, Users, Boxes, ArrowDownUp, Wallet } from 'lucide-react'
-import { changeInventoryStock, createInventoryItem, createFinancialEntry, createServiceOrderWithDevice, listBranches, listCustomers, listFinancialEntries, listInventory, listServiceOrderEvents, listServiceOrders, saveCustomer, updateFinancialEntryStatus, updateServiceOrderStatus } from '../lib/tenant-data'
+import { Building2, ClipboardList, LogOut, Plus, RefreshCw, Smartphone, Users, Boxes, ArrowDownUp, Wallet, ShoppingCart, Trash2 } from 'lucide-react'
+import { changeInventoryStock, createInventoryItem, createFinancialEntry, createSale, createServiceOrderWithDevice, listBranches, listCustomers, listFinancialEntries, listInventory, listSales, listServiceOrderEvents, listServiceOrders, saveCustomer, updateFinancialEntryStatus, updateServiceOrderStatus } from '../lib/tenant-data'
 import type { Organization, Branch } from '../lib/supabase'
 import type { ServiceOrderStatus } from '../lib/tenant-data'
 
@@ -23,7 +23,7 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
   const [branchId, setBranchId] = useState('')
   const [customers, setCustomers] = useState<Customer[]>([])
   const [orders, setOrders] = useState<Order[]>([])
-  const [tab, setTab] = useState<'orders' | 'customers' | 'inventory' | 'finance'>('orders')
+  const [tab, setTab] = useState<'orders' | 'customers' | 'inventory' | 'finance' | 'sales'>('orders')
   const [inventory, setInventory] = useState<Array<{item_id:string;quantity:number;inventory_items:Array<{id:string;sku:string|null;name:string;category:string;cost_price:number;sale_price:number;min_stock:number;active:boolean}>}>>([])
   const [showInventoryForm, setShowInventoryForm] = useState(false)
   const [inventoryForm, setInventoryForm] = useState({name:'',sku:'',category:'Acessórios',costPrice:'0',salePrice:'0',minStock:'0'})
@@ -33,6 +33,11 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
   const [financeRows, setFinanceRows] = useState<Array<{id:string;entry_type:'income'|'expense';description:string;amount:number;payment_method:string;status:'pending'|'paid'|'cancelled';due_date:string|null;created_at:string}>>([])
   const [showFinanceForm, setShowFinanceForm] = useState(false)
   const [financeForm, setFinanceForm] = useState({entryType:'income' as 'income'|'expense',description:'',amount:'',paymentMethod:'pix' as 'cash'|'pix'|'debit_card'|'credit_card'|'bank_transfer'|'boleto'|'other',status:'paid' as 'pending'|'paid',dueDate:'',notes:''})
+  const canSell = ['owner','admin','manager','attendant'].includes(role)
+  const [salesRows, setSalesRows] = useState<Array<{id:string;sale_number:number;total:number;payment_method:string;payment_status:string;created_at:string;customers:{name:string}|null;sale_items:Array<{id:string;product_name:string;quantity:number;line_total:number}>}>>([])
+  const [showSaleForm, setShowSaleForm] = useState(false)
+  const [saleForm, setSaleForm] = useState({itemId:'',quantity:'1',customerId:'',paymentMethod:'pix' as 'cash'|'pix'|'debit_card'|'credit_card'|'bank_transfer'|'boleto'|'other',paymentStatus:'paid' as 'paid'|'pending',discount:'0',notes:''})
+  const [saleCart, setSaleCart] = useState<Array<{itemId:string;name:string;quantity:number;unitPrice:number;costPrice:number}>>([])
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -56,11 +61,12 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
     setLoading(true); setError('')
     try {
       const context = { organizationId: organization.id, branchId: targetBranch }
-      const [customerRows, orderRows, stockRows, financeData] = await Promise.all([listCustomers(context), listServiceOrders(context), listInventory(context), canManageFinance ? listFinancialEntries(context) : Promise.resolve([])])
+      const [customerRows, orderRows, stockRows, financeData, salesData] = await Promise.all([listCustomers(context), listServiceOrders(context), listInventory(context), canManageFinance ? listFinancialEntries(context) : Promise.resolve([]), listSales(context)])
       setCustomers(customerRows as Customer[])
       setOrders(orderRows as unknown as Order[])
       setInventory(stockRows as typeof inventory)
       setFinanceRows(financeData as typeof financeRows)
+      setSalesRows(salesData as typeof salesRows)
     } catch (e) { setError(e instanceof Error ? e.message : 'Não foi possível carregar os dados.') }
     finally { setLoading(false) }
   }
@@ -83,6 +89,36 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
       await changeInventoryStock({organizationId:organization.id,branchId},stockTarget,stockForm.type,Number(stockForm.quantity),stockForm.reason)
       setStockTarget(null);setStockForm({type:'in',quantity:'1',reason:''});await loadWorkspace()
     } catch(e) { setError(e instanceof Error ? e.message : 'Falha ao movimentar estoque.') }
+    finally { setBusy(false) }
+  }
+
+  function addSaleCartItem() {
+    const row = inventory.find(entry => entry.item_id === saleForm.itemId)
+    const product = row?.inventory_items?.[0]
+    if (!row || !product) { setError('Selecione um produto do estoque.'); return }
+    const quantity = Number(saleForm.quantity)
+    if (!Number.isFinite(quantity) || quantity <= 0) { setError('Informe uma quantidade válida.'); return }
+    const already = saleCart.filter(item => item.itemId === product.id).reduce((sum,item)=>sum+item.quantity,0)
+    if (already + quantity > Number(row.quantity)) { setError('Quantidade maior que o estoque disponível.'); return }
+    setSaleCart(current => [...current,{itemId:product.id,name:product.name,quantity,unitPrice:Number(product.sale_price),costPrice:Number(product.cost_price)}])
+    setSaleForm(current=>({...current,itemId:'',quantity:'1'})); setError('')
+  }
+
+  async function submitSale(event: React.FormEvent) {
+    event.preventDefault(); setBusy(true); setError('')
+    try {
+      const subtotal = saleCart.reduce((sum,item)=>sum+item.quantity*item.unitPrice,0)
+      const discount = Number(saleForm.discount || 0)
+      if (!saleCart.length) throw new Error('Adicione produtos à venda.')
+      if (discount < 0 || discount >= subtotal) throw new Error('O desconto deve ser menor que o subtotal.')
+      await createSale({organizationId:organization.id,branchId},{
+        items:saleCart.map(item=>({itemId:item.itemId,quantity:item.quantity,unitPrice:item.unitPrice})),
+        paymentMethod:saleForm.paymentMethod,paymentStatus:saleForm.paymentStatus,
+        customerId:saleForm.customerId || undefined,discount,notes:saleForm.notes,
+      })
+      setSaleCart([]);setSaleForm({itemId:'',quantity:'1',customerId:'',paymentMethod:'pix',paymentStatus:'paid',discount:'0',notes:''})
+      setShowSaleForm(false);await loadWorkspace()
+    } catch(e) { setError(e instanceof Error ? e.message : 'Falha ao concluir venda.') }
     finally { setBusy(false) }
   }
 
@@ -157,7 +193,7 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
     <section className="tenant-content">
       <div className="tenant-heading"><div><small>AMBIENTE EMPRESARIAL</small><h1>{organization.name}</h1><p>Gestão de atendimentos e clientes</p></div><label className="branch-select"><Building2 size={16}/><select value={branchId} onChange={e=>setBranchId(e.target.value)}>{branches.map(branch=><option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label></div>
       <div className="tenant-stats"><article><span>Ordens nesta filial</span><b>{orders.length}</b></article><article><span>Clientes cadastrados</span><b>{customers.length}</b></article><article><span>Em andamento</span><b>{orders.filter(item=>!['delivered','cancelled'].includes(item.status)).length}</b></article></div>
-      <div className="tenant-tabs"><button className={tab==='orders'?'selected':''} onClick={()=>setTab('orders')}><ClipboardList size={17}/> Ordens de serviço</button><button className={tab==='customers'?'selected':''} onClick={()=>setTab('customers')}><Users size={17}/> Clientes</button><button className={tab==='inventory'?'selected':''} onClick={()=>setTab('inventory')}><Boxes size={17}/> Estoque</button>{canManageFinance&&<button className={tab==='finance'?'selected':''} onClick={()=>setTab('finance')}><Wallet size={17}/> Financeiro</button>}<button className="refresh" onClick={()=>loadWorkspace()}><RefreshCw size={16}/> Atualizar</button></div>
+      <div className="tenant-tabs"><button className={tab==='orders'?'selected':''} onClick={()=>setTab('orders')}><ClipboardList size={17}/> Ordens de serviço</button><button className={tab==='customers'?'selected':''} onClick={()=>setTab('customers')}><Users size={17}/> Clientes</button><button className={tab==='inventory'?'selected':''} onClick={()=>setTab('inventory')}><Boxes size={17}/> Estoque</button>{canManageFinance&&<button className={tab==='finance'?'selected':''} onClick={()=>setTab('finance')}><Wallet size={17}/> Financeiro</button>}<button className={tab==='sales'?'selected':''} onClick={()=>setTab('sales')}><ShoppingCart size={17}/> Vendas</button><button className="refresh" onClick={()=>loadWorkspace()}><RefreshCw size={16}/> Atualizar</button></div>
       {error&&<div className="tenant-error">{error}</div>}
       {tab==='orders'&&<section className="tenant-panel"><div className="tenant-panel-head"><div><b>Ordens de serviço</b><small>Atendimentos registrados na filial selecionada</small></div><button className="tenant-primary" onClick={()=>setShowOrder(v=>!v)}><Plus size={16}/> Nova OS</button></div>
         {showOrder&&<form className="tenant-form" onSubmit={submitOrder}><label>Cliente<select required value={order.customerId} onChange={e=>setOrder({...order,customerId:e.target.value})}><option value="">Selecione um cliente</option>{customers.map(c=><option key={c.id} value={c.id}>{c.name} · {c.phone}</option>)}</select></label><div className="tenant-grid"><label>Marca<select value={order.brand} onChange={e=>setOrder({...order,brand:e.target.value})}>{['Apple','Samsung','Motorola','Xiaomi','Realme','Infinix','Outra'].map(v=><option key={v}>{v}</option>)}</select></label><label>Modelo<input required value={order.model} onChange={e=>setOrder({...order,model:e.target.value})}/></label><label>IMEI / Série<input value={order.imei} onChange={e=>setOrder({...order,imei:e.target.value})}/></label><label>Valor estimado (R$)<input type="number" min="0" step="0.01" value={order.amount} onChange={e=>setOrder({...order,amount:e.target.value})}/></label><label className="wide">Defeito informado<textarea required value={order.issue} onChange={e=>setOrder({...order,issue:e.target.value})}/></label><label>Acessórios<input value={order.accessories} onChange={e=>setOrder({...order,accessories:e.target.value})}/></label><label>Condição física<input value={order.condition} onChange={e=>setOrder({...order,condition:e.target.value})}/></label></div><div className="tenant-form-actions"><button type="button" onClick={()=>setShowOrder(false)}>Cancelar</button><button className="tenant-primary" disabled={busy}>Salvar ordem</button></div></form>}
@@ -174,6 +210,17 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
         {loading?<p className="tenant-empty">Carregando estoque...</p>:inventory.length===0?<p className="tenant-empty">Nenhum produto cadastrado para esta filial.</p>:<div className="tenant-table-wrap"><table><thead><tr><th>PRODUTO</th><th>CATEGORIA</th><th>CUSTO</th><th>VENDA</th><th>SALDO</th><th>SITUAÇÃO</th><th>AÇÃO</th></tr></thead><tbody>{inventory.map(row=>{const item=row.inventory_items?.[0];if(!item)return null;const low=Number(row.quantity)<=Number(item.min_stock);return <tr key={row.item_id}><td><b>{item.name}</b><small>{item.sku||'Sem SKU'}</small></td><td>{item.category}</td><td>{money(Number(item.cost_price))}</td><td>{money(Number(item.sale_price))}</td><td>{Number(row.quantity).toLocaleString('pt-BR')}</td><td><span className={low?'tenant-stock-low':'tenant-stock-ok'}>{low?'Estoque baixo':'Disponível'}</span></td><td>{canManageInventory?<button className="tenant-history-button" onClick={()=>setStockTarget(row.item_id)}><ArrowDownUp size={14}/> Movimentar</button>:<span>Somente leitura</span>}</td></tr>})}</tbody></table></div>}
       </section>}
 
+
+      {tab==='sales'&&<section className="tenant-panel"><div className="tenant-panel-head"><div><b>Vendas</b><small>Venda de produtos com baixa automática no estoque e lançamento no financeiro</small></div>{canSell&&<button className="tenant-primary" onClick={()=>setShowSaleForm(v=>!v)}><Plus size={16}/> Nova venda</button>}</div>
+        {showSaleForm&&canSell&&<form className="tenant-form" onSubmit={submitSale}>
+          <div className="tenant-grid"><label className="wide">Produto<select value={saleForm.itemId} onChange={e=>setSaleForm({...saleForm,itemId:e.target.value})}><option value="">Selecione um produto</option>{inventory.map(row=>{const item=row.inventory_items?.[0];return item?<option key={item.id} value={item.id}>{item.name} · estoque {Number(row.quantity).toLocaleString('pt-BR')} · {money(Number(item.sale_price))}</option>:null})}</select></label><label>Quantidade<input type="number" min="0.001" step="0.001" value={saleForm.quantity} onChange={e=>setSaleForm({...saleForm,quantity:e.target.value})}/></label><label><span> </span><button type="button" className="tenant-primary" onClick={addSaleCartItem}><Plus size={14}/> Adicionar item</button></label></div>
+          {saleCart.length>0&&<div className="tenant-table-wrap"><table><thead><tr><th>PRODUTO</th><th>QTD.</th><th>UNITÁRIO</th><th>TOTAL</th><th></th></tr></thead><tbody>{saleCart.map((item,index)=><tr key={index}><td>{item.name}</td><td>{item.quantity}</td><td>{money(item.unitPrice)}</td><td>{money(item.quantity*item.unitPrice)}</td><td><button type="button" className="tenant-history-button" onClick={()=>setSaleCart(rows=>rows.filter((_,i)=>i!==index))}><Trash2 size={14}/></button></td></tr>)}</tbody></table></div>}
+          <div className="tenant-grid"><label>Cliente (opcional)<select value={saleForm.customerId} onChange={e=>setSaleForm({...saleForm,customerId:e.target.value})}><option value="">Venda sem cliente</option>{customers.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label>Desconto (R$)<input type="number" min="0" step="0.01" value={saleForm.discount} onChange={e=>setSaleForm({...saleForm,discount:e.target.value})}/></label><label>Pagamento<select value={saleForm.paymentMethod} onChange={e=>setSaleForm({...saleForm,paymentMethod:e.target.value as typeof saleForm.paymentMethod})}><option value="pix">PIX</option><option value="cash">Dinheiro</option><option value="debit_card">Débito</option><option value="credit_card">Crédito</option><option value="bank_transfer">Transferência</option><option value="boleto">Boleto</option><option value="other">Outro</option></select></label><label>Situação<select value={saleForm.paymentStatus} onChange={e=>setSaleForm({...saleForm,paymentStatus:e.target.value as 'paid'|'pending'})}><option value="paid">Pago</option><option value="pending">Pendente</option></select></label><label className="wide">Observações<input value={saleForm.notes} onChange={e=>setSaleForm({...saleForm,notes:e.target.value})}/></label></div>
+          <div className="tenant-sale-total"><span>Total da venda</span><b>{money(saleCart.reduce((sum,item)=>sum+item.quantity*item.unitPrice,0)-Number(saleForm.discount||0))}</b></div>
+          <div className="tenant-form-actions"><button type="button" onClick={()=>{setShowSaleForm(false);setSaleCart([])}}>Cancelar</button><button className="tenant-primary" disabled={busy||saleCart.length===0}><ShoppingCart size={15}/> Finalizar venda</button></div>
+        </form>}
+        {loading?<p className="tenant-empty">Carregando vendas...</p>:salesRows.length===0?<p className="tenant-empty">Nenhuma venda registrada nesta filial.</p>:<div className="tenant-table-wrap"><table><thead><tr><th>VENDA</th><th>DATA</th><th>CLIENTE</th><th>ITENS</th><th>TOTAL</th><th>PAGAMENTO</th><th>SITUAÇÃO</th></tr></thead><tbody>{salesRows.map(sale=><tr key={sale.id}><td>#{sale.sale_number}</td><td>{new Date(sale.created_at).toLocaleDateString('pt-BR')}</td><td>{sale.customers?.name||'Consumidor'}</td><td>{sale.sale_items?.map(item=>item.product_name+' × '+item.quantity).join(', ')}</td><td>{money(Number(sale.total))}</td><td>{{cash:'Dinheiro',pix:'PIX',debit_card:'Débito',credit_card:'Crédito',bank_transfer:'Transferência',boleto:'Boleto',other:'Outro'}[sale.payment_method]||sale.payment_method}</td><td>{sale.payment_status==='paid'?'Pago':'Pendente'}</td></tr>)}</tbody></table></div>}
+      </section>}
       {tab==='finance'&&<section className="tenant-panel"><div className="tenant-panel-head"><div><b>Fluxo de caixa</b><small>Entradas, saídas e valores pendentes desta filial</small></div>{canManageFinance&&<button className="tenant-primary" onClick={()=>setShowFinanceForm(v=>!v)}><Plus size={16}/> Novo lançamento</button>}</div>
         <div className="tenant-finance-summary"><article><small>Entradas pagas</small><b>{money(financeRows.filter(x=>x.entry_type==='income'&&x.status==='paid').reduce((n,x)=>n+Number(x.amount),0))}</b></article><article><small>Saídas pagas</small><b>{money(financeRows.filter(x=>x.entry_type==='expense'&&x.status==='paid').reduce((n,x)=>n+Number(x.amount),0))}</b></article><article><small>Saldo realizado</small><b>{money(financeRows.filter(x=>x.status==='paid').reduce((n,x)=>n+(x.entry_type==='income'?1:-1)*Number(x.amount),0))}</b></article></div>
         {showFinanceForm&&canManageFinance&&<form className="tenant-form" onSubmit={submitFinanceEntry}><div className="tenant-grid"><label>Tipo<select value={financeForm.entryType} onChange={e=>setFinanceForm({...financeForm,entryType:e.target.value as 'income'|'expense'})}><option value="income">Entrada</option><option value="expense">Saída</option></select></label><label>Valor (R$)<input required type="number" min="0.01" step="0.01" value={financeForm.amount} onChange={e=>setFinanceForm({...financeForm,amount:e.target.value})}/></label><label className="wide">Descrição<input required value={financeForm.description} onChange={e=>setFinanceForm({...financeForm,description:e.target.value})}/></label><label>Forma de pagamento<select value={financeForm.paymentMethod} onChange={e=>setFinanceForm({...financeForm,paymentMethod:e.target.value as typeof financeForm.paymentMethod})}><option value="cash">Dinheiro</option><option value="pix">PIX</option><option value="debit_card">Débito</option><option value="credit_card">Crédito</option><option value="bank_transfer">Transferência</option><option value="boleto">Boleto</option><option value="other">Outro</option></select></label><label>Situação inicial<select value={financeForm.status} onChange={e=>setFinanceForm({...financeForm,status:e.target.value as 'pending'|'paid'})}><option value="paid">Pago / recebido</option><option value="pending">Pendente</option></select></label><label>Vencimento<input type="date" value={financeForm.dueDate} onChange={e=>setFinanceForm({...financeForm,dueDate:e.target.value})}/></label><label className="wide">Observações<input value={financeForm.notes} onChange={e=>setFinanceForm({...financeForm,notes:e.target.value})}/></label></div><div className="tenant-form-actions"><button type="button" onClick={()=>setShowFinanceForm(false)}>Cancelar</button><button className="tenant-primary" disabled={busy}>Salvar lançamento</button></div></form>}
