@@ -148,6 +148,28 @@ begin
     raise exception 'Backup schema contract failed: partial unique SKU index is missing';
   end if;
 
+  -- Every exported operational table locks its organization on insert so a
+  -- restore's organization FOR UPDATE lock blocks same-tenant concurrent writes.
+  for expected in
+    select unnest(array[
+      'branches','customers','devices','service_orders','service_order_events',
+      'inventory_items','branch_inventory','stock_movements','financial_categories',
+      'financial_entries','sales','sale_items','service_catalog','service_order_lines',
+      'audit_logs'
+    ]) as table_name
+  loop
+    if not exists (
+      select 1 from pg_trigger t
+      join pg_class r on r.oid=t.tgrelid
+      join pg_namespace n on n.oid=r.relnamespace
+      where n.nspname='public' and r.relname=expected.table_name
+        and t.tgname=expected.table_name || '_restore_tenant_lock'
+        and not t.tgisinternal
+    ) then
+      raise exception 'Backup restore schema contract failed: tenant insert lock is missing on %', expected.table_name;
+    end if;
+  end loop;
+
   -- Restore-run ledger must be tenant-scoped and protected from browser roles.
   if to_regclass('public.backup_restore_runs') is null then
     raise exception 'Backup restore schema contract failed: restore-run ledger is missing';
