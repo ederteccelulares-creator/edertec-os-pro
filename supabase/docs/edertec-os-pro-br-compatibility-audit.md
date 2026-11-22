@@ -174,3 +174,20 @@ Esta seção registra alterações já aplicadas no banco BR; não é um arquivo
 ### CI
 - O primeiro workflow CI falhou antes do build porque o repositório não tem lockfile npm e o setup-node com cache npm exige um lockfile.
 - Workflow ajustado para não usar cache e executar `npm install`; uma nova execução foi iniciada. O resultado final ainda precisa ser confirmado.
+
+
+## Fornecedores e integridade de compras — 22/11/2026
+
+- Criados `src/lib/company-suppliers.ts` e `src/components/CompanySuppliersPanel.tsx`; seção Fornecedores integrada ao workspace.
+- Cadastro e pesquisa de fornecedores por nome, documento e telefone, sempre filtrados por `company_id`.
+- Inspecionada a política de `purchase_items`: havia uma comparação tautológica `p.company_id = p.company_id`, que não garantia que o item pertencia à mesma empresa da compra.
+- Corrigida a política para validar `purchases.id = purchase_items.purchase_id` e `purchases.company_id = purchase_items.company_id`, além de validar o produto opcional contra a mesma empresa.
+- Criadas constraints compostas:
+  - `suppliers(id, company_id)`
+  - `purchases(id, company_id)`
+  - `purchases(branch_id, company_id)` -> branches
+  - `purchases(supplier_id, company_id)` -> suppliers
+  - `purchase_items(purchase_id, company_id)` -> purchases
+  - `purchase_items(product_id, company_id)` -> products
+- As tabelas suppliers, purchases e purchase_items estavam vazias antes da alteração. As constraints foram verificadas depois.
+- Security Advisor permanece com os dois apontamentos já conhecidos: `platform_admins` sem política RLS (intencionalmente fechado até desenhar o acesso Super Admin) e `register_company` SECURITY DEFINER executável por authenticated (necessário ao fluxo de cadastro, com grants restritos e verificados).
