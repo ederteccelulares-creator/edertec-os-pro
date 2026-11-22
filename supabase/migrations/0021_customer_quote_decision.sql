@@ -91,3 +91,25 @@ $$;
 
 revoke all on function public.respond_service_order_quote(text,text) from public;
 grant execute on function public.respond_service_order_quote(text,text) to anon, authenticated;
+
+
+-- Older backup files predate the customer decision columns. The generic
+-- restore importer supplies NULL for absent JSON keys, so normalize that
+-- value before NOT NULL/check constraints are evaluated.
+create or replace function public.default_service_order_quote_decision()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if new.customer_quote_decision is null then
+    new.customer_quote_decision := 'pending';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists service_orders_quote_decision_default on public.service_orders;
+create trigger service_orders_quote_decision_default
+before insert on public.service_orders
+for each row execute function public.default_service_order_quote_decision();
