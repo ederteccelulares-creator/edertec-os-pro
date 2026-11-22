@@ -1,0 +1,51 @@
+name: Deploy Supabase (manual)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Apply migrations and deploy Edge Functions
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - name: Validate deployment secrets
+        shell: bash
+        run: |
+          test -n "$SUPABASE_ACCESS_TOKEN" || (echo "Missing SUPABASE_ACCESS_TOKEN" && exit 1)
+          test -n "$SUPABASE_PROJECT_REF" || (echo "Missing SUPABASE_PROJECT_REF" && exit 1)
+          test -n "$SUPABASE_DB_PASSWORD" || (echo "Missing SUPABASE_DB_PASSWORD" && exit 1)
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link target project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
+
+      - name: Apply versioned migrations
+        run: supabase db push
+
+      - name: Deploy authenticated Edge Functions
+        run: |
+          supabase functions deploy invite-team --project-ref "$SUPABASE_PROJECT_REF"
+          supabase functions deploy export-organization --project-ref "$SUPABASE_PROJECT_REF"
+          supabase functions deploy validate-organization-backup --project-ref "$SUPABASE_PROJECT_REF"
+          supabase functions deploy restore-organization-backup --project-ref "$SUPABASE_PROJECT_REF"
