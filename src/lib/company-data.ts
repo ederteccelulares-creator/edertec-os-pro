@@ -21,6 +21,7 @@ export type Company = {
   email: string | null
   phone: string | null
   status: string
+  logo_url: string | null
 }
 
 export type CompanyMembership = {
@@ -57,6 +58,7 @@ export async function registerCompany(input: {
   name: string
   taxId?: string
   phone?: string
+  logoUrl?: string | null
 }) {
   const name = input.name.trim()
   if (name.length < 2) throw new Error('O nome da assistência deve ter pelo menos 2 caracteres.')
@@ -155,9 +157,10 @@ export async function updateCompanyProfile(input: {
       tax_id: input.taxId?.trim() || null,
       email: input.email?.trim() || null,
       phone: input.phone?.trim() || null,
+      logo_url: input.logoUrl || null,
     })
     .eq('id', input.companyId)
-    .select('id,name,legal_name,tax_id,email,phone,status')
+    .select('id,name,legal_name,tax_id,email,phone,status,logo_url')
     .single()
   if (error) throw error
   return data as Company
