@@ -130,7 +130,8 @@ begin
     'id','ad000000-0000-4000-8000-000000000001',
     'company_id','a4000000-0000-4000-8000-000000000002',
     'customer_id','ae000000-0000-4000-8000-000000000099',
-    'reported_issue','FK inválida'
+    'order_number',778,'reported_issue','FK inválida','status','received','priority','normal',
+    'estimated_price',0,'final_price',0,'received_at',now(),'created_at',now(),'updated_at',now()
    )),
    'service_order_items','[]'::jsonb,'stock_movements','[]'::jsonb,
    'payments','[]'::jsonb,'suppliers','[]'::jsonb,'purchases','[]'::jsonb,
