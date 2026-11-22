@@ -129,12 +129,12 @@ A chamada deve ser feita com método POST, token Bearer do usuário autenticado 
 
 A resposta é o arquivo JSON de backup. Guarde-o em local privado e criptografado, pois contém dados pessoais e comerciais. Não compartilhe o arquivo publicamente.
 
-**Limitações desta versão:** exporta até 10.000 registros por tabela e não inclui credenciais, contas de autenticação, convites pendentes, assinaturas ou dados globais da plataforma. Ainda não há restauração automática pelo painel. Para restaurar, use procedimento assistido em ambiente separado, validando relações, IDs e usuários antes de qualquer importação. Não importe o arquivo diretamente em produção.
+**Limitações desta versão:** exporta até 10.000 registros por tabela e não inclui credenciais, contas de autenticação, convites pendentes, assinaturas ou dados globais da plataforma. A restauração transacional está disponível para a mesma organização lógica, desde que as tabelas operacionais do destino estejam vazias; filiais existentes são reutilizadas por mapeamento. Não há mesclagem nem sobrescrita. Homologue primeiro em um projeto Supabase separado e nunca use um arquivo não verificado em produção.
 
 
 ## Validação de arquivo de backup
 
-A função `validate-organization-backup` permite que proprietário ou administrador valide um JSON antes de iniciar uma restauração assistida. Ela confere formato, versão, empresa de origem, tabelas esperadas e `organization_id` de cada registro. A validação é somente leitura: não insere, atualiza nem exclui dados.
+A função `validate-organization-backup` permite que proprietário ou administrador valide um JSON antes de restaurá-lo. Ela confere formato, versão, empresa de origem, tabelas esperadas e `organization_id` de cada registro. A validação é somente leitura: não insere, atualiza nem exclui dados.
 
 Publique com:
 
@@ -143,36 +143,36 @@ supabase functions deploy validate-organization-backup
 supabase functions deploy restore-organization-backup
 ```
 
-No painel da empresa, use **Backup e restauração → Validar arquivo JSON**. O arquivo deve ter até 10 MB e pertencer à mesma empresa selecionada. Um resultado válido significa apenas que a estrutura e a separação por empresa passaram nas verificações básicas; não comprova integridade de todas as relações nem executa uma restauração. A restauração automática continua desabilitada até a implementação de importação transacional e testes em homologação.
+No painel da empresa, use **Backup e restauração → Validar arquivo JSON**. O arquivo deve ter até 10 MB e pertencer à mesma empresa selecionada. Um resultado válido confirma a estrutura e as referências básicas; `restore_ready: true` também confirma os mapeamentos e que as tabelas operacionais do destino estão vazias. A restauração só é habilitada quando essa prontidão é verdadeira e exige confirmação explícita no painel. A importação é transacional e qualquer falha desfaz os registros inseridos.
 A validação também confere referências internas entre clientes, aparelhos, OS, filiais, estoque, vendas, serviços e lançamentos financeiros. O relatório sinaliza quando há referências a usuários do Supabase Auth: essas contas não são exportadas e precisarão ser mapeadas para usuários já existentes no destino antes de qualquer restauração. A checagem é estrutural e não substitui constraints/testes de banco.
 
 
 ## Integridade do histórico de serviços
 
 A migração `0016_service_history_integrity.sql` impede reatribuir eventos e linhas de serviços a outra ordem, filial, empresa ou usuário responsável. Também protege as chaves do catálogo de serviços. Ela preserva os dados existentes e deve ser aplicada após a migração 0015.
-A validação consulta também, em modo somente leitura, a quantidade atual de registros de cada tabela operacional da empresa de destino. O painel informa se o destino está vazio ou já contém dados e lista as tabelas ocupadas. Se houver dados no destino, uma futura restauração não deverá sobrescrevê-los automaticamente; será necessário um procedimento de mesclagem com regras explícitas. Essa prévia não executa importação e não libera a restauração.
+A validação consulta em modo somente leitura a quantidade de registros no destino. Filiais já existentes podem ser reutilizadas; todas as demais tabelas operacionais, inclusive auditoria, devem estar vazias. Se houver dados em qualquer uma delas, a restauração é bloqueada: não há mesclagem nem sobrescrita.
 
 
 ### Plano de restauração segura (prévia)
-A validação do backup agora discrimina, por tabela e campo, quantos registros dependem de referências a usuários do Supabase Auth (por exemplo, responsável pela OS, autor de eventos, vendedor e autor de movimentações). Também apresenta os IDs de origem encontrados, suas quantidades de referências, se o mesmo ID já pertence à equipe de destino e a lista de membros do destino com nome, papel e situação. Essas contas não fazem parte do arquivo JSON e precisarão ser mapeadas para usuários já existentes e membros ativos da empresa de destino antes de qualquer importação. A consulta é somente leitura e não grava associações. A interface permite selecionar um membro ativo para cada usuário de origem e pré-preenche automaticamente apenas quando o mesmo ID já corresponde a um membro ativo. Essas escolhas permanecem somente no estado da tela: não são persistidas, não alteram contas e ainda não habilitam a importação.
+A validação do backup agora discrimina, por tabela e campo, quantos registros dependem de referências a usuários do Supabase Auth (por exemplo, responsável pela OS, autor de eventos, vendedor e autor de movimentações). Também apresenta os IDs de origem encontrados, suas quantidades de referências, se o mesmo ID já pertence à equipe de destino e a lista de membros do destino com nome, papel e situação. Essas contas não fazem parte do arquivo JSON e precisarão ser mapeadas para usuários já existentes e membros ativos da empresa de destino antes de qualquer importação. A consulta é somente leitura e não grava associações. A interface permite selecionar um membro ativo para cada usuário de origem e pré-preenche automaticamente apenas quando o mesmo ID já corresponde a um membro ativo. Essas escolhas permanecem somente no estado da tela até a confirmação da restauração; não alteram contas nem permissões.
 
-A prévia de ocupação do destino continua sendo somente leitura. A existência de registros, inclusive a filial Matriz criada no cadastro da empresa, não autoriza mesclagem automática. Ainda não existe rotina de restauração: não importar, sobrescrever nem excluir dados com base apenas no relatório. A próxima implementação deverá definir mapeamento explícito de IDs de filiais e usuários, ordem de dependências, validação de vínculos e execução transacional com rollback; até isso ser implementado e testado em ambiente separado, a restauração permanece indisponível.
+A prévia de ocupação do destino continua sendo somente leitura. A filial Matriz criada no cadastro pode ser reutilizada por mapeamento; os outros dados operacionais devem estar vazios. A rotina transacional aplica o mapeamento de filiais e usuários, preserva snapshots e históricos, ajusta sequências identity e grava uma chave de idempotência. Não há mesclagem nem sobrescrita.
 
-A etapa de pré-validação de identidade também aceita o rascunho de associações e confere no servidor se todos os IDs de origem foram cobertos, se cada destino é membro ativo da empresa e se não há associações duplicadas ou IDs de origem desconhecidos. O resultado é informativo e não persiste o mapeamento nem executa a restauração.
+A validação de identidade aceita o rascunho de associações e confere no servidor se todos os IDs de origem foram cobertos, se cada destino é membro ativo da empresa e se não há associações duplicadas ou IDs desconhecidos. O mapeamento não é persistido; ele é reenviado e revalidado pelo banco no momento da restauração.
 
-A prévia também identifica as filiais do backup, seus códigos e nomes, e contabiliza referências em OS, estoque, movimentações, financeiro, vendas e linhas de serviços. O administrador pode associar cada filial de origem a uma filial ativa do destino; o servidor verifica cobertura completa, existência, situação ativa, IDs desconhecidos e associações duplicadas. Essa validação é somente leitura e não reescreve os IDs nas tabelas relacionadas. O relatório retorna `restore_ready: false` e `restore_blockers`; a importação transacional e a substituição dos IDs relacionados ainda não existem.
+A prévia também identifica as filiais do backup, seus códigos e nomes, e contabiliza referências em OS, estoque, movimentações, financeiro, vendas e linhas de serviços. O administrador pode associar cada filial de origem a uma filial ativa do destino; o servidor verifica cobertura completa, existência, situação ativa, IDs desconhecidos e associações duplicadas. Essa validação é somente leitura e não reescreve os IDs nas tabelas relacionadas. O relatório calcula `restore_ready` e `restore_blockers`; quando estiver pronta, a função transacional substitui os IDs relacionados durante a importação.
 
 
 
 ## Projeto técnico de restauração segura
 
-O plano `supabase/docs/backup-restore-implementation-plan.md` documenta a ordem de dependências, os campos que exigem remapeamento de filiais e usuários, colisões de chaves únicas, colunas identity e os requisitos de transação/rollback. É documentação de implementação, não uma rotina de restauração. A função de validação permanece somente leitura e `restore_ready` permanece `false`.
+O plano `supabase/docs/backup-restore-implementation-plan.md` documenta a ordem de dependências, os campos que exigem remapeamento de filiais e usuários, colisões de chaves únicas, colunas identity e os requisitos de transação/rollback. O plano descreve as regras da primeira versão implementada. A validação permanece somente leitura; a Edge Function `restore-organization-backup` chama a rotina SQL transacional quando a prontidão é confirmada.
 
 
 
-## Contrato do schema para futura restauração
+## Contrato do schema de restauração
 
-O script `supabase/tests/backup_restore_schema_contract.sql` faz uma verificação somente de leitura das chaves de organização, das relações entre as tabelas exportadas e das colunas identity de OS e vendas. Também confirma que cada relacionamento operacional entre empresas está protegido por uma chave estrangeira composta que inclui `organization_id` no mesmo vínculo, que as restrições de unicidade de filiais/categorias/estoque e o índice parcial de SKU estão presentes para detectar colisões, e que `service_order_lines.line_total` continua sendo uma coluna gerada. Execute-o em um projeto Supabase descartável depois das migrações 0001 a 0018. Ele não testa nem executa a restauração; serve para detectar divergências entre o schema instalado e o plano documentado em `supabase/docs/backup-restore-implementation-plan.md`.
+O script `supabase/tests/backup_restore_schema_contract.sql` faz uma verificação somente de leitura das chaves de organização, das relações entre as tabelas exportadas e das colunas identity de OS e vendas. Também confirma que cada relacionamento operacional entre empresas está protegido por uma chave estrangeira composta que inclui `organization_id` no mesmo vínculo, que as restrições de unicidade de filiais/categorias/estoque e o índice parcial de SKU estão presentes para detectar colisões, e que `service_order_lines.line_total` continua sendo uma coluna gerada. Execute-o em um projeto Supabase descartável depois das migrações 0001 a 0018. O teste transacional `supabase/tests/backup_restore_transactional.sql` cobre importação, remapeamento, idempotência e rollback; nenhum desses testes substitui a homologação em uma instância Supabase real.
 
 
 ## Verificação automatizada de banco no GitHub Actions
