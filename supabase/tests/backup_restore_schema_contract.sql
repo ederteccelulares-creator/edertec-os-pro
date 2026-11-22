@@ -26,7 +26,8 @@ begin
     end if;
   end loop;
 
-  -- Verify the foreign-key edges used by the restore dependency plan.
+  -- Verify every cross-table relationship and ensure the tenant key is
+  -- part of the SAME composite FK (not merely present on both tables).
   for expected in
     select * from (values
       ('devices','customer_id','customers','id'),
@@ -51,27 +52,55 @@ begin
   loop
     if not exists (
       select 1
-      from information_schema.table_constraints tc
-      join information_schema.key_column_usage kcu
-        on kcu.constraint_catalog=tc.constraint_catalog
-       and kcu.constraint_schema=tc.constraint_schema
-       and kcu.constraint_name=tc.constraint_name
-      join information_schema.constraint_column_usage ccu
-        on ccu.constraint_catalog=tc.constraint_catalog
-       and ccu.constraint_schema=tc.constraint_schema
-       and ccu.constraint_name=tc.constraint_name
-      where tc.constraint_type='FOREIGN KEY'
-        and tc.table_schema='public'
-        and tc.table_name=expected.source_table
-        and kcu.column_name=expected.source_column
-        and ccu.table_schema='public'
-        and ccu.table_name=expected.target_table
-        and ccu.column_name=expected.target_column
+      from pg_constraint fk
+      join pg_class source_rel on source_rel.oid=fk.conrelid
+      join pg_namespace source_ns on source_ns.oid=source_rel.relnamespace
+      join pg_class target_rel on target_rel.oid=fk.confrelid
+      join pg_namespace target_ns on target_ns.oid=target_rel.relnamespace
+      where fk.contype='f'
+        and source_ns.nspname='public'
+        and source_rel.relname=expected.source_table
+        and target_ns.nspname='public'
+        and target_rel.relname=expected.target_table
+        and exists (
+          select 1
+          from unnest(fk.conkey) with ordinality source_key(attnum, position)
+          join unnest(fk.confkey) with ordinality target_key(attnum, position)
+            using (position)
+          join pg_attribute source_att
+            on source_att.attrelid=fk.conrelid and source_att.attnum=source_key.attnum
+          join pg_attribute target_att
+            on target_att.attrelid=fk.confrelid and target_att.attnum=target_key.attnum
+          where source_att.attname=expected.source_column
+            and target_att.attname=expected.target_column
+        )
+        and exists (
+          select 1
+          from unnest(fk.conkey) with ordinality source_key(attnum, position)
+          join unnest(fk.confkey) with ordinality target_key(attnum, position)
+            using (position)
+          join pg_attribute source_att
+            on source_att.attrelid=fk.conrelid and source_att.attnum=source_key.attnum
+          join pg_attribute target_att
+            on target_att.attrelid=fk.confrelid and target_att.attnum=target_key.attnum
+          where source_att.attname='organization_id'
+            and target_att.attname='organization_id'
+        )
     ) then
-      raise exception 'Backup schema contract failed: missing FK %.% -> %.%',
+      raise exception 'Backup schema contract failed: missing tenant-scoped FK %.% -> %.% including organization_id',
         expected.source_table, expected.source_column, expected.target_table, expected.target_column;
     end if;
   end loop;
+
+  -- Service line totals must remain generated, rather than trusting imported totals.
+  select exists (
+    select 1 from information_schema.columns
+    where table_schema='public' and table_name='service_order_lines'
+      and column_name='line_total' and is_generated='ALWAYS'
+  ) into identity_ok;
+  if not identity_ok then
+    raise exception 'Backup schema contract failed: service_order_lines.line_total must remain generated';
+  end if;
 
   -- Identity columns must be imported with explicit identity handling and
   -- their sequences reconciled after a successful transaction.
