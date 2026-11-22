@@ -147,7 +147,7 @@ export type CreateCompanyServiceOrderInput = {
 
 /**
  * Insere uma OS usando o DEFAULT do banco para order_number.
- * Requer a migração company_service_order_number_default antes de uso.
+ * A coluna order_number já é IDENTITY BY DEFAULT no banco BR.
  */
 export async function createCompanyServiceOrder(input: CreateCompanyServiceOrderInput) {
   const reportedIssue = input.reportedIssue.trim()
