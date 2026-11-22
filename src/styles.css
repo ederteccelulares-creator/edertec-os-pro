@@ -200,3 +200,14 @@
 /* Existing device selection in service order form */
 .tenant-order-device-selected{margin:8px 0 12px;padding:10px 12px;border:1px solid #3b604e;border-radius:8px;background:#13251e;color:#a8d8b8;font-size:11px;line-height:1.5}
 .tenant-order-device-selected b{color:#d8f1df}
+
+
+/* Device service-order history */
+.tenant-device-order-history{display:grid;gap:9px;margin-top:12px}
+.tenant-device-order-history article{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;align-items:center;gap:12px;padding:12px;border:1px solid #344153;border-radius:9px;background:#101722}
+.tenant-device-order-history article>div{min-width:0}
+.tenant-device-order-history b,.tenant-device-order-history small{display:block}
+.tenant-device-order-history small{font-size:10px;color:#9eacbd;margin-top:3px}
+.tenant-device-order-history p{font-size:11px;color:#cbd5e1;margin:7px 0 0;overflow-wrap:anywhere}
+.tenant-order-status{font-size:10px;color:#e7c47d;white-space:nowrap}
+@media(max-width:600px){.tenant-device-order-history article{grid-template-columns:1fr auto;gap:8px}.tenant-device-order-history article>div{grid-column:1/-1}.tenant-device-order-history article strong{justify-self:start}}
