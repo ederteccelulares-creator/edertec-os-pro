@@ -105,12 +105,27 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
     finally {setBusy(false)}
   }
 
-  function printServiceOrder(order:CompanyServiceOrder,format:'a4'|'thermal80',trackingUrl:string) {
+  async function prepareOrderPrint(format:'a4'|'thermal80') {
+    const order=pendingPrintOrder
+    if(!order)return
+    // Abrir a janela dentro do clique evita bloqueio de pop-up no Safari/iPhone.
+    const popup=window.open('','_blank','width=900,height=700')
+    if(!popup){setError('Permita janelas pop-up para imprimir a ordem de serviço.');return}
+    setBusy(true);setError('')
+    try {
+      const link=await createCompanyServiceOrderTrackingLink({companyId:company.id,orderId:order.id})
+      setPendingPrintOrder(null)
+      printServiceOrder(order,format,link,popup)
+    } catch(e) {
+      popup.close()
+      setError(e instanceof Error?e.message:'Não foi possível gerar o QR Code.')
+    } finally {setBusy(false)}
+  }
+
+  function printServiceOrder(order:CompanyServiceOrder,format:'a4'|'thermal80',trackingUrl:string,popup:Window) {
     const customer=order.customers
     const safe=(value:unknown)=>String(value??"—").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]||ch))
     const date=(value:string|null|undefined)=>value?new Date(value).toLocaleString("pt-BR"):"—"
-    const popup=window.open("","_blank","width=900,height=700")
-    if(!popup){setError("Permita janelas pop-up para gerar as duas vias da ordem de serviço.");return}
     const printedAt=safe(new Date().toLocaleString("pt-BR"))
     const copy=(label:string,customerCopy:boolean)=>'<section class="copy"><div class="copy-label">'+label+'</div>'
       +'<header><div><h1>'+safe(companyInfo.name)+'</h1><div class="muted">ORDEM DE SERVIÇO · ASSISTÊNCIA TÉCNICA</div></div><div class="number">OS #'+safe(order.order_number)+'<div class="muted small">Entrada: '+safe(date(order.received_at))+'</div></div></header>'
@@ -228,7 +243,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
         </form>}
         {loading?<p className="company-empty">Carregando...</p>:orders.length===0?<p className="company-empty">Nenhuma OS cadastrada nesta filial.</p>:<div className="company-table-wrap"><table><thead><tr><th>OS</th><th>CLIENTE</th><th>APARELHO</th><th>DEFEITO</th><th>VALOR</th><th>STATUS</th><th>PAGAMENTO</th><th>FOTOS</th><th>IMPRIMIR</th></tr></thead><tbody>{orders.map(o=><tr key={o.id}><td><b>#{o.order_number}</b><small>{new Date(o.received_at).toLocaleDateString('pt-BR')}</small></td><td>{o.customers?.name||'—'}<small>{o.customers?.phone||''}</small></td><td>{[o.device_brand,o.device_model].filter(Boolean).join(' ')||o.device_type||'—'}<small>{o.serial_number||''}</small></td><td>{o.reported_issue}</td><td>{money(o.estimated_price)}</td><td><select disabled={busy} value={o.status} onChange={e=>void changeStatus(o,e.target.value)}>{statusFlow.map(s=><option key={s} value={s}>{statusLabels[s]}</option>)}</select></td><td><button className="company-secondary company-small-action" disabled={busy||o.status==='cancelled'} onClick={()=>{setPaymentOrder(o);setPaymentAmount(String(o.final_price>0?o.final_price:o.estimated_price));setPaymentMethod('pix')}}>Receber</button></td><td>{o.photo_urls?.length?<div className="company-os-photo-list">{o.photo_urls.map((url,i)=><a key={i} href={url} target="_blank" rel="noreferrer"><img src={url} alt={`Foto da OS ${o.order_number} ${i+1}`}/></a>)}</div>:<small>—</small>}<button className="company-secondary company-small-action" onClick={()=>setPendingPrintOrder(o)} title="Imprimir ordem de serviço"><Printer size={15}/> Imprimir</button></td></tr>)}</tbody></table></div>}
       </section>}
-      {pendingPrintOrder&&<div className="company-modal-backdrop"><div className="company-form company-payment-modal"><h3>Escolher formato de impressão</h3><p>OS #{pendingPrintOrder.order_number} · {pendingPrintOrder.customers?.name||'Cliente'}</p><div className="company-form-actions"><button type="button" className="company-secondary" onClick={async()=>{const order=pendingPrintOrder;if(!order)return;setBusy(true);try{const link=await createCompanyServiceOrderTrackingLink({companyId:company.id,orderId:order.id});setPendingPrintOrder(null);printServiceOrder(order,'a4',link)}catch(e){setError(e instanceof Error?e.message:'Não foi possível gerar o QR Code.')}finally{setBusy(false)}}}><Printer size={16}/> Imprimir A4</button><button type="button" className="company-primary" onClick={async()=>{const order=pendingPrintOrder;if(!order)return;setBusy(true);try{const link=await createCompanyServiceOrderTrackingLink({companyId:company.id,orderId:order.id});setPendingPrintOrder(null);printServiceOrder(order,'thermal80',link)}catch(e){setError(e instanceof Error?e.message:'Não foi possível gerar o QR Code.')}finally{setBusy(false)}}}><Printer size={16}/> Térmica 80 mm</button><button type="button" className="company-secondary" onClick={()=>setPendingPrintOrder(null)}>Cancelar</button></div></div></div>}
+      {pendingPrintOrder&&<div className="company-modal-backdrop"><div className="company-form company-payment-modal"><h3>Escolher formato de impressão</h3><p>OS #{pendingPrintOrder.order_number} · {pendingPrintOrder.customers?.name||'Cliente'}</p><div className="company-form-actions"><button type="button" className="company-secondary" disabled={busy} onClick={()=>void prepareOrderPrint('a4')}><Printer size={16}/> Imprimir A4</button><button type="button" className="company-primary" disabled={busy} onClick={()=>void prepareOrderPrint('thermal80')}><Printer size={16}/> Térmica 80 mm</button><button type="button" className="company-secondary" onClick={()=>setPendingPrintOrder(null)}>Cancelar</button></div></div></div>}
       {paymentOrder&&<div className="company-modal-backdrop"><form className="company-form company-payment-modal" onSubmit={submitOrderPayment}><h3>Receber pagamento · OS #{paymentOrder.order_number}</h3><p>{paymentOrder.customers?.name||'Cliente não informado'} · {[paymentOrder.device_brand,paymentOrder.device_model].filter(Boolean).join(' ')}</p><label>Valor recebido (R$)<input required type="number" min="0.01" step="0.01" value={paymentAmount} onChange={e=>setPaymentAmount(e.target.value)}/></label><label>Forma de pagamento<select value={paymentMethod} onChange={e=>setPaymentMethod(e.target.value as PaymentMethod)}><option value="pix">PIX</option><option value="cash">Dinheiro</option><option value="debit_card">Cartão de débito</option><option value="credit_card">Cartão de crédito</option><option value="bank_transfer">Transferência</option><option value="boleto">Boleto</option><option value="other">Outro</option></select></label><label>Observações<input value={paymentNotes} onChange={e=>setPaymentNotes(e.target.value)}/></label><div className="company-form-actions"><button type="button" className="company-secondary" onClick={()=>setPaymentOrder(null)}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Registrando...':'Confirmar recebimento'}</button></div></form></div>}
       {tab==='pos'&&<CompanyPOSPanel company={company}/>}{tab==='inventory'&&<CompanyInventoryPanel company={company}/>}{tab==='suppliers'&&<CompanySuppliersPanel company={company}/>}{tab==='purchases'&&<CompanyPurchasesPanel company={company}/>}{tab==='cash'&&<CompanyCashPanel company={company}/>}{tab==='entries'&&<CompanyFinancialEntriesPanel company={company}/>}
       {tab==='backup'&&(role==='owner'||role==='admin')&&<section className="company-panel">
