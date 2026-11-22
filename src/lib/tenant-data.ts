@@ -140,6 +140,28 @@ export async function saveDevice(context: TenantContext, input: DeviceInput) {
   return data
 }
 
+export async function updateDevice(context: TenantContext, deviceId: string, input: DeviceInput) {
+  const payload = {
+    customer_id: required(input.customerId, 'o cliente do aparelho'),
+    brand: required(input.brand, 'a marca'),
+    model: required(input.model, 'o modelo'),
+    color: input.color?.trim() || null,
+    storage: input.storage?.trim() || null,
+    imei: input.imei?.trim() || null,
+    serial_number: input.serialNumber?.trim() || null,
+    notes: input.notes?.trim() || null,
+  }
+  const { data, error } = await client().from('devices')
+    .update(payload)
+    .eq('organization_id', context.organizationId)
+    .eq('customer_id', input.customerId)
+    .eq('id', deviceId)
+    .select('id, organization_id, customer_id, brand, model, color, storage, imei, serial_number, notes, created_at')
+    .single()
+  if (error) throw error
+  return data
+}
+
 export async function listServiceOrders(context: TenantContext) {
   const { data, error } = await client().from('service_orders')
     .select('id, organization_id, branch_id, customer_id, device_id, order_number, status, reported_issue, diagnosis, accessories, physical_condition, estimated_amount, approved_amount, technician_id, opened_by, received_at, delivered_at, warranty_days, internal_notes, created_at, updated_at, customers(name, phone), devices(brand, model, imei)')
