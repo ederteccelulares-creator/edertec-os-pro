@@ -371,3 +371,46 @@ export async function createSale(context: TenantContext, input: SaleInput) {
   if (error) throw error
   return data
 }
+
+
+export type TeamMember = {
+  member_id: string
+  user_id: string
+  full_name: string
+  phone: string | null
+  member_role: 'owner' | 'admin' | 'manager' | 'attendant' | 'technician'
+  is_active: boolean
+  joined_at: string
+}
+
+export async function listOrganizationTeam(organizationId: string): Promise<TeamMember[]> {
+  const { data, error } = await client().rpc('list_organization_team', { p_organization_id: organizationId })
+  if (error) throw error
+  return (data ?? []) as TeamMember[]
+}
+
+export async function setOrganizationMemberRole(
+  organizationId: string,
+  memberId: string,
+  role: TeamMember['member_role'],
+) {
+  const { error } = await client().rpc('set_organization_member_role', {
+    p_organization_id: organizationId,
+    p_member_id: memberId,
+    p_new_role: role,
+  })
+  if (error) throw error
+}
+
+export async function setOrganizationMemberActive(
+  organizationId: string,
+  memberId: string,
+  active: boolean,
+) {
+  const { error } = await client().rpc('set_organization_member_active', {
+    p_organization_id: organizationId,
+    p_member_id: memberId,
+    p_active: active,
+  })
+  if (error) throw error
+}
