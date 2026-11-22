@@ -12,7 +12,7 @@ Crie duas empresas independentes (Empresa A e Empresa B) e os seguintes usuário
 - B1: proprietário da Empresa B.
 - B2: atendente da Empresa B.
 
-Cadastre uma filial, um cliente, um aparelho, uma OS, um produto e uma venda em cada empresa. Atribua a OS da Empresa A ao técnico A3. Cadastre também um lançamento financeiro em cada empresa.
+Cadastre uma filial, um cliente, um aparelho, uma OS, um produto e uma venda em cada empresa. Atribua a OS da Empresa A ao técnico A3. Crie também uma OS sem técnico e outra OS encerrada para os testes de atribuição. Cadastre também um lançamento financeiro em cada empresa.
 
 ## Testes de isolamento
 
@@ -27,6 +27,12 @@ Cadastre uma filial, um cliente, um aparelho, uma OS, um produto e uma venda em 
 | Tentar mover aparelho para outro cliente | A1 | Trigger rejeita alteração |
 | Tentar alterar diretamente campos da OS | A1 | RLS rejeita UPDATE direto |
 | Tentar inserir OS diretamente pela API | A1 | RLS rejeita INSERT direto |
+| Atribuir OS da Empresa A ao técnico A3 | A1 (proprietário), administrador ou gerente | Permitido, com log de auditoria |
+| Atribuir OS a usuário que não é técnico ativo da Empresa A | A1 | Função rejeita |
+| Remover ou trocar técnico de OS em andamento | A1 | Permitido, com log de auditoria |
+| Atribuir ou remover técnico de OS entregue/cancelada | A1 | Função rejeita |
+| Técnico A3 tentar atribuir ou remover técnico | A3 | Função rejeita |
+| Proprietário B1 tentar atribuir técnico em OS da Empresa A | B1 | Função rejeita |
 | Alterar status de OS atribuída | A3 | Permitido, com evento e auditoria |
 | Alterar status de OS não atribuída | A3 | Função rejeita |
 | Consultar vendas de outro atendente da mesma empresa | A2 | Nenhuma linha retornada |
