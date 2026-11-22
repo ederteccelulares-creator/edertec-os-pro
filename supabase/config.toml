@@ -12,3 +12,6 @@ verify_jwt = true
 
 [functions.respond-service-order-quote]
 verify_jwt = false
+
+[functions.mercadopago-billing]
+verify_jwt = false
