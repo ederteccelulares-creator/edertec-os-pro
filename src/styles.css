@@ -284,3 +284,14 @@
 .customer-portal-updated{margin-top:16px;color:#93a1b8;font-size:12px}.customer-portal-card footer{margin-top:22px;color:#8291a8;font-size:12px;text-align:center}
 .customer-portal-state{min-height:240px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#b7c3d6;text-align:center}.customer-portal-error svg{color:#f2ae76}.customer-portal-error h1{margin:0;font-size:21px}.customer-portal-error p{max-width:420px;line-height:1.5}
 @media(max-width:540px){.customer-portal-page{padding:12px}.customer-portal-card{padding:18px;border-radius:14px}.customer-portal-order{align-items:flex-start;flex-direction:column}.customer-portal-heading h1{font-size:23px}}
+
+
+.customer-portal-decision{margin-top:16px;padding:14px;border:1px solid #385078;border-radius:12px;background:#17243a}
+.customer-portal-decision>p{margin:0 0 12px;color:#c4d1e4;font-size:13px}
+.customer-portal-decision>div{display:flex;gap:10px;flex-wrap:wrap}
+.customer-portal-decision button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:10px 14px;border:1px solid #477a67;border-radius:9px;background:#1d5943;color:#e6fff1;font-weight:700;cursor:pointer}
+.customer-portal-decision button.customer-portal-decline{border-color:#80505a;background:#542c37;color:#ffe9ed}
+.customer-portal-decision button:disabled{opacity:.55;cursor:wait}
+.customer-portal-decision-result{padding:10px 12px;border-radius:9px;background:#1d3b35;color:#b9f1d1!important;font-size:13px}
+.customer-portal-action-error{padding:10px 12px;border-radius:9px;background:#4a2930;color:#ffdce1!important;font-size:13px}
+@media(max-width:540px){.customer-portal-decision>div{flex-direction:column}.customer-portal-decision button{width:100%}}
