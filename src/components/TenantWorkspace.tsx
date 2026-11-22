@@ -34,7 +34,7 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
   const [showFinanceForm, setShowFinanceForm] = useState(false)
   const [financeForm, setFinanceForm] = useState({entryType:'income' as 'income'|'expense',description:'',amount:'',paymentMethod:'pix' as 'cash'|'pix'|'debit_card'|'credit_card'|'bank_transfer'|'boleto'|'other',status:'paid' as 'pending'|'paid',dueDate:'',notes:''})
   const canSell = ['owner','admin','manager','attendant'].includes(role)
-  const [salesRows, setSalesRows] = useState<Array<{id:string;sale_number:number;total:number;payment_method:string;payment_status:string;created_at:string;customers:{name:string}|null;sale_items:Array<{id:string;product_name:string;quantity:number;line_total:number}>}>>([])
+  const [salesRows, setSalesRows] = useState<Array<{id:string;sale_number:number;total:number;payment_method:string;payment_status:string;created_at:string;customers:Array<{name:string}>;sale_items:Array<{id:string;product_name:string;quantity:number;line_total:number}>}>>([])
   const [showSaleForm, setShowSaleForm] = useState(false)
   const [saleForm, setSaleForm] = useState({itemId:'',quantity:'1',customerId:'',paymentMethod:'pix' as 'cash'|'pix'|'debit_card'|'credit_card'|'bank_transfer'|'boleto'|'other',paymentStatus:'paid' as 'paid'|'pending',discount:'0',notes:''})
   const [saleCart, setSaleCart] = useState<Array<{itemId:string;name:string;quantity:number;unitPrice:number;costPrice:number}>>([])
