@@ -15,6 +15,9 @@ Sistema de gestão para assistência técnica de celulares.
 - Lista, busca e filtro por status
 - Alteração do andamento da OS
 - Visualização de detalhes da ordem
+- Cadastro de clientes com telefone, CPF, e-mail e endereço
+- Perfil do cliente com histórico de ordens por telefone
+- Criação automática de cadastro básico quando uma OS é aberta para um novo telefone
 - Dados adicionais de entrada: IMEI/série, acessórios e condição física
 - Modelo de impressão A4 com identificação da OS, dados do cliente/aparelho, defeito, valor e assinaturas
 - Impressão pelo navegador com opção de salvar como PDF
