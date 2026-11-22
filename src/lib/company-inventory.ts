@@ -128,3 +128,31 @@ export async function listCompanyStockMovements(input: {
   if (error) throw error
   return (data ?? []) as CompanyStockMovement[]
 }
+
+
+export async function recordCompanyStockMovement(input: {
+  companyId: string
+  productId: string
+  movementType: 'in' | 'out' | 'adjustment'
+  quantity: number
+  unitCost?: number
+  reason?: string
+  branchId?: string | null
+}) {
+  const quantity = Number(input.quantity)
+  const unitCost = Number(input.unitCost ?? 0)
+  if (!Number.isFinite(quantity) || quantity <= 0) throw new Error('Informe uma quantidade maior que zero.')
+  if (!Number.isFinite(unitCost) || unitCost < 0) throw new Error('O custo unitário não pode ser negativo.')
+
+  const { data, error } = await db().rpc('record_stock_movement', {
+    p_company_id: input.companyId,
+    p_product_id: input.productId,
+    p_movement_type: input.movementType,
+    p_quantity: quantity,
+    p_branch_id: input.branchId || null,
+    p_unit_cost: unitCost,
+    p_reason: input.reason?.trim() || null,
+  })
+  if (error) throw error
+  return data as string
+}
