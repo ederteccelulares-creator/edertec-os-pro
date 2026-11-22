@@ -149,4 +149,4 @@ A validação também confere referências internas entre clientes, aparelhos, O
 ## Integridade do histórico de serviços
 
 A migração `0016_service_history_integrity.sql` impede reatribuir eventos e linhas de serviços a outra ordem, filial, empresa ou usuário responsável. Também protege as chaves do catálogo de serviços. Ela preserva os dados existentes e deve ser aplicada após a migração 0015.
-
+A validação consulta também, em modo somente leitura, a quantidade atual de registros de cada tabela operacional da empresa de destino. O painel informa se o destino está vazio ou já contém dados e lista as tabelas ocupadas. Se houver dados no destino, uma futura restauração não deverá sobrescrevê-los automaticamente; será necessário um procedimento de mesclagem com regras explícitas. Essa prévia não executa importação e não libera a restauração.
