@@ -1,6 +1,6 @@
 import {supabase} from './supabase'
 function db(){if(!supabase)throw new Error('Supabase não está configurado.');return supabase}
-export type FinancialEntry={id:string;company_id:string;branch_id:string|null;entry_type:'payable'|'receivable';category:string;description:string;counterparty:string|null;amount:number;due_date:string;status:'open'|'paid'|'cancelled';payment_method:string|null;paid_at:string|null;notes:string|null;created_at:string}
+export type FinancialEntry={id:string;company_id:string;branch_id:string|null;entry_type:'payable'|'receivable';category:string;description:string;counterparty:string|null;amount:number;due_date:string;status:'open'|'paid'|'cancelled';payment_method:string|null;paid_at:string|null;notes:string|null;created_at:string;source_order_number:number|null;source_service_order_id:string|null;customer_id:string|null}
 export async function listFinancialEntries(companyId:string):Promise<FinancialEntry[]>{
  const {data,error}=await db().from('company_financial_entries').select('*').eq('company_id',companyId).order('due_date').limit(500)
  if(error)throw error;return (data??[]) as FinancialEntry[]
