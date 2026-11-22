@@ -619,3 +619,32 @@ export async function validateOrganizationBackup(organizationId: string, backup:
     errors: string[]
   }
 }
+
+
+export async function restoreOrganizationBackup(
+  organizationId: string,
+  backup: Record<string, unknown>,
+  branchMapping: Record<string, string>,
+  userMapping: Record<string, string>,
+  idempotencyKey: string,
+) {
+  const { data, error } = await client().functions.invoke('restore-organization-backup', {
+    body: {
+      organization_id: organizationId,
+      idempotency_key: idempotencyKey,
+      backup,
+      branch_mapping: branchMapping,
+      user_mapping: userMapping,
+    },
+  })
+  if (error) throw error
+  if (data?.error) throw new Error(data.error)
+  return data as {
+    success: boolean
+    applied: boolean
+    replayed: boolean
+    organization_id: string
+    restored_counts: Record<string, number>
+    restored_at: string
+  }
+}
