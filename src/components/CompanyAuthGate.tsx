@@ -133,7 +133,7 @@ export default function CompanyAuthGate() {
       <h1>{accessStatus.company_status!=='active'?'Acesso suspenso':'Seu período de teste terminou'}</h1>
       <p>O acesso aos módulos está bloqueado. Seus clientes, ordens de serviço, produtos, fotos e demais dados continuam armazenados e serão liberados após a contratação ou renovação de um plano.</p>
       {accessStatus.plan_name&&<p>Plano: <b>{accessStatus.plan_name}</b></p>}
-      <button className="company-primary" onClick={()=>window.open('https://wa.me/?text='+encodeURIComponent('Olá! Quero contratar um plano do Edertec OS Pro para minha empresa: '+selected.name),'_blank','noopener,noreferrer')}>Entrar em contato para contratar um plano</button>
+      <button className="company-primary" onClick={()=>window.open('https://wa.me/5547992454773?text='+encodeURIComponent('Olá! Quero contratar um plano do Edertec OS Pro para minha empresa: '+selected.name),'_blank','noopener,noreferrer')}>Entrar em contato para contratar um plano</button>
       <button className="company-link" onClick={signOut}>Sair da conta</button>
     </section></main>
     return <CompanyWorkspace company={selected} role={memberships.find(m=>m.company_id===selected.id)?.role||'technician'} email={session.user.email||''} onSignOut={signOut}/>
