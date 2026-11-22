@@ -1275,3 +1275,28 @@ td b { font-weight:650; }
 .support-ticket-actions .support-ticket-finish:hover{filter:brightness(1.12)}
 .support-ticket-actions button:disabled{opacity:.55;cursor:wait}
 @media(max-width:560px){.support-ticket-actions{display:grid;grid-template-columns:1fr}.support-ticket-actions>button{width:100%}}
+
+/* Branded startup screen shown after authentication while workspace data loads */
+.auth-splash{
+  position:fixed;inset:0;z-index:9999;min-height:100dvh;width:100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  overflow:hidden;padding:24px;background:#030303;color:#b9c0ca;
+}
+.auth-splash::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 42%,rgba(205,15,27,.12),transparent 52%);
+}
+.auth-splash-image{
+  position:relative;display:block;width:min(88vw,560px);height:auto;max-height:78dvh;
+  object-fit:contain;filter:drop-shadow(0 0 28px rgba(225,18,32,.14));
+  animation:edertec-splash-in .55s ease-out both;
+}
+.auth-splash-progress{position:relative;display:flex;gap:7px;margin-top:24px}
+.auth-splash-progress span{width:6px;height:6px;border-radius:50%;background:#ed1b2e;animation:edertec-splash-pulse 1s ease-in-out infinite}
+.auth-splash-progress span:nth-child(2){animation-delay:.15s}
+.auth-splash-progress span:nth-child(3){animation-delay:.3s}
+.auth-splash p{position:relative;margin:13px 0 0;font-size:9px;letter-spacing:2.6px;text-align:center;color:#858585}
+@keyframes edertec-splash-in{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+@keyframes edertec-splash-pulse{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1.15)}}
+@media(max-width:540px){.auth-splash{padding:16px}.auth-splash-image{width:min(94vw,520px);max-height:76dvh}.auth-splash p{font-size:8px;letter-spacing:1.8px}}
+@media(prefers-reduced-motion:reduce){.auth-splash-image,.auth-splash-progress span{animation:none}}
