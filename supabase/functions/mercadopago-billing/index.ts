@@ -59,15 +59,49 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
     || (() => { try { return JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") || "{}").default; } catch { return undefined; } })();
-  const accessToken = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN");
-  const webhookSecret = Deno.env.get("MERCADOPAGO_WEBHOOK_SECRET");
-  if (!supabaseUrl || !serviceKey || !accessToken) {
-    return response({ error: "Billing backend is not configured." }, 503);
-  }
-
+  if (!supabaseUrl || !serviceKey) return response({ error: "Billing backend is not configured." }, 503);
   const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
   const url = new URL(req.url);
   const action = url.searchParams.get("action");
+
+  // Settings are available only to authenticated Super Admin accounts.
+  if (action === "settings") {
+    const authorization = req.headers.get("Authorization") || "";
+    const jwt = authorization.replace(/^Bearer\\s+/i, "");
+    const anonKey = getApiKey("SUPABASE_ANON_KEY");
+    if (!jwt || !anonKey) return response({ error: "Authentication required." }, 401);
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: `Bearer ${jwt}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data: userData, error: userError } = await userClient.auth.getUser(jwt);
+    if (userError || !userData.user) return response({ error: "Invalid session." }, 401);
+    const { data: isAdmin } = await admin.from("platform_admins").select("user_id").eq("user_id", userData.user.id).maybeSingle();
+    if (!isAdmin) return response({ error: "Super Admin access required." }, 403);
+
+    if (req.method === "GET") {
+      const { data, error } = await admin.rpc("get_platform_billing_config_status");
+      if (error) return response({ error: "Could not load billing settings." }, 500);
+      return response(data || { access_token_configured: false, webhook_secret_configured: false });
+    }
+    if (req.method === "POST") {
+      let input: { access_token?: string; webhook_secret?: string };
+      try { input = await req.json(); } catch { return response({ error: "Invalid JSON." }, 400); }
+      const { data, error } = await admin.rpc("save_platform_billing_secrets", {
+        p_user_id: userData.user.id,
+        p_access_token: input.access_token || "",
+        p_webhook_secret: input.webhook_secret || "",
+      });
+      if (error) return response({ error: error.message || "Could not save billing credentials." }, 400);
+      return response(data || { configured: true });
+    }
+    return response({ error: "Method not allowed." }, 405);
+  }
+
+  const { data: storedSecrets, error: secretsError } = await admin.rpc("get_platform_billing_secrets");
+  const accessToken = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN") || storedSecrets?.access_token;
+  const webhookSecret = Deno.env.get("MERCADOPAGO_WEBHOOK_SECRET") || storedSecrets?.webhook_secret;
+  if (!accessToken) return response({ error: "Mercado Pago access token is not configured." }, 503);
 
   if (action === "webhook") {
     if (!webhookSecret) return response({ error: "Webhook secret is not configured." }, 503);
