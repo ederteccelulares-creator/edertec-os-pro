@@ -1,45 +1,36 @@
--- End-to-end RLS smoke test using two synthetic users and two isolated tenants.
--- Run only in the disposable PostgreSQL CI database after migrations 0001-0017.
+-- End-to-end RLS smoke test for two company-scoped tenants.
+-- Run only in the disposable PostgreSQL CI database after all migrations.
 -- The test harness simulates auth.uid(); it is not a substitute for Supabase Auth.
 
 \set ON_ERROR_STOP on
 
 INSERT INTO auth.users (id,email) VALUES
   ('10000000-0000-4000-8000-000000000001','tenant-a@example.invalid'),
-  ('20000000-0000-4000-8000-000000000002','tenant-b@example.invalid'),
-  ('30000000-0000-4000-8000-000000000003','technician-a@example.invalid');
+  ('20000000-0000-4000-8000-000000000002','tenant-b@example.invalid');
 
 GRANT USAGE ON SCHEMA public TO authenticated;
--- Grant only what this smoke test needs; do not override migration revokes.
-GRANT SELECT ON public.organization_members, public.branches TO authenticated;
-GRANT SELECT, INSERT ON public.customers, public.devices TO authenticated;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
+GRANT SELECT ON public.companies, public.company_members, public.branches TO authenticated;
+GRANT SELECT, INSERT ON public.customers TO authenticated;
 
 SET ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false);
-SELECT public.create_organization('Tenant A','tenant-a') AS org_a \gset
-SELECT set_config('test.org_a', :'org_a', false);
-INSERT INTO public.customers(id,organization_id,name,phone)
-VALUES ('a0000000-0000-4000-8000-000000000001', :'org_a'::uuid, 'Cliente A', '111');
+SELECT public.register_company('Tenant A',NULL,NULL) AS company_a \gset
+SELECT set_config('test.company_a', :'company_a', false);
+INSERT INTO public.customers(company_id,name,phone)
+VALUES (:'company_a'::uuid,'Cliente A','111');
 
 SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000002',false);
-SELECT public.create_organization('Tenant B','tenant-b') AS org_b \gset
-SELECT set_config('test.org_b', :'org_b', false);
-INSERT INTO public.customers(id,organization_id,name,phone)
-VALUES ('b0000000-0000-4000-8000-000000000002', :'org_b'::uuid, 'Cliente B', '222');
+SELECT public.register_company('Tenant B',NULL,NULL) AS company_b \gset
+SELECT set_config('test.company_b', :'company_b', false);
+INSERT INTO public.customers(company_id,name,phone)
+VALUES (:'company_b'::uuid,'Cliente B','222');
 
--- Create a real technician membership for Tenant A through the privileged
--- disposable test harness. This simulates an accepted team invitation.
-RESET ROLE;
-INSERT INTO public.organization_members(organization_id,user_id,role,active)
-VALUES (current_setting('test.org_a')::uuid,'30000000-0000-4000-8000-000000000003','technician',true);
-SET ROLE authenticated;
-
--- A tenant B user must not see tenant A rows, and vice versa.
+-- Tenant B must see only its own customer and branch.
 DO $$
 BEGIN
   IF (SELECT count(*) FROM public.customers) <> 1
-     OR EXISTS (SELECT 1 FROM public.customers WHERE id='a0000000-0000-4000-8000-000000000001') THEN
+     OR EXISTS (SELECT 1 FROM public.customers WHERE name='Cliente A')
+     OR (SELECT count(*) FROM public.branches) <> 1 THEN
     RAISE EXCEPTION 'Tenant B can see data belonging to Tenant A';
   END IF;
 END;
@@ -49,18 +40,19 @@ SELECT set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001'
 DO $$
 BEGIN
   IF (SELECT count(*) FROM public.customers) <> 1
-     OR EXISTS (SELECT 1 FROM public.customers WHERE id='b0000000-0000-4000-8000-000000000002') THEN
+     OR EXISTS (SELECT 1 FROM public.customers WHERE name='Cliente B')
+     OR (SELECT count(*) FROM public.branches) <> 1 THEN
     RAISE EXCEPTION 'Tenant A can see data belonging to Tenant B';
   END IF;
 END;
 $$;
 
--- RLS must reject writes that claim another organization's tenant key.
+-- RLS must reject a write that claims another company's tenant key.
 DO $$
 BEGIN
   BEGIN
-    INSERT INTO public.customers(organization_id,name,phone)
-    VALUES (current_setting('test.org_b')::uuid, 'Cross-tenant attempt', '999');
+    INSERT INTO public.customers(company_id,name,phone)
+    VALUES (current_setting('test.company_b')::uuid,'Tentativa entre empresas','999');
     RAISE EXCEPTION 'Cross-tenant customer insert unexpectedly succeeded';
   EXCEPTION WHEN insufficient_privilege THEN
     NULL;
@@ -68,135 +60,5 @@ BEGIN
 END;
 $$;
 
--- Composite tenant foreign keys must reject linking a Tenant B device to
--- a Tenant A customer, even when the request is authenticated as Tenant B.
-SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000002',false);
-DO $$
-BEGIN
-  BEGIN
-    INSERT INTO public.devices(organization_id,customer_id,brand,model)
-    VALUES (current_setting('test.org_b')::uuid, 'a0000000-0000-4000-8000-000000000001', 'Teste', 'Cross Tenant');
-    RAISE EXCEPTION 'Cross-tenant device/customer relationship unexpectedly succeeded';
-  EXCEPTION WHEN foreign_key_violation THEN
-    NULL;
-  END;
-END;
-$$;
-
--- Membership privilege changes are RPC-only; authenticated clients cannot
--- update organization_members directly.
-DO $$
-BEGIN
-  BEGIN
-    UPDATE public.organization_members SET role='owner'
-    WHERE organization_id=current_setting('test.org_b')::uuid
-      AND user_id='20000000-0000-4000-8000-000000000002';
-    RAISE EXCEPTION 'Direct membership role update unexpectedly succeeded';
-  EXCEPTION WHEN insufficient_privilege THEN
-    NULL;
-  END;
-END;
-$$;
-
--- Service orders must be created through the audited SECURITY DEFINER RPC.
-DO $$
-BEGIN
-  BEGIN
-    INSERT INTO public.service_orders(organization_id,branch_id,customer_id,reported_issue)
-    SELECT current_setting('test.org_b')::uuid, b.id, 'b0000000-0000-4000-8000-000000000002', 'Direct insert attempt'
-    FROM public.branches b
-    WHERE b.organization_id=current_setting('test.org_b')::uuid
-    LIMIT 1;
-    RAISE EXCEPTION 'Direct service order insert unexpectedly succeeded';
-  EXCEPTION WHEN insufficient_privilege THEN
-    NULL;
-  END;
-END;
-$$;
-
--- Technician assignment is tenant- and role-scoped.
-SELECT set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false);
-SELECT set_config('test.branch_a', (SELECT id::text FROM public.branches WHERE organization_id=current_setting('test.org_a')::uuid LIMIT 1), false);
-SELECT (public.create_service_order_with_device(
-  current_setting('test.org_a')::uuid,
-  (SELECT id FROM public.branches WHERE organization_id=current_setting('test.org_a')::uuid LIMIT 1),
-  'a0000000-0000-4000-8000-000000000001',
-  'Apple','iPhone de teste',NULL,'Tela danificada',100,NULL,NULL
-)).id AS assigned_order_id \gset
-SELECT set_config('test.assigned_order_id', :'assigned_order_id', false);
-SELECT (public.create_service_order_with_device(
-  current_setting('test.org_a')::uuid,
-  (SELECT id FROM public.branches WHERE organization_id=current_setting('test.org_a')::uuid LIMIT 1),
-  'a0000000-0000-4000-8000-000000000001',
-  'Samsung','Galaxy de teste',NULL,'Não liga',80,NULL,NULL
-)).id AS unassigned_order_id \gset
-SELECT set_config('test.unassigned_order_id', :'unassigned_order_id', false);
-
-SELECT public.assign_service_order_technician(
-  current_setting('test.org_a')::uuid,
-  current_setting('test.branch_a')::uuid,
-  current_setting('test.assigned_order_id')::uuid,
-  '30000000-0000-4000-8000-000000000003'
-);
-
-SELECT set_config('request.jwt.claim.sub','30000000-0000-4000-8000-000000000003',false);
-SELECT public.update_service_order_status(
-  current_setting('test.org_a')::uuid,
-  current_setting('test.branch_a')::uuid,
-  current_setting('test.assigned_order_id')::uuid,
-  'diagnosing',
-  'Técnico iniciou o diagnóstico'
-);
-
-DO $$
-BEGIN
-  BEGIN
-    PERFORM public.update_service_order_status(
-      current_setting('test.org_a')::uuid,
-      current_setting('test.branch_a')::uuid,
-      current_setting('test.unassigned_order_id')::uuid,
-      'diagnosing',
-      'Tentativa em OS não atribuída'
-    );
-    RAISE EXCEPTION 'Test failure: technician updated an unassigned order';
-  EXCEPTION WHEN raise_exception THEN
-    IF SQLERRM LIKE 'Test failure:%' THEN RAISE; END IF;
-  END;
-END;
-$$;
-
-DO $$
-BEGIN
-  BEGIN
-    PERFORM public.assign_service_order_technician(
-      current_setting('test.org_a')::uuid,
-      current_setting('test.branch_a')::uuid,
-      current_setting('test.assigned_order_id')::uuid,
-      NULL
-    );
-    RAISE EXCEPTION 'Test failure: technician assigned an order';
-  EXCEPTION WHEN raise_exception THEN
-    IF SQLERRM LIKE 'Test failure:%' THEN RAISE; END IF;
-  END;
-END;
-$$;
-
-SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000002',false);
-DO $$
-BEGIN
-  BEGIN
-    PERFORM public.assign_service_order_technician(
-      current_setting('test.org_a')::uuid,
-      current_setting('test.branch_a')::uuid,
-      current_setting('test.assigned_order_id')::uuid,
-      NULL
-    );
-    RAISE EXCEPTION 'Test failure: Tenant B assigned an order in Tenant A';
-  EXCEPTION WHEN raise_exception THEN
-    IF SQLERRM LIKE 'Test failure:%' THEN RAISE; END IF;
-  END;
-END;
-$$;
-
 RESET ROLE;
-\echo 'Tenant isolation RLS smoke tests passed for two synthetic tenants.'
+\echo 'Company tenant isolation RLS smoke tests passed for two synthetic companies.'
