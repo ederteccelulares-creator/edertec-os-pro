@@ -140,6 +140,7 @@ Publique com:
 
 ```bash
 supabase functions deploy validate-organization-backup
+supabase functions deploy restore-organization-backup
 ```
 
 No painel da empresa, use **Backup e restauração → Validar arquivo JSON**. O arquivo deve ter até 10 MB e pertencer à mesma empresa selecionada. Um resultado válido significa apenas que a estrutura e a separação por empresa passaram nas verificações básicas; não comprova integridade de todas as relações nem executa uma restauração. A restauração automática continua desabilitada até a implementação de importação transacional e testes em homologação.
@@ -171,12 +172,12 @@ O plano `supabase/docs/backup-restore-implementation-plan.md` documenta a ordem 
 
 ## Contrato do schema para futura restauração
 
-O script `supabase/tests/backup_restore_schema_contract.sql` faz uma verificação somente de leitura das chaves de organização, das relações entre as tabelas exportadas e das colunas identity de OS e vendas. Também confirma que cada relacionamento operacional entre empresas está protegido por uma chave estrangeira composta que inclui `organization_id` no mesmo vínculo, que as restrições de unicidade de filiais/categorias/estoque e o índice parcial de SKU estão presentes para detectar colisões, e que `service_order_lines.line_total` continua sendo uma coluna gerada. Execute-o em um projeto Supabase descartável depois das migrações 0001 a 0017. Ele não testa nem executa a restauração; serve para detectar divergências entre o schema instalado e o plano documentado em `supabase/docs/backup-restore-implementation-plan.md`.
+O script `supabase/tests/backup_restore_schema_contract.sql` faz uma verificação somente de leitura das chaves de organização, das relações entre as tabelas exportadas e das colunas identity de OS e vendas. Também confirma que cada relacionamento operacional entre empresas está protegido por uma chave estrangeira composta que inclui `organization_id` no mesmo vínculo, que as restrições de unicidade de filiais/categorias/estoque e o índice parcial de SKU estão presentes para detectar colisões, e que `service_order_lines.line_total` continua sendo uma coluna gerada. Execute-o em um projeto Supabase descartável depois das migrações 0001 a 0018. Ele não testa nem executa a restauração; serve para detectar divergências entre o schema instalado e o plano documentado em `supabase/docs/backup-restore-implementation-plan.md`.
 
 
 ## Verificação automatizada de banco no GitHub Actions
 
-O workflow executa as migrações 0001–0017 em um PostgreSQL 16 descartável, usando `supabase/tests/postgres_auth_harness.sql` para simular somente os objetos mínimos do Supabase Auth necessários às migrações. Em seguida, executa `security_regression.sql` e `backup_restore_schema_contract.sql`.
+O workflow executa as migrações 0001–0018 em um PostgreSQL 16 descartável, usando `supabase/tests/postgres_auth_harness.sql` para simular somente os objetos mínimos do Supabase Auth necessários às migrações. Em seguida, executa `security_regression.sql` e `backup_restore_schema_contract.sql`.
 
 Esse job verifica a compatibilidade SQL das migrações e as asserções estruturais em PostgreSQL isolado. Ele **não** equivale a uma homologação completa no Supabase: não testa PostgREST, Auth real, Edge Functions, políticas com sessões reais de usuários, e-mail, nem restauração transacional. Nenhum banco de produção é acessado ou alterado.
 
@@ -200,4 +201,4 @@ Publique a função após aplicar as migrações:
 supabase functions deploy restore-organization-backup
 ```
 
-A interface ainda deve apresentar confirmação explícita, resumo do destino e resultado da operação. Até a conclusão dos testes de sucesso, rollback, repetição e isolamento em PostgreSQL descartável e homologação Supabase real, não use a restauração com dados reais.
+A interface apresenta confirmação explícita, permite revisar os mapeamentos e mostra o resultado da operação. A restauração passou a ter testes automatizados de importação, remapeamento, idempotência e rollback em PostgreSQL descartável; ainda exige homologação em projeto Supabase real antes do uso com dados reais.
