@@ -136,3 +136,29 @@ export async function saveCompanyCustomer(input: {
   if (error) throw error
   return data as CompanyCustomer
 }
+
+export async function updateCompanyProfile(input: {
+  companyId: string
+  name: string
+  legalName?: string
+  taxId?: string
+  email?: string
+  phone?: string
+}) {
+  const name = input.name.trim()
+  if (name.length < 2) throw new Error('Informe o nome da assistência.')
+  const { data, error } = await db()
+    .from('companies')
+    .update({
+      name,
+      legal_name: input.legalName?.trim() || null,
+      tax_id: input.taxId?.trim() || null,
+      email: input.email?.trim() || null,
+      phone: input.phone?.trim() || null,
+    })
+    .eq('id', input.companyId)
+    .select('id,name,legal_name,tax_id,email,phone,status')
+    .single()
+  if (error) throw error
+  return data as Company
+}
