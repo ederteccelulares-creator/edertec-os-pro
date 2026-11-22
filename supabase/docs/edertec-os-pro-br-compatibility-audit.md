@@ -215,3 +215,15 @@ Esta seção registra alterações já aplicadas no banco BR; não é um arquivo
 - Painel permite registrar entradas e saídas manuais com categoria, descrição, valor, forma de pagamento e filial; exibe as últimas 300 movimentações e totais calculados sobre esse conjunto.
 - Limitação atual explícita na interface: o fluxo de caixa ainda não integra automaticamente pagamentos de OS nem contas a pagar/receber; o saldo apresentado é o saldo líquido dos lançamentos carregados, não saldo bancário conciliado.
 - Security Advisor após a mudança não apontou novos problemas; permanecem os dois achados já documentados: `platform_admins` com RLS sem policy (INFO, intencional enquanto o acesso Super Admin não estiver desenhado) e `register_company` SECURITY DEFINER executável por authenticated (fluxo de cadastro intencional, com grants restritos).
+
+
+## Recebimento de pagamentos de OS — 22/11/2026
+
+- Criada RPC `record_company_service_order_payment(company_id, service_order_id, amount, method, notes)`, SECURITY INVOKER e `search_path='' `.
+- A função valida usuário autenticado, associação à empresa, OS pertencente à empresa, OS não cancelada, valor positivo e método dentro da lista permitida.
+- Em uma única transação, cria um registro em `payments` com status `paid` e um lançamento de entrada em `cash_transactions` associado ao pagamento. A filial e cliente são herdados da OS.
+- EXECUTE concedido a authenticated e revogado de PUBLIC/anon; grants conferidos no catálogo (authenticated=true, anon=false).
+- Criado índice único parcial em `cash_transactions(payment_id)` para impedir mais de um lançamento de caixa vinculado ao mesmo pagamento.
+- Criados `src/lib/company-service-order-payments.ts` e formulário de recebimento na listagem de OS. O usuário informa valor, forma de pagamento e observação; após sucesso o fluxo de caixa é atualizado automaticamente.
+- O fluxo permite recebimentos parciais e múltiplos pagamentos para uma mesma OS; cada pagamento individual gera exatamente um lançamento de caixa.
+- Não foi criado limite automático baseado no preço estimado/final da OS, pois o modelo atual não mantém saldo devedor calculado. A conciliação de saldo e estornos permanece como etapa futura.
