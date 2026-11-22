@@ -40,6 +40,8 @@ begin
 end;
 $$;
 
+revoke all on function public.lock_organization_for_restore() from public, anon, authenticated;
+
 create table if not exists public.backup_restore_runs (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
