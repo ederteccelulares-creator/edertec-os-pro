@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !anonKey || !serviceRoleKey) return response({ error: "Função não configurada." }, 500);
 
-  let body: { organization_id?: string; backup?: Record<string, unknown> };
+  let body: { organization_id?: string; backup?: Record<string, unknown>; user_mapping?: Record<string, string> };
   try {
     const rawBody = await req.text();
     if (new TextEncoder().encode(rawBody).length > 10 * 1024 * 1024) return response({ error: "Arquivo maior que 10 MB. Solicite análise assistida." }, 413);
@@ -190,10 +190,26 @@ Deno.serve(async (req) => {
     active: member.active,
   }));
   const destinationMemberIds = new Set(memberIds);
+  const activeDestinationMemberIds = new Set((destinationMembers ?? []).filter(member => member.active).map(member => member.user_id));
   const sourceUsers = [...sourceUserMap.values()].map(user => ({
     ...user,
     same_id_member_exists: destinationMemberIds.has(user.source_user_id),
   }));
+  const submittedMapping = body.user_mapping ?? {};
+  const mappingErrors: string[] = [];
+  const expectedSourceIds = new Set(sourceUsers.map(user => user.source_user_id));
+  for (const sourceId of expectedSourceIds) {
+    const targetId = submittedMapping[sourceId];
+    if (!targetId) mappingErrors.push("Usuário de origem sem associação: " + sourceId);
+    else if (!activeDestinationMemberIds.has(targetId)) mappingErrors.push("O destino selecionado não é membro ativo da empresa: " + targetId);
+  }
+  for (const sourceId of Object.keys(submittedMapping)) {
+    if (!expectedSourceIds.has(sourceId)) mappingErrors.push("Mapeamento contém usuário de origem não reconhecido: " + sourceId);
+  }
+  const mappedTargets = Object.values(submittedMapping).filter(Boolean);
+  if (new Set(mappedTargets).size !== mappedTargets.length) mappingErrors.push("Cada usuário de origem deve ser associado a um membro diferente do destino.");
+  const mappingProvided = Object.keys(submittedMapping).length > 0;
+  const mappingValid = mappingProvided && mappingErrors.length === 0 && Object.keys(submittedMapping).length === expectedSourceIds.size;
 
   const unknownTables = Object.keys(tables).filter(name => !TABLES.includes(name as typeof TABLES[number]));
   if (unknownTables.length) errors.push("O arquivo contém tabelas não reconhecidas: " + unknownTables.join(", "));
@@ -228,6 +244,9 @@ Deno.serve(async (req) => {
     user_mapping_requirements: userMappingRequirements,
     source_users: sourceUsers,
     destination_members: destinationMemberList,
+    mapping_provided: mappingProvided,
+    mapping_valid: mappingValid,
+    mapping_errors: mappingErrors,
     destination_empty: destinationEmpty,
     target_counts: targetCounts,
     occupied_tables: occupiedTables,
