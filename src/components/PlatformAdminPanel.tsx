@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { Building2, ShieldCheck, CreditCard, Package, RefreshCw, LogOut, Plus, LifeBuoy } from 'lucide-react'
+import { Building2, ShieldCheck, CreditCard, Package, RefreshCw, LogOut, Plus, LifeBuoy, Menu, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import PlatformSupportPanel from './PlatformSupportPanel'
 
@@ -13,6 +13,7 @@ const intervalLabels:Record<string,string>={monthly:'Mensal',yearly:'Anual',six_
 
 export default function PlatformAdminPanel({email,onSignOut}:Props) {
   const [tab,setTab]=useState<'companies'|'plans'|'subscriptions'|'support'|'billing'>('companies')
+  const [menuOpen,setMenuOpen]=useState(false)
   const [companies,setCompanies]=useState<CompanyRow[]>([])
   const [plans,setPlans]=useState<PlanRow[]>([])
   const [subscriptions,setSubscriptions]=useState<SubscriptionRow[]>([])
@@ -177,7 +178,7 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
       <div className="platform-title"><div><small>CONTROLE CENTRAL</small><h1>Super Admin</h1><p>Gerencie empresas, planos e assinaturas da plataforma.</p></div><button className="platform-refresh" onClick={()=>void load()}><RefreshCw size={15}/> Atualizar</button></div>
       {error&&<div className="platform-error">{error}</div>}{notice&&<div className="platform-notice">{notice}</div>}
       <div className="platform-stats"><article><Building2/><small>Empresas cadastradas</small><b>{companies.length}</b></article><article><Package/><small>Planos disponíveis</small><b>{plans.filter(p=>p.is_active).length}</b></article><article><CreditCard/><small>Assinaturas</small><b>{subscriptions.length}</b></article><button type="button" className="platform-stat-action" onClick={()=>setTab('support')} aria-label={openTickets+' chamados abertos. Abrir central de suporte'}><LifeBuoy/><small>Chamados abertos</small><b>{openTickets}</b><span>Ver chamados →</span></button></div>
-      <nav className="platform-tabs"><button className={tab==='companies'?'active':''} onClick={()=>setTab('companies')}>Empresas</button><button className={tab==='plans'?'active':''} onClick={()=>setTab('plans')}>Planos</button><button className={tab==='subscriptions'?'active':''} onClick={()=>setTab('subscriptions')}>Assinaturas</button><button className={tab==='support'?'active':''} onClick={()=>setTab('support')}><LifeBuoy size={15}/> Chamados</button><button className={tab==='billing'?'active':''} onClick={()=>setTab('billing')}><CreditCard size={15}/> Mercado Pago</button></nav>
+      <div className="platform-menu-wrap"><button type="button" className="platform-menu-toggle" aria-expanded={menuOpen} aria-controls="platform-menu-options" onClick={()=>setMenuOpen(v=>!v)}><span>{menuOpen?<X size={19}/>:<Menu size={19}/>} <b>Menu de opções</b></span><small>{menuOpen?'Fechar':'Abrir'}</small></button><nav id="platform-menu-options" className={menuOpen?'platform-tabs platform-tabs-open':'platform-tabs'} hidden={!menuOpen}><button className={tab==='companies'?'active':''} onClick={()=>{setTab('companies');setMenuOpen(false)}}>Empresas</button><button className={tab==='plans'?'active':''} onClick={()=>{setTab('plans');setMenuOpen(false)}}>Planos</button><button className={tab==='subscriptions'?'active':''} onClick={()=>{setTab('subscriptions');setMenuOpen(false)}}>Assinaturas</button><button className={tab==='support'?'active':''} onClick={()=>{setTab('support');setMenuOpen(false)}}><LifeBuoy size={15}/> Chamados</button><button className={tab==='billing'?'active':''} onClick={()=>{setTab('billing');setMenuOpen(false)}}><CreditCard size={15}/> Mercado Pago</button></nav></div>
       {loading?<p className="platform-empty">Carregando dados da plataforma...</p>:<>
         {tab==='support'&&<PlatformSupportPanel/>}
         {tab==='billing'&&<section className="platform-panel">
