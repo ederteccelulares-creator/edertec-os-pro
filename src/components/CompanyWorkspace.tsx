@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, type FormEvent, type ChangeEvent } from 'react'
 import { Building2, ClipboardList, Users, Package, Truck, ShoppingCart, Wallet, Plus, RefreshCw, LogOut, Database, Download } from 'lucide-react'
 import CompanyInventoryPanel from './CompanyInventoryPanel'
 import CompanySuppliersPanel from './CompanySuppliersPanel'
@@ -8,7 +8,7 @@ import CompanyFinancialEntriesPanel from './CompanyFinancialEntriesPanel'
 import { recordCompanyServiceOrderPayment, type PaymentMethod } from '../lib/company-service-order-payments'
 import { listCompanyBranches, listCompanyCustomers, saveCompanyCustomer, type Company, type CompanyBranch, type CompanyCustomer, type CompanyRole } from '../lib/company-data'
 import { createCompanyServiceOrder, listCompanyServiceOrders, updateCompanyServiceOrderStatus, type CompanyServiceOrder } from '../lib/company-service-orders'
-import { downloadCompanyBackup } from '../lib/company-backups'
+import { downloadCompanyBackup, restoreCompanyBackup } from '../lib/company-backups'
 
 type Props = { company: Company; role: CompanyRole; email: string; onSignOut: () => void }
 const statusLabels: Record<string,string> = {received:'Recebido',diagnosis:'Em diagnóstico',waiting_approval:'Aguardando aprovação',approved:'Aprovado',in_repair:'Em conserto',waiting_parts:'Aguardando peça',ready:'Pronto',delivered:'Entregue',cancelled:'Cancelado'}
@@ -49,6 +49,20 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   },[company.id,branchId])
 
   useEffect(()=>{void load()},[load])
+
+  async function restoreBackup(event:ChangeEvent<HTMLInputElement>) {
+    const file=event.target.files?.[0]
+    event.target.value=''
+    if(!file)return
+    if(!window.confirm('A restauração só funciona se os dados operacionais da empresa estiverem vazios. Deseja continuar?'))return
+    setBackupBusy(true); setError(''); setNotice('')
+    try {
+      await restoreCompanyBackup(company.id,file)
+      setNotice('Restauração concluída. Atualize os módulos para conferir os dados.')
+      await load()
+    } catch(e) { setError(e instanceof Error?e.message:'Não foi possível restaurar o backup.') }
+    finally { setBackupBusy(false) }
+  }
 
   async function createBackup() {
     setBackupBusy(true); setError(''); setNotice('')
@@ -131,7 +145,8 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
         <div className="company-backup-content">
           <p>Gere um arquivo JSON com filiais, clientes, funcionários, serviços, produtos, ordens de serviço, estoque, compras e registros financeiros.</p>
           <p>O backup pertence exclusivamente a <strong>{company.name}</strong>. Dados de acesso, senhas, usuários de autenticação e assinaturas não são incluídos.</p>
-          <button className="company-primary" disabled={backupBusy} onClick={()=>void createBackup()}><Download size={16}/>{backupBusy?'Gerando backup...':'Baixar backup agora'}</button>
+          <button className="company-primary" disabled={backupBusy} onClick={()=>void createBackup()}><Download size={16}/>{backupBusy?'Processando...':'Baixar backup agora'}</button>
+          <div className="company-backup-restore"><b>Restaurar backup</b><p>Use somente um arquivo JSON desta mesma empresa. A restauração é bloqueada se já existirem dados operacionais para evitar mesclagem ou duplicação.</p><label className="company-secondary">Selecionar arquivo JSON<input type="file" accept="application/json,.json" disabled={backupBusy} onChange={restoreBackup}/></label></div>
           <small>Recomendação: guarde uma cópia em local seguro e faça novos backups regularmente.</small>
         </div>
       </section>}
