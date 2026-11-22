@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
     return response({ error: "Method not allowed." }, 405);
   }
 
-  const { data: storedSecrets, error: secretsError } = await admin.rpc("get_platform_billing_secrets");
+  const { data: storedSecrets } = await admin.rpc("get_platform_billing_secrets");
   const accessToken = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN") || storedSecrets?.access_token;
   const webhookSecret = Deno.env.get("MERCADOPAGO_WEBHOOK_SECRET") || storedSecrets?.webhook_secret;
   if (!accessToken) return response({ error: "Mercado Pago access token is not configured." }, 503);
