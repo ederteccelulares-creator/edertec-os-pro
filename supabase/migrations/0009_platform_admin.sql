@@ -161,3 +161,74 @@ grant execute on function public.platform_list_organizations() to authenticated;
 grant execute on function public.platform_update_subscription(uuid,public.subscription_status,uuid,timestamptz,timestamptz) to authenticated;
 grant execute on function public.platform_save_plan(uuid,text,text,text,numeric,numeric,integer,integer,boolean) to authenticated;
 grant execute on function public.platform_list_plans() to authenticated;
+
+
+-- Plan limits are enforced in PostgreSQL, not only displayed in the admin UI.
+create or replace function public.create_organization(org_name text, org_slug text)
+returns uuid language plpgsql security definer set search_path=public
+as $$
+declare new_org uuid;
+begin
+  if auth.uid() is null then raise exception 'Authentication required'; end if;
+  if length(trim(org_name)) < 2 then raise exception 'Organization name is required'; end if;
+  if org_slug !~ '^[a-z0-9][a-z0-9-]{2,39}$' then raise exception 'Invalid organization slug'; end if;
+  insert into public.organizations(name,slug,created_by)
+    values(trim(org_name),lower(org_slug),auth.uid()) returning id into new_org;
+  insert into public.subscriptions(organization_id,status,trial_ends_at)
+    values(new_org,'trialing',now()+interval '14 days');
+  insert into public.organization_members(organization_id,user_id,role)
+    values(new_org,auth.uid(),'owner');
+  insert into public.branches(organization_id,name,code)
+    values(new_org,'Matriz','MATRIZ');
+  return new_org;
+end;
+$$;
+
+create or replace function public.enforce_plan_user_limit()
+returns trigger language plpgsql security definer set search_path=public
+as $$
+declare user_limit integer; current_count bigint;
+begin
+  if new.active and (tg_op='INSERT' or not old.active or old.organization_id<>new.organization_id) then
+    select p.max_users into user_limit from public.subscriptions s
+      left join public.plans p on p.id=s.plan_id where s.organization_id=new.organization_id;
+    if not found then raise exception 'Organization subscription not found'; end if;
+    if user_limit is not null then
+      select count(*) into current_count from public.organization_members m
+        where m.organization_id=new.organization_id and m.active
+          and (tg_op='INSERT' or m.id<>new.id);
+      if current_count>=user_limit then raise exception 'User limit reached for the current plan'; end if;
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+create or replace function public.enforce_plan_branch_limit()
+returns trigger language plpgsql security definer set search_path=public
+as $$
+declare branch_limit integer; current_count bigint;
+begin
+  if new.active and (tg_op='INSERT' or not old.active or old.organization_id<>new.organization_id) then
+    select p.max_branches into branch_limit from public.subscriptions s
+      left join public.plans p on p.id=s.plan_id where s.organization_id=new.organization_id;
+    if not found then raise exception 'Organization subscription not found'; end if;
+    if branch_limit is not null then
+      select count(*) into current_count from public.branches b
+        where b.organization_id=new.organization_id and b.active
+          and (tg_op='INSERT' or b.id<>new.id);
+      if current_count>=branch_limit then raise exception 'Branch limit reached for the current plan'; end if;
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger enforce_organization_user_limit
+before insert or update of active,organization_id on public.organization_members
+for each row execute function public.enforce_plan_user_limit();
+
+create trigger enforce_organization_branch_limit
+before insert or update of active,organization_id on public.branches
+for each row execute function public.enforce_plan_branch_limit();
+
