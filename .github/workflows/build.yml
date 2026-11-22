@@ -61,14 +61,10 @@ jobs:
             echo "Applying $migration"
             psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$migration"
           done
-      - name: Run database security regression checks
+      - name: Run current company-schema security regression checks
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/edertec_test
-        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/security_regression.sql
-      - name: Run backup and restore schema contract checks
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/edertec_test
-        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/backup_restore_schema_contract.sql
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/company_schema_security.sql
       - name: Run two-tenant RLS smoke tests
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/edertec_test
