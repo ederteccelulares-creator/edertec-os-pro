@@ -198,3 +198,17 @@ begin
   end if;
 end;
 $$;
+
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_trigger
+    where tgrelid='public.service_orders'::regclass
+      and tgname='service_orders_quote_decision_default'
+      and not tgisinternal
+  ) then
+    raise exception 'Legacy backup compatibility trigger for quote decisions is missing';
+  end if;
+end;
+$$;
