@@ -32,7 +32,7 @@ declare
   'purchase_items','cash_sessions','cash_transactions','company_financial_entries',
   'audit_logs'
  ];
- table_name text;
+ v_table_name text;
  row_value jsonb;
  rows_value jsonb;
  column_names text[];
@@ -90,18 +90,18 @@ begin
   return previous_run.result || jsonb_build_object('replayed',true);
  end if;
 
- for table_name in select jsonb_object_keys(p_backup->'tables') loop
-  if not (table_name=any(array_append(allowed_tables,'branches'))) then
-   raise exception 'Unsupported backup collection: %',table_name;
+ for v_table_name in select jsonb_object_keys(p_backup->'tables') loop
+  if not (v_table_name=any(array_append(allowed_tables,'branches'))) then
+   raise exception 'Unsupported backup collection: %',v_table_name;
   end if;
  end loop;
- foreach table_name in array array_append(allowed_tables,'branches') loop
-  rows_value:=p_backup->'tables'->table_name;
+ foreach v_table_name in array array_append(allowed_tables,'branches') loop
+  rows_value:=p_backup->'tables'->v_table_name;
   if jsonb_typeof(rows_value)<>'array' then
-   raise exception 'Missing or invalid backup collection: %',table_name;
+   raise exception 'Missing or invalid backup collection: %',v_table_name;
   end if;
   row_count:=jsonb_array_length(rows_value);
-  if row_count>10000 then raise exception 'Backup collection too large: %',table_name; end if;
+  if row_count>10000 then raise exception 'Backup collection too large: %',v_table_name; end if;
   total_rows:=total_rows+row_count;
  end loop;
  if total_rows>150000 then raise exception 'Backup exceeds total row limit'; end if;
@@ -116,19 +116,19 @@ begin
  end loop;
 
  -- Prevent accidental merges: every restorable destination collection must be empty.
- foreach table_name in array allowed_tables loop
-  execute format('select exists(select 1 from public.%I where company_id=$1)',table_name)
+ foreach v_table_name in array allowed_tables loop
+  execute format('select exists(select 1 from public.%I where company_id=$1)',v_table_name)
    into has_rows using p_company_id;
   if has_rows then
-   raise exception 'Restore destination is not empty: % already contains data',table_name;
+   raise exception 'Restore destination is not empty: % already contains data',v_table_name;
   end if;
  end loop;
 
  -- Auth-linked references are preserved only if the referenced account still exists.
- foreach table_name in array allowed_tables loop
-  for row_value in select value from jsonb_array_elements(p_backup->'tables'->table_name) loop
+ foreach v_table_name in array allowed_tables loop
+  for row_value in select value from jsonb_array_elements(p_backup->'tables'->v_table_name) loop
    if row_value->>'company_id' is distinct from p_company_id::text then
-    raise exception 'Invalid company_id in % backup row',table_name;
+    raise exception 'Invalid company_id in % backup row',v_table_name;
    end if;
    foreach auth_user_id in array array[
     nullif(row_value->>'user_id','')::uuid,
@@ -146,7 +146,7 @@ begin
  values(p_company_id,p_idempotency_key,backup_hash,p_actor_user_id);
 
  -- Parent-to-child order. Generated columns are omitted and recalculated.
- foreach table_name in array array[
+ foreach v_table_name in array array[
   'customers','employees','service_catalog','products','suppliers','service_orders',
   'cash_sessions','purchases','service_order_items','stock_movements','payments',
   'purchase_items','cash_transactions','company_financial_entries','audit_logs'
@@ -155,20 +155,20 @@ begin
          coalesce(bool_or(is_identity='YES' and identity_generation='ALWAYS'),false)
   into column_names,identity_always
   from information_schema.columns
-  where table_schema='public' and table_name=restore_company_backup.table_name
+  where table_schema='public' and table_name=v_table_name
     and is_generated='NEVER';
   select string_agg(quote_ident(c),',' order by ordinality),
          string_agg('x.'||quote_ident(c),',' order by ordinality)
   into column_list,select_list
   from unnest(column_names) with ordinality as cols(c,ordinality);
   identity_clause:=case when identity_always then 'OVERRIDING SYSTEM VALUE' else '' end;
-  for row_value in select value from jsonb_array_elements(p_backup->'tables'->table_name) loop
+  for row_value in select value from jsonb_array_elements(p_backup->'tables'->v_table_name) loop
    execute format(
     'insert into public.%I (%s) %s select %s from jsonb_populate_record(null::public.%I,$1) x',
-    table_name,column_list,identity_clause,select_list,table_name
+    v_table_name,column_list,identity_clause,select_list,v_table_name
    ) using row_value;
   end loop;
-  restored_counts:=restored_counts||jsonb_build_object(table_name,jsonb_array_length(p_backup->'tables'->table_name));
+  restored_counts:=restored_counts||jsonb_build_object(v_table_name,jsonb_array_length(p_backup->'tables'->v_table_name));
  end loop;
 
  -- Reconcile the generated audit identity after explicit historical IDs.
