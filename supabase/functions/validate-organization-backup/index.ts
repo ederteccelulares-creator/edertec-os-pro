@@ -26,8 +26,7 @@ Deno.serve(async (req) => {
   const authorization = req.headers.get("Authorization");
   if (!authorization?.startsWith("Bearer ")) return response({ error: "Sessão não encontrada." }, 401);
 
-  const contentLength = Number(req.headers.get("content-length") || 0);
-  if (contentLength > 10 * 1024 * 1024) return response({ error: "Arquivo maior que 10 MB. Divida a exportação ou solicite análise assistida." }, 413);
+
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
@@ -35,7 +34,11 @@ Deno.serve(async (req) => {
   if (!supabaseUrl || !anonKey || !serviceRoleKey) return response({ error: "Função não configurada." }, 500);
 
   let body: { organization_id?: string; backup?: Record<string, unknown> };
-  try { body = await req.json(); } catch { return response({ error: "Envie um JSON válido." }, 400); }
+  try {
+    const rawBody = await req.text();
+    if (new TextEncoder().encode(rawBody).length > 10 * 1024 * 1024) return response({ error: "Arquivo maior que 10 MB. Solicite análise assistida." }, 413);
+    body = JSON.parse(rawBody);
+  } catch { return response({ error: "Envie um JSON válido." }, 400); }
   const organizationId = body.organization_id?.trim();
   const backup = body.backup;
   if (!organizationId || !/^[0-9a-f-]{36}$/i.test(organizationId)) return response({ error: "Empresa inválida." }, 400);
