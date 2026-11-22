@@ -15,7 +15,7 @@ const PLATFORM_TAB_KEY='edertec-platform-admin-tab-v1'
 function readBillingDraft(){try{const value=sessionStorage.getItem(BILLING_DRAFT_KEY);return value?{accessToken:'',webhookSecret:'',...JSON.parse(value)}:{accessToken:'',webhookSecret:''}}catch{return {accessToken:'',webhookSecret:''}}}
 
 export default function PlatformAdminPanel({email,onSignOut}:Props) {
-  const [tab,setTab]=useState<'companies'|'plans'|'subscriptions'|'support'|'billing'>(()=>{try{const saved=sessionStorage.getItem(PLATFORM_TAB_KEY);return saved==='billing'||saved==='plans'||saved==='subscriptions'||saved==='support'||saved==='companies'?saved:'companies'}catch{return 'companies'}})
+  const [tab,setTab]=useState<'companies'|'plans'|'subscriptions'|'support'|'billing'>(()=>{try{const saved=localStorage.getItem(PLATFORM_TAB_KEY);return saved==='billing'||saved==='plans'||saved==='subscriptions'||saved==='support'||saved==='companies'?saved:'companies'}catch{return 'companies'}})
   const [menuOpen,setMenuOpen]=useState(false)
   const [companies,setCompanies]=useState<CompanyRow[]>([])
   const [plans,setPlans]=useState<PlanRow[]>([])
@@ -53,7 +53,7 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
   useEffect(()=>{void load()},[load])
 
   // Keep the billing screen and its unfinished fields when the user switches tabs/apps.
-  useEffect(()=>{try{sessionStorage.setItem(PLATFORM_TAB_KEY,tab)}catch{}},[tab])
+  useEffect(()=>{try{localStorage.setItem(PLATFORM_TAB_KEY,tab)}catch{}},[tab])
   useEffect(()=>{try{sessionStorage.setItem(BILLING_DRAFT_KEY,JSON.stringify(billingForm))}catch{}},[billingForm])
 
   useEffect(()=>{
