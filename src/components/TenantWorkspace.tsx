@@ -7,7 +7,7 @@ import type { ServiceOrderStatus, TeamMember, ServiceCatalogItem } from '../lib/
 type Props = { organization: Organization; role: import('../lib/supabase').OrganizationRole; email: string; onSignOut: () => void }
 type Customer = { id: string; name: string; phone: string; email?: string | null; document?: string | null; notes?: string | null }
 type CustomerDevice = { id: string; customer_id: string; brand: string; model: string; color?: string | null; storage?: string | null; imei?: string | null; serial_number?: string | null; notes?: string | null; created_at: string }
-type Order = { id: string; order_number: number; technician_id?: string | null; status: string; reported_issue: string; estimated_amount: number; received_at: string; accessories?: string | null; physical_condition?: string | null; diagnosis?: string | null; customers?: { name: string; phone: string } | null; devices?: { brand: string; model: string; imei?: string | null } | null }
+type Order = { id: string; order_number: number; device_id?: string | null; created_at: string; technician_id?: string | null; status: string; reported_issue: string; estimated_amount: number; received_at: string; accessories?: string | null; physical_condition?: string | null; diagnosis?: string | null; customers?: { name: string; phone: string } | null; devices?: { brand: string; model: string; imei?: string | null } | null }
 
 const statusLabels: Record<string, string> = {
   received: 'Recebido', diagnosing: 'Em diagnóstico', waiting_approval: 'Aguardando aprovação',
