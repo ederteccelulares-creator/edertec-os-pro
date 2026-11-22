@@ -20,6 +20,11 @@ const TABLES = [
   "audit_logs",
 ] as const;
 
+function isStringRecord(value: unknown): value is Record<string, string> {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    && Object.values(value).every(item => typeof item === "string");
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return response({ error: "Method not allowed" }, 405);
@@ -39,6 +44,15 @@ Deno.serve(async (req) => {
     if (new TextEncoder().encode(rawBody).length > 10 * 1024 * 1024) return response({ error: "Arquivo maior que 10 MB. Solicite análise assistida." }, 413);
     body = JSON.parse(rawBody);
   } catch { return response({ error: "Envie um JSON válido." }, 400); }
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return response({ error: "O corpo da solicitação deve ser um objeto JSON." }, 400);
+  }
+  if (body.user_mapping !== undefined && !isStringRecord(body.user_mapping)) {
+    return response({ error: "O mapeamento de usuários deve ser um objeto de IDs em texto." }, 400);
+  }
+  if (body.branch_mapping !== undefined && !isStringRecord(body.branch_mapping)) {
+    return response({ error: "O mapeamento de filiais deve ser um objeto de IDs em texto." }, 400);
+  }
   const organizationId = body.organization_id?.trim();
   const backup = body.backup;
   if (!organizationId || !/^[0-9a-f-]{36}$/i.test(organizationId)) return response({ error: "Empresa inválida." }, 400);
