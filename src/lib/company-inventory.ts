@@ -28,7 +28,7 @@ export type CompanyStockMovement = {
   movement_type: string
   quantity: number
   unit_cost: number | null
-  notes: string | null
+  reason: string | null
   created_at: string
 }
 
@@ -121,7 +121,7 @@ export async function listCompanyStockMovements(input: {
 }): Promise<CompanyStockMovement[]> {
   let query = db()
     .from('stock_movements')
-    .select('id,company_id,product_id,branch_id,movement_type,quantity,unit_cost,notes,created_at')
+    .select('id,company_id,product_id,branch_id,movement_type,quantity,unit_cost,reason,created_at')
     .eq('company_id', input.companyId)
     .order('created_at', { ascending: false })
     .limit(Math.min(Math.max(input.limit ?? 100, 1), 500))
