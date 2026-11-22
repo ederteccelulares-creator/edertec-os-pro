@@ -570,9 +570,9 @@ export async function exportOrganizationBackup(organizationId: string) {
 }
 
 
-export async function validateOrganizationBackup(organizationId: string, backup: Record<string, unknown>, userMapping?: Record<string, string>) {
+export async function validateOrganizationBackup(organizationId: string, backup: Record<string, unknown>, userMapping?: Record<string, string>, branchMapping?: Record<string, string>) {
   const { data, error } = await client().functions.invoke('validate-organization-backup', {
-    body: { organization_id: organizationId, backup, ...(userMapping ? { user_mapping: userMapping } : {}) },
+    body: { organization_id: organizationId, backup, ...(userMapping ? { user_mapping: userMapping } : {}), ...(branchMapping ? { branch_mapping: branchMapping } : {}) },
   })
   if (error) throw error
   if (data?.error) throw new Error(data.error)
