@@ -69,7 +69,9 @@ $$;
 
 drop trigger if exists on_auth_user_team_invitation on auth.users;
 create trigger on_auth_user_team_invitation
-  after insert on auth.users
-  for each row execute function public.accept_pending_team_invitation();
+  after update of email_confirmed_at on auth.users
+  for each row
+  when (old.email_confirmed_at is null and new.email_confirmed_at is not null)
+  execute function public.accept_pending_team_invitation();
 
 revoke all on function public.accept_pending_team_invitation() from public, anon, authenticated;
