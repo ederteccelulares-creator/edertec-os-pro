@@ -8,7 +8,7 @@ import CompanyCashPanel from './CompanyCashPanel'
 import CompanyFinancialEntriesPanel from './CompanyFinancialEntriesPanel'
 import { recordCompanyServiceOrderPayment, type PaymentMethod } from '../lib/company-service-order-payments'
 import { listCompanyBranches, listCompanyCustomers, saveCompanyCustomer, type Company, type CompanyBranch, type CompanyCustomer, type CompanyRole, updateCompanyProfile } from '../lib/company-data'
-import { createCompanyServiceOrder, createCompanyServiceOrderTrackingLink, listCompanyServiceOrders, updateCompanyServiceOrderStatus, type CompanyServiceOrder } from '../lib/company-service-orders'
+import { createCompanyServiceOrder, createCompanyServiceOrderTrackingLink, listCompanyServiceOrders, updateCompanyServiceOrder, updateCompanyServiceOrderStatus, type CompanyServiceOrder } from '../lib/company-service-orders'
 import { downloadCompanyBackup, restoreCompanyBackup } from '../lib/company-backups'
 
 type Props = { company: Company; role: CompanyRole; email: string; onSignOut: () => void }
@@ -33,6 +33,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   const [error,setError] = useState('')
   const [notice,setNotice] = useState('')
   const [showOrder,setShowOrder] = useState(false)
+  const [editingOrder,setEditingOrder] = useState<CompanyServiceOrder|null>(null)
   const [customerSearch,setCustomerSearch] = useState('')
   const [showCustomer,setShowCustomer] = useState(false)
   const [paymentOrder,setPaymentOrder] = useState<CompanyServiceOrder|null>(null)
@@ -42,7 +43,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   const [paymentNotes,setPaymentNotes] = useState('')
   const [customerForm,setCustomerForm] = useState({name:'',phone:'',email:'',document:'',notes:''})
   const [orderPhotos,setOrderPhotos] = useState<File[]>([])
-  const [orderForm,setOrderForm] = useState({customerId:'',deviceType:'Celular',brand:'',model:'',color:'',serial:'',issue:'',condition:'',accessories:'',priority:'normal' as 'low'|'normal'|'high'|'urgent',price:'0',promisedAt:''})
+  const [orderForm,setOrderForm] = useState({customerId:'',deviceType:'Celular',brand:'',model:'',color:'',serial:'',issue:'',condition:'',accessories:'',priority:'normal' as 'low'|'normal'|'high'|'urgent',price:'0',finalPrice:'0',diagnosis:'',promisedAt:''})
 
   const load = useCallback(async () => {
     setLoading(true); setError('')
@@ -140,23 +141,27 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
     popup.document.open();popup.document.write(html);popup.document.close()
   }
 
-    async function submitOrder(event:FormEvent) {
+  async function submitOrder(event:FormEvent) {
     event.preventDefault(); setBusy(true); setError(''); setNotice('')
     try {
-      const created = await createCompanyServiceOrder({
-        companyId:company.id,branchId:branchId||null,customerId:orderForm.customerId||null,
-        deviceType:orderForm.deviceType,deviceBrand:orderForm.brand,deviceModel:orderForm.model,
-        deviceColor:orderForm.color,serialNumber:orderForm.serial,reportedIssue:orderForm.issue,
-        intakeCondition:orderForm.condition,includedAccessories:orderForm.accessories,
-        priority:orderForm.priority,estimatedPrice:Number(orderForm.price||0),
-        promisedAt:orderForm.promisedAt?new Date(orderForm.promisedAt).toISOString():null,
-        photos:orderPhotos,
-      })
-      setShowOrder(false); setOrderPhotos([]); setNotice('OS #'+created.order_number+' criada com sucesso.')
-      setOrderForm({customerId:'',deviceType:'Celular',brand:'',model:'',color:'',serial:'',issue:'',condition:'',accessories:'',priority:'normal',price:'0',promisedAt:''})
+      if(editingOrder) {
+        await updateCompanyServiceOrder({companyId:company.id,orderId:editingOrder.id,customerId:orderForm.customerId||null,deviceType:orderForm.deviceType,deviceBrand:orderForm.brand,deviceModel:orderForm.model,deviceColor:orderForm.color,serialNumber:orderForm.serial,reportedIssue:orderForm.issue,intakeCondition:orderForm.condition,includedAccessories:orderForm.accessories,priority:orderForm.priority,estimatedPrice:Number(orderForm.price||0),finalPrice:Number(orderForm.finalPrice||0),diagnosis:orderForm.diagnosis,promisedAt:orderForm.promisedAt?new Date(orderForm.promisedAt).toISOString():null})
+        setNotice('OS #'+editingOrder.order_number+' atualizada com sucesso.')
+      } else {
+        const created = await createCompanyServiceOrder({companyId:company.id,branchId:branchId||null,customerId:orderForm.customerId||null,deviceType:orderForm.deviceType,deviceBrand:orderForm.brand,deviceModel:orderForm.model,deviceColor:orderForm.color,serialNumber:orderForm.serial,reportedIssue:orderForm.issue,intakeCondition:orderForm.condition,includedAccessories:orderForm.accessories,priority:orderForm.priority,estimatedPrice:Number(orderForm.price||0),promisedAt:orderForm.promisedAt?new Date(orderForm.promisedAt).toISOString():null,photos:orderPhotos})
+        setNotice('OS #'+created.order_number+' criada com sucesso.')
+      }
+      setShowOrder(false); setEditingOrder(null); setOrderPhotos([])
+      setOrderForm({customerId:'',deviceType:'Celular',brand:'',model:'',color:'',serial:'',issue:'',condition:'',accessories:'',priority:'normal',price:'0',finalPrice:'0',diagnosis:'',promisedAt:''})
       await load()
-    } catch(e) {setError(e instanceof Error?e.message:'Falha ao criar ordem de serviço.')}
+    } catch(e) {setError(e instanceof Error?e.message:'Falha ao salvar ordem de serviço.')}
     finally {setBusy(false)}
+  }
+
+  function editOrder(order:CompanyServiceOrder) {
+    setEditingOrder(order); setOrderPhotos([]); setCustomerSearch('')
+    setOrderForm({customerId:order.customer_id||'',deviceType:order.device_type||'Celular',brand:order.device_brand||'',model:order.device_model||'',color:order.device_color||'',serial:order.serial_number||'',issue:order.reported_issue||'',condition:order.intake_condition||'',accessories:order.included_accessories||'',priority:(order.priority||'normal') as typeof orderForm.priority,price:String(order.estimated_price??0),finalPrice:String(order.final_price??0),diagnosis:order.diagnosis||'',promisedAt:order.promised_at?new Date(order.promised_at).toISOString().slice(0,16):''})
+    setShowOrder(true)
   }
 
   async function submitOrderPayment(event:FormEvent) {
@@ -224,24 +229,24 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
       {tab==='orders'&&<section className="company-panel">
         <div className="company-panel-head"><div><b>Ordens cadastradas</b><small>{orders.length} registros nesta visualização</small></div><button className="company-primary" onClick={()=>setShowOrder(v=>!v)}><Plus size={16}/> Nova OS</button></div>
         {showOrder&&<form className="company-form" onSubmit={submitOrder}>
-          <h3>Dados do atendimento</h3>
+          <h3>{editingOrder ? 'Editar ordem de serviço #' + editingOrder.order_number : 'Dados do atendimento'}</h3>
           <label>Buscar cliente<input type="search" placeholder="Digite nome, telefone ou CPF/CNPJ..." value={customerSearch} onChange={e=>setCustomerSearch(e.target.value)}/></label>
           <label>Selecionar cliente<select value={orderForm.customerId} onChange={e=>setOrderForm({...orderForm,customerId:e.target.value})}><option value="">Cliente não selecionado</option>{customers.filter(c=>!customerSearch.trim()||[c.name,c.phone,c.document].some(v=>String(v||"").toLowerCase().includes(customerSearch.trim().toLowerCase()))).map(c=><option key={c.id} value={c.id}>{c.name} · {c.phone||"sem telefone"}</option>)}</select></label>
           {customerSearch.trim()&&customers.filter(c=>[c.name,c.phone,c.document].some(v=>String(v||"").toLowerCase().includes(customerSearch.trim().toLowerCase()))).length===0&&<small>Nenhum cliente encontrado. Cadastre o cliente na aba Clientes.</small>}
           <div className="company-form-grid"><label>Tipo<input value={orderForm.deviceType} onChange={e=>setOrderForm({...orderForm,deviceType:e.target.value})}/></label><label>Marca<input value={orderForm.brand} onChange={e=>setOrderForm({...orderForm,brand:e.target.value})}/></label><label>Modelo<input required value={orderForm.model} onChange={e=>setOrderForm({...orderForm,model:e.target.value})}/></label><label>Cor<input value={orderForm.color} onChange={e=>setOrderForm({...orderForm,color:e.target.value})}/></label><label>IMEI / Série<input value={orderForm.serial} onChange={e=>setOrderForm({...orderForm,serial:e.target.value})}/></label><label>Prioridade<select value={orderForm.priority} onChange={e=>setOrderForm({...orderForm,priority:e.target.value as typeof orderForm.priority})}><option value="low">Baixa</option><option value="normal">Normal</option><option value="high">Alta</option><option value="urgent">Urgente</option></select></label></div>
-          <label>Defeito informado<textarea required rows={3} value={orderForm.issue} onChange={e=>setOrderForm({...orderForm,issue:e.target.value})}/></label>
-          <div className="company-form-grid"><label>Condição de entrada<input value={orderForm.condition} onChange={e=>setOrderForm({...orderForm,condition:e.target.value})}/></label><label>Acessórios<input value={orderForm.accessories} onChange={e=>setOrderForm({...orderForm,accessories:e.target.value})}/></label><label>Valor estimado (R$)<input type="number" min="0" step="0.01" value={orderForm.price} onChange={e=>setOrderForm({...orderForm,price:e.target.value})}/></label><label>Previsão de entrega<input type="datetime-local" value={orderForm.promisedAt} onChange={e=>setOrderForm({...orderForm,promisedAt:e.target.value})}/></label></div>
-          <div className="company-os-photo-upload"><b>Fotos do aparelho (somente no sistema)</b><small>As imagens ficam anexadas à OS e não aparecem nas vias impressas.</small>
+          <label>Defeito informado<textarea required rows={3} value={orderForm.issue} onChange={e=>setOrderForm({...orderForm,issue:e.target.value})}/></label><label>Diagnóstico / serviço a realizar<textarea rows={3} value={orderForm.diagnosis} onChange={e=>setOrderForm({...orderForm,diagnosis:e.target.value})}/></label>
+          <div className="company-form-grid"><label>Condição de entrada<input value={orderForm.condition} onChange={e=>setOrderForm({...orderForm,condition:e.target.value})}/></label><label>Acessórios<input value={orderForm.accessories} onChange={e=>setOrderForm({...orderForm,accessories:e.target.value})}/></label><label>Valor estimado (R$)<input type="number" min="0" step="0.01" value={orderForm.price} onChange={e=>setOrderForm({...orderForm,price:e.target.value})}/></label><label>Valor final do orçamento (R$)<input type="number" min="0" step="0.01" value={orderForm.finalPrice} onChange={e=>setOrderForm({...orderForm,finalPrice:e.target.value})}/></label><label>Previsão de entrega<input type="datetime-local" value={orderForm.promisedAt} onChange={e=>setOrderForm({...orderForm,promisedAt:e.target.value})}/></label></div>
+          {!editingOrder&&<div className="company-os-photo-upload"><b>Fotos do aparelho (somente no sistema)</b><small>As imagens ficam anexadas à OS e não aparecem nas vias impressas.</small>
             <div className="company-os-photo-actions">
               <label className="company-secondary"><span>📷 Tirar foto</span><input type="file" accept="image/*" capture="environment" multiple onChange={e=>setOrderPhotos(old=>[...old,...Array.from(e.target.files||[])].slice(0,10))}/></label>
               <label className="company-secondary"><span>＋ Anexar da galeria</span><input type="file" accept="image/*" multiple onChange={e=>setOrderPhotos(old=>[...old,...Array.from(e.target.files||[])].slice(0,10))}/></label>
             </div>
             {orderPhotos.length>0&&<div className="company-os-photo-previews">{orderPhotos.map((file,index)=><div key={index}><img src={URL.createObjectURL(file)} alt={file.name}/><button type="button" onClick={()=>setOrderPhotos(old=>old.filter((_,i)=>i!==index))}>Remover</button></div>)}</div>}
             <small>{orderPhotos.length}/10 fotos selecionadas · JPG, PNG ou WebP · até 8 MB cada</small>
-          </div>
-          <div className="company-form-actions"><button type="button" className="company-secondary" onClick={()=>setShowOrder(false)}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Salvando...':'Criar ordem de serviço'}</button></div>
+          </div>}
+          <div className="company-form-actions"><button type="button" className="company-secondary" onClick={()=>{setShowOrder(false);setEditingOrder(null)}}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Salvando...':editingOrder?'Salvar alterações':'Criar ordem de serviço'}</button></div>
         </form>}
-        {loading?<p className="company-empty">Carregando...</p>:orders.length===0?<p className="company-empty">Nenhuma OS cadastrada nesta filial.</p>:<div className="company-table-wrap"><table><thead><tr><th>OS</th><th>CLIENTE</th><th>APARELHO</th><th>DEFEITO</th><th>VALOR</th><th>STATUS</th><th>PAGAMENTO</th><th>FOTOS</th><th>IMPRIMIR</th></tr></thead><tbody>{orders.map(o=><tr key={o.id}><td><b>#{o.order_number}</b><small>{new Date(o.received_at).toLocaleDateString('pt-BR')}</small></td><td>{o.customers?.name||'—'}<small>{o.customers?.phone||''}</small></td><td>{[o.device_brand,o.device_model].filter(Boolean).join(' ')||o.device_type||'—'}<small>{o.serial_number||''}</small></td><td>{o.reported_issue}</td><td>{money(o.estimated_price)}</td><td><select disabled={busy} value={o.status} onChange={e=>void changeStatus(o,e.target.value)}>{statusFlow.map(s=><option key={s} value={s}>{statusLabels[s]}</option>)}</select></td><td><button className="company-secondary company-small-action" disabled={busy||o.status==='cancelled'} onClick={()=>{setPaymentOrder(o);setPaymentAmount(String(o.final_price>0?o.final_price:o.estimated_price));setPaymentMethod('pix')}}>Receber</button></td><td>{o.photo_urls?.length?<div className="company-os-photo-list">{o.photo_urls.map((url,i)=><a key={i} href={url} target="_blank" rel="noreferrer"><img src={url} alt={`Foto da OS ${o.order_number} ${i+1}`}/></a>)}</div>:<small>—</small>}<button className="company-secondary company-small-action" onClick={()=>setPendingPrintOrder(o)} title="Imprimir ordem de serviço"><Printer size={15}/> Imprimir</button></td></tr>)}</tbody></table></div>}
+        {loading?<p className="company-empty">Carregando...</p>:orders.length===0?<p className="company-empty">Nenhuma OS cadastrada nesta filial.</p>:<div className="company-table-wrap"><table><thead><tr><th>OS</th><th>CLIENTE</th><th>APARELHO</th><th>DEFEITO</th><th>VALOR</th><th>STATUS</th><th>PAGAMENTO</th><th>FOTOS</th><th>AÇÕES</th></tr></thead><tbody>{orders.map(o=><tr key={o.id}><td><b>#{o.order_number}</b><small>{new Date(o.received_at).toLocaleDateString('pt-BR')}</small></td><td>{o.customers?.name||'—'}<small>{o.customers?.phone||''}</small></td><td>{[o.device_brand,o.device_model].filter(Boolean).join(' ')||o.device_type||'—'}<small>{o.serial_number||''}</small></td><td>{o.reported_issue}</td><td>{money(o.estimated_price)}</td><td><select disabled={busy} value={o.status} onChange={e=>void changeStatus(o,e.target.value)}>{statusFlow.map(s=><option key={s} value={s}>{statusLabels[s]}</option>)}</select></td><td><button className="company-secondary company-small-action" disabled={busy||o.status==='cancelled'} onClick={()=>{setPaymentOrder(o);setPaymentAmount(String(o.final_price>0?o.final_price:o.estimated_price));setPaymentMethod('pix')}}>Receber</button></td><td>{o.photo_urls?.length?<div className="company-os-photo-list">{o.photo_urls.map((url,i)=><a key={i} href={url} target="_blank" rel="noreferrer"><img src={url} alt={`Foto da OS ${o.order_number} ${i+1}`}/></a>)}</div>:<small>—</small>}<button className="company-secondary company-small-action" onClick={()=>setPendingPrintOrder(o)} title="Imprimir ordem de serviço"><Printer size={15}/> Imprimir</button><button className="company-secondary company-small-action" disabled={busy} onClick={()=>editOrder(o)} title="Editar ordem de serviço">Editar</button></td></tr>)}</tbody></table></div>}
       </section>}
       {pendingPrintOrder&&<div className="company-modal-backdrop"><div className="company-form company-payment-modal"><h3>Escolher formato de impressão</h3><p>OS #{pendingPrintOrder.order_number} · {pendingPrintOrder.customers?.name||'Cliente'}</p><div className="company-form-actions"><button type="button" className="company-secondary" disabled={busy} onClick={()=>void prepareOrderPrint('a4')}><Printer size={16}/> Imprimir A4</button><button type="button" className="company-primary" disabled={busy} onClick={()=>void prepareOrderPrint('thermal80')}><Printer size={16}/> Térmica 80 mm</button><button type="button" className="company-secondary" onClick={()=>setPendingPrintOrder(null)}>Cancelar</button></div></div></div>}
       {paymentOrder&&<div className="company-modal-backdrop"><form className="company-form company-payment-modal" onSubmit={submitOrderPayment}><h3>Receber pagamento · OS #{paymentOrder.order_number}</h3><p>{paymentOrder.customers?.name||'Cliente não informado'} · {[paymentOrder.device_brand,paymentOrder.device_model].filter(Boolean).join(' ')}</p><label>Valor recebido (R$)<input required type="number" min="0.01" step="0.01" value={paymentAmount} onChange={e=>setPaymentAmount(e.target.value)}/></label><label>Forma de pagamento<select value={paymentMethod} onChange={e=>setPaymentMethod(e.target.value as PaymentMethod)}><option value="pix">PIX</option><option value="cash">Dinheiro</option><option value="debit_card">Cartão de débito</option><option value="credit_card">Cartão de crédito</option><option value="bank_transfer">Transferência</option><option value="boleto">Boleto</option><option value="other">Outro</option></select></label><label>Observações<input value={paymentNotes} onChange={e=>setPaymentNotes(e.target.value)}/></label><div className="company-form-actions"><button type="button" className="company-secondary" onClick={()=>setPaymentOrder(null)}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Registrando...':'Confirmar recebimento'}</button></div></form></div>}
