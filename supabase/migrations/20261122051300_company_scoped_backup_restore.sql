@@ -29,8 +29,7 @@ declare
  allowed_tables text[] := array[
   'customers','employees','service_catalog','products','service_orders',
   'service_order_items','stock_movements','payments','suppliers','purchases',
-  'purchase_items','cash_sessions','cash_transactions','company_financial_entries',
-  'audit_logs'
+  'purchase_items','cash_sessions','cash_transactions','company_financial_entries'
  ];
  v_table_name text;
  row_value jsonb;
@@ -149,7 +148,7 @@ begin
  foreach v_table_name in array array[
   'customers','employees','service_catalog','products','suppliers','service_orders',
   'cash_sessions','purchases','service_order_items','stock_movements','payments',
-  'purchase_items','cash_transactions','company_financial_entries','audit_logs'
+  'purchase_items','cash_transactions','company_financial_entries'
  ] loop
   select array_agg(column_name order by ordinal_position),
          coalesce(bool_or(is_identity='YES' and identity_generation='ALWAYS'),false)
