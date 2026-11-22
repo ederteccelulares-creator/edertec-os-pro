@@ -273,19 +273,24 @@ Deno.serve(async (req) => {
     targetCounts[result.table] = result.count;
     if (result.error) errors.push("Não foi possível conferir o destino em " + result.table + ".");
   }
-  const destinationEmpty = targetResults.every(result => !result.error && result.count === 0);
+  // Branches created during onboarding are reusable destination anchors.
+  // Every other exported table, including audit history, must be empty.
+  const destinationEmpty = targetResults
+    .filter(result => result.table !== "branches")
+    .every(result => !result.error && result.count === 0);
   const occupiedTables = targetResults
     .filter(result => result.count > 0)
     .map(result => ({ table: result.table, records: result.count }));
+  const branchMappingSatisfied = sourceBranches.length === 0 || branchMappingValid;
+  const userMappingSatisfied = !requiresUserMapping || mappingValid;
 
   const totalRecords = Object.values(counts).reduce((sum, count) => sum + count, 0);
   const restoreBlockers = [
-    "A restauração transacional com rollback ainda não foi implementada.",
     ...(sourceBranches.length > 0 && !branchMappingValid ? ["As associações das filiais ainda não foram validadas com sucesso no servidor."] : []),
-    "A importação ainda não implementa a substituição dos IDs de filiais nas referências relacionadas.",
     ...(requiresUserMapping && !mappingValid ? ["As associações de usuários ainda não foram validadas com sucesso no servidor."] : []),
-    ...(!destinationEmpty ? ["O destino contém registros operacionais; uma estratégia segura de mesclagem ainda não foi implementada."] : []),
+    ...(!destinationEmpty ? ["O destino contém registros operacionais; a restauração não faz mesclagem nem sobrescrita."] : []),
   ];
+  const restoreReady = errors.length === 0 && destinationEmpty && branchMappingSatisfied && userMappingSatisfied;
   return response({
     valid: errors.length === 0,
     applied: false,
@@ -308,7 +313,7 @@ Deno.serve(async (req) => {
     branch_mapping_provided: branchMappingProvided,
     branch_mapping_valid: branchMappingValid,
     branch_mapping_errors: branchMappingErrors,
-    restore_ready: false,
+    restore_ready: restoreReady,
     restore_blockers: restoreBlockers,
     destination_empty: destinationEmpty,
     target_counts: targetCounts,
