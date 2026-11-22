@@ -83,8 +83,9 @@ export async function listMyCompanies(): Promise<CompanyMembership[]> {
     .from('company_members')
     .select('company_id, role, companies(id,name,legal_name,tax_id,email,phone,status,logo_url)')
     .eq('user_id', auth.user.id)
+    .eq('is_active', true)
   if (error) throw error
-  return (data ?? []) as unknown as CompanyMembership[]
+  return ((data ?? []) as unknown as CompanyMembership[]).filter(m => m.company_id && m.companies && (Array.isArray(m.companies) ? m.companies.length > 0 : m.companies.id === m.company_id))
 }
 
 export async function listCompanyBranches(companyId: string): Promise<CompanyBranch[]> {
