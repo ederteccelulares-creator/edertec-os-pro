@@ -20,6 +20,8 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
   const [error,setError]=useState('')
   const [notice,setNotice]=useState('')
   const [showPlan,setShowPlan]=useState(false)
+  const [showCompany,setShowCompany]=useState(false)
+  const [companyForm,setCompanyForm]=useState({name:'',taxId:'',phone:''})
   const [planForm,setPlanForm]=useState({code:'',name:'',description:'',price:'0',billing_interval:'monthly',max_branches:'',max_users:''})
 
   const load=useCallback(async()=>{
@@ -38,6 +40,23 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
   },[])
 
   useEffect(()=>{void load()},[load])
+
+  async function createCompany(event:FormEvent){
+    event.preventDefault();if(!supabase)return
+    setBusy(true);setError('');setNotice('')
+    try{
+      const {error}=await supabase.rpc('register_company',{
+        company_name:companyForm.name.trim(),
+        company_tax_id:companyForm.taxId.trim()||null,
+        main_phone:companyForm.phone.trim()||null,
+      })
+      if(error)throw error
+      setCompanyForm({name:'',taxId:'',phone:''});setShowCompany(false)
+      setNotice('Empresa cadastrada com sucesso. O acesso inicial ficou vinculado à conta Super Admin.')
+      await load()
+    }catch(e){setError(e instanceof Error?e.message:'Falha ao cadastrar empresa.')}
+    finally{setBusy(false)}
+  }
 
   async function updateCompanyStatus(company:CompanyRow,status:string){
     if(!supabase)return
@@ -89,7 +108,9 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
       <div className="platform-stats"><article><Building2/><small>Empresas cadastradas</small><b>{companies.length}</b></article><article><Package/><small>Planos disponíveis</small><b>{plans.filter(p=>p.is_active).length}</b></article><article><CreditCard/><small>Assinaturas</small><b>{subscriptions.length}</b></article></div>
       <nav className="platform-tabs"><button className={tab==='companies'?'active':''} onClick={()=>setTab('companies')}>Empresas</button><button className={tab==='plans'?'active':''} onClick={()=>setTab('plans')}>Planos</button><button className={tab==='subscriptions'?'active':''} onClick={()=>setTab('subscriptions')}>Assinaturas</button></nav>
       {loading?<p className="platform-empty">Carregando dados da plataforma...</p>:<>
-        {tab==='companies'&&<section className="platform-panel"><h2>Empresas cadastradas</h2><div className="platform-table-wrap"><table><thead><tr><th>EMPRESA</th><th>DOCUMENTO</th><th>CADASTRO</th><th>SITUAÇÃO</th></tr></thead><tbody>{companies.map(c=><tr key={c.id}><td><b>{c.name}</b><small>{c.id}</small></td><td>{c.tax_id||'—'}</td><td>{new Date(c.created_at).toLocaleDateString('pt-BR')}</td><td><select disabled={busy} value={c.status} onChange={e=>void updateCompanyStatus(c,e.target.value)}><option value="active">Ativa</option><option value="suspended">Suspensa</option><option value="cancelled">Cancelada</option></select></td></tr>)}</tbody></table></div></section>}
+        {tab==='companies'&&<section className="platform-panel"><div className="platform-panel-title"><h2>Empresas cadastradas</h2><button onClick={()=>setShowCompany(v=>!v)}><Plus size={15}/> Nova empresa</button></div>
+          {showCompany&&<form className="platform-form" onSubmit={createCompany}><label className="platform-wide">Nome da empresa<input required minLength={2} value={companyForm.name} onChange={e=>setCompanyForm(v=>({...v,name:e.target.value}))} placeholder="Ex.: Edertec Assistência Técnica"/></label><label>CNPJ ou CPF<input value={companyForm.taxId} onChange={e=>setCompanyForm(v=>({...v,taxId:e.target.value}))} placeholder="Opcional"/></label><label>Telefone<input value={companyForm.phone} onChange={e=>setCompanyForm(v=>({...v,phone:e.target.value}))} placeholder="(00) 00000-0000"/></label><div className="platform-form-actions"><button type="button" onClick={()=>setShowCompany(false)}>Cancelar</button><button type="submit" disabled={busy}>{busy?'Cadastrando...':'Criar empresa'}</button></div></form>}
+          <div className="platform-table-wrap"><table><thead><tr><th>EMPRESA</th><th>DOCUMENTO</th><th>CADASTRO</th><th>SITUAÇÃO</th></tr></thead><tbody>{companies.map(c=><tr key={c.id}><td><b>{c.name}</b><small>{c.id}</small></td><td>{c.tax_id||'—'}</td><td>{new Date(c.created_at).toLocaleDateString('pt-BR')}</td><td><select disabled={busy} value={c.status} onChange={e=>void updateCompanyStatus(c,e.target.value)}><option value="active">Ativa</option><option value="suspended">Suspensa</option><option value="cancelled">Cancelada</option></select></td></tr>)}</tbody></table></div></section>}
         {tab==='plans'&&<section className="platform-panel"><div className="platform-panel-title"><h2>Planos e preços</h2><button onClick={()=>setShowPlan(v=>!v)}><Plus size={15}/> Novo plano</button></div>
           {showPlan&&<form className="platform-form" onSubmit={createPlan}><label>Código<input required value={planForm.code} onChange={e=>setPlanForm({...planForm,code:e.target.value})} placeholder="basico"/></label><label>Nome<input required value={planForm.name} onChange={e=>setPlanForm({...planForm,name:e.target.value})} placeholder="Plano Básico"/></label><label>Preço (R$)<input required type="number" min="0" step="0.01" value={planForm.price} onChange={e=>setPlanForm({...planForm,price:e.target.value})}/></label><label>Periodicidade<select value={planForm.billing_interval} onChange={e=>setPlanForm({...planForm,billing_interval:e.target.value})}><option value="monthly">Mensal</option><option value="six_months">Semestral</option><option value="yearly">Anual</option><option value="lifetime">Vitalício</option></select></label><label>Limite de filiais<input type="number" min="1" value={planForm.max_branches} onChange={e=>setPlanForm({...planForm,max_branches:e.target.value})} placeholder="Sem limite"/></label><label>Limite de usuários<input type="number" min="1" value={planForm.max_users} onChange={e=>setPlanForm({...planForm,max_users:e.target.value})} placeholder="Sem limite"/></label><label className="platform-wide">Descrição<input value={planForm.description} onChange={e=>setPlanForm({...planForm,description:e.target.value})}/></label><div className="platform-form-actions"><button type="button" onClick={()=>setShowPlan(false)}>Cancelar</button><button type="submit" disabled={busy}>{busy?'Salvando...':'Criar plano'}</button></div></form>}
           <div className="platform-table-wrap"><table><thead><tr><th>PLANO</th><th>VALOR</th><th>PERÍODO</th><th>LIMITES</th><th>STATUS</th></tr></thead><tbody>{plans.map(p=><tr key={p.id}><td><b>{p.name}</b><small>{p.code}</small></td><td>{money(p.price)}</td><td>{intervalLabels[p.billing_interval]||p.billing_interval}</td><td>{p.max_branches??'∞'} filiais · {p.max_users??'∞'} usuários</td><td><button className="platform-toggle" disabled={busy} onClick={()=>void togglePlan(p)}>{p.is_active?'Ativo':'Inativo'}</button></td></tr>)}</tbody></table></div>
