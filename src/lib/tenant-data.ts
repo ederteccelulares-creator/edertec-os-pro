@@ -204,6 +204,21 @@ export async function updateServiceOrderStatus(
   return data
 }
 
+export async function assignServiceOrderTechnician(
+  context: TenantContext,
+  orderId: string,
+  technicianId: string | null,
+) {
+  const { data, error } = await client().rpc('assign_service_order_technician', {
+    p_organization_id: context.organizationId,
+    p_branch_id: context.branchId,
+    p_order_id: orderId,
+    p_technician_id: technicianId,
+  })
+  if (error) throw error
+  return data
+}
+
 export async function listServiceOrderEvents(context: TenantContext, orderId: string) {
   const { data, error } = await client().from('service_order_events')
     .select('id, from_status, to_status, description, changed_by, created_at')
