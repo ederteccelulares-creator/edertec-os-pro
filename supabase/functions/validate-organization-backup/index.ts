@@ -91,6 +91,24 @@ Deno.serve(async (req) => {
     idSets.set(table, new Set(rows.map(row => String(row?.id ?? ""))));
   }
 
+  // Detect duplicated primary keys before any future import attempt.
+  for (const table of TABLES) {
+    const rows = Array.isArray(tables[table]) ? tables[table] as Array<Record<string, unknown>> : [];
+    const seen = new Set<string>();
+    for (let index = 0; index < rows.length; index++) {
+      const id = rows[index]?.id;
+      if ((typeof id !== "string" && typeof id !== "number") || !String(id).trim()) {
+        errors.push(table + "[" + index + "] não possui chave primária válida.");
+      } else if (seen.has(String(id))) {
+        errors.push(table + "[" + index + "] contém chave primária duplicada: " + String(id));
+      } else {
+        seen.add(String(id));
+      }
+      if (errors.length >= 50) break;
+    }
+    if (errors.length >= 50) break;
+  }
+
   const references: Array<[string, string, string, boolean]> = [
     ["devices", "customer_id", "customers", false],
     ["service_orders", "branch_id", "branches", false],
