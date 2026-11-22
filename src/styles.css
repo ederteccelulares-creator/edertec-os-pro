@@ -932,3 +932,8 @@ td b { font-weight:650; }
 .company-print-settings label { color:#cfc3d3;font-size:12px;font-weight:700; }
 .company-print-settings select { width:100%;min-height:48px;padding:0 12px;border:1px solid #49344a;border-radius:9px;background:#1b1721;color:#fff;font-size:14px; }
 .company-print-settings p { margin:0;color:#aaa0b0;font-size:12px;line-height:1.6; }
+
+.company-settings-stack{display:grid;gap:16px}
+.company-print-settings input{width:100%;min-height:44px;padding:10px 12px;border:1px solid #49344a;border-radius:9px;background:#1b1721;color:#fff;font-size:14px;outline:none}
+.company-print-settings input:focus{border-color:#d65bb5}
+.company-print-settings button{min-height:44px;justify-content:center}
