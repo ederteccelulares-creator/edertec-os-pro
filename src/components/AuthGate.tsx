@@ -147,7 +147,7 @@ export default function AuthGate() {
     <div className="auth-brand"><span><Building2 size={24}/></span><div><b>EDERTEC <i>OS PRO</i></b><small>CADASTRO DA ASSISTÊNCIA</small></div></div>
     <div className="auth-icon"><CheckCircle2 size={25}/></div><h1>Cadastre sua assistência</h1><p className="auth-subtitle">Crie o ambiente exclusivo da sua empresa. Você será o proprietário e poderá convidar sua equipe depois.</p>
     <form className="auth-form" onSubmit={createCompany}>
-      <label>Nome da assistência<input required minLength={2} value={companyName} onChange={e=>{setCompanyName(e.target.value);if(!companySlug)setCompanySlug(slugify(e.target.value))}} placeholder="Ex.: Minha Assistência Técnica"/></label>
+      <label>Nome da assistência<input required minLength={2} value={companyName} onChange={e=>{setCompanyName(e.target.value);setCompanySlug(slugify(e.target.value))}} placeholder="Ex.: Minha Assistência Técnica"/></label>
       <label>Identificador da empresa<input required minLength={3} maxLength={40} pattern="[a-z0-9][a-z0-9-]{2,39}" value={companySlug} onChange={e=>setCompanySlug(e.target.value)} placeholder="minha-assistencia"/><small className="field-help">Somente letras minúsculas, números e hífen.</small></label>
       {error && <div className="auth-error">{error}</div>}{notice && <div className="auth-notice">{notice}</div>}
       <button className="primary auth-submit" disabled={busy}>{busy?<LoaderCircle className="spin" size={17}/>:<Building2 size={17}/>} Criar ambiente da empresa</button>
