@@ -141,3 +141,23 @@ Esta seção registra alterações já aplicadas no banco BR; não é um arquivo
 
 - O módulo de consulta de OS usa nomes explícitos das relações antigas (`service_orders_customer_id_fkey` e `service_orders_assigned_employee_id_fkey`) para evitar ambiguidade no PostgREST após a adição das chaves estrangeiras compostas.
 - Grants da função `register_company(text,text,text)` verificados: `anon` não pode executar; `authenticated` pode executar; o privilégio herdado de `PUBLIC` está ausente. A permissão autenticada é intencional para permitir o cadastro da empresa. O Advisor continua alertando por ser SECURITY DEFINER, então o corpo e o escopo devem permanecer sob revisão.
+
+
+## Estoque e produtos — 22/11/2026
+
+### Código no GitHub
+- Criado `src/lib/company-inventory.ts` com listagem de produtos, cadastro de produto, ativação/desativação e consulta de movimentações.
+- Criado `src/components/CompanyInventoryPanel.tsx` e integrado à navegação principal do workspace.
+- A consulta usa `company_id` e RLS. Os dados exibidos incluem custo, venda, saldo e estoque mínimo.
+- Cadastro inicial cria o produto com saldo zero. Não há ainda formulário de entrada/saída: o saldo só deve mudar por movimentação auditável.
+- Corrigido o tipo de movimentação para usar a coluna real `reason` (não existe coluna `notes` em `stock_movements`).
+
+### Banco BR
+- Confirmado RLS habilitado e política de membros para `products` e `stock_movements`.
+- Criada chave única composta `products(id, company_id)`.
+- Criadas FKs compostas para que cada movimentação só possa apontar para produto e filial da mesma empresa.
+- Constraints verificadas após aplicação; tabelas estavam vazias no momento da mudança.
+
+### Verificação
+- Adicionado workflow GitHub Actions `.github/workflows/ci.yml` para executar `npm ci` e `npm run build` em push/PR para main.
+- A criação do workflow foi confirmada no GitHub; ainda não foi possível confirmar uma execução concluída.
