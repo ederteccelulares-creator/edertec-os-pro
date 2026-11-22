@@ -28,6 +28,9 @@ export type CompanyServiceOrder = {
   received_at: string
   promised_at: string | null
   delivered_at: string | null
+  warranty_started_at?: string | null
+  warranty_expires_at?: string | null
+  warranty_days?: number | null
   notes: string | null
   created_at: string
   updated_at: string
@@ -80,7 +83,7 @@ export async function listCompanyServiceOrders(
       device_type,device_brand,device_model,device_color,serial_number,
       reported_issue,intake_condition,included_accessories,diagnosis,status,
       priority,estimated_price,final_price,received_at,promised_at,delivered_at,
-      notes,created_at,updated_at,
+      warranty_started_at,warranty_expires_at,warranty_days,notes,created_at,updated_at,
       customers!service_orders_customer_id_fkey(id,name,phone),
       employees!service_orders_assigned_employee_id_fkey(id,name)
     `)
