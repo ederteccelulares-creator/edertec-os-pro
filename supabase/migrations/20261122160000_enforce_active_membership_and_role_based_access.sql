@@ -176,3 +176,21 @@ begin
  return v_purchase_id;
 end;
 $$;
+
+
+-- Restore runs only from the trusted service backend; also reject inactive actors.
+do $$
+declare v_definition text;
+begin
+  v_definition := pg_get_functiondef('public.restore_company_backup(uuid,uuid,uuid,jsonb)'::regprocedure);
+  v_definition := replace(
+    v_definition,
+    'and cm.role in (''owner'',''admin'')',
+    'and cm.is_active = true and cm.role in (''owner'',''admin'')'
+  );
+  if v_definition = pg_get_functiondef('public.restore_company_backup(uuid,uuid,uuid,jsonb)'::regprocedure) then
+    raise exception 'Could not locate restore membership guard; migration aborted';
+  end if;
+  execute v_definition;
+end;
+$$;
