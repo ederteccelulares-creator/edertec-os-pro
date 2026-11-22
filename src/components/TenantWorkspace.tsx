@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Building2, ClipboardList, LogOut, Plus, RefreshCw, Smartphone, Users } from 'lucide-react'
 import { createServiceOrder, listBranches, listCustomers, listServiceOrders, saveCustomer, saveDevice, updateServiceOrderStatus } from '../lib/tenant-data'
 import type { Organization, Branch } from '../lib/supabase'
+import type { ServiceOrderStatus } from '../lib/tenant-data'
 
 type Props = { organization: Organization; email: string; onSignOut: () => void }
 type Customer = { id: string; name: string; phone: string }
@@ -81,7 +82,7 @@ export default function TenantWorkspace({ organization, email, onSignOut }: Prop
   async function changeStatus(id: string, status: string) {
     setBusy(true); setError('')
     try {
-      await updateServiceOrderStatus({ organizationId: organization.id, branchId }, id, status as typeof statuses[number] extends keyof typeof statusLabels ? never : never)
+      await updateServiceOrderStatus({ organizationId: organization.id, branchId }, id, status as ServiceOrderStatus)
       await loadWorkspace()
     } catch (e) { setError(e instanceof Error ? e.message : 'Falha ao atualizar status.') }
     finally { setBusy(false) }
