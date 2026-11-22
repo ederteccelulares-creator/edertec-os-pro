@@ -133,6 +133,38 @@ export async function listServiceOrders(context: TenantContext) {
   return data ?? []
 }
 
+
+export async function createServiceOrderWithDevice(
+  context: TenantContext,
+  input: {
+    customerId: string
+    brand: string
+    model: string
+    imei?: string
+    reportedIssue: string
+    estimatedAmount?: number
+    accessories?: string
+    physicalCondition?: string
+  },
+) {
+  const amount = input.estimatedAmount ?? 0
+  if (!Number.isFinite(amount) || amount < 0) throw new Error('O valor estimado deve ser zero ou maior.')
+  const { data, error } = await client().rpc('create_service_order_with_device', {
+    p_organization_id: context.organizationId,
+    p_branch_id: context.branchId,
+    p_customer_id: required(input.customerId, 'o cliente'),
+    p_brand: required(input.brand, 'a marca'),
+    p_model: required(input.model, 'o modelo'),
+    p_imei: input.imei?.trim() || null,
+    p_reported_issue: required(input.reportedIssue, 'o defeito informado'),
+    p_estimated_amount: amount,
+    p_accessories: input.accessories?.trim() || null,
+    p_physical_condition: input.physicalCondition?.trim() || null,
+  })
+  if (error) throw error
+  return data
+}
+
 export async function createServiceOrder(context: TenantContext, input: ServiceOrderInput) {
   const amount = input.estimatedAmount ?? 0
   if (!Number.isFinite(amount) || amount < 0) throw new Error('O valor estimado deve ser zero ou maior.')
