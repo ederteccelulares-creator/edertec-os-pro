@@ -101,7 +101,6 @@ begin
     'order_number', so.order_number,
     'status', so.status,
     'reported_issue', so.reported_issue,
-    'diagnosis', so.diagnosis,
     'estimated_amount', so.estimated_amount,
     'approved_amount', so.approved_amount,
     'received_at', so.received_at,
@@ -112,7 +111,6 @@ begin
     'events', coalesce((
       select jsonb_agg(jsonb_build_object(
         'status', ev.to_status,
-        'description', ev.description,
         'created_at', ev.created_at
       ) order by ev.created_at asc)
       from public.service_order_events ev
