@@ -81,6 +81,7 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
   const [deviceHistory, setDeviceHistory] = useState<CustomerDevice | null>(null)
   const [historyOrder, setHistoryOrder] = useState<Order | null>(null)
   const [printOrder, setPrintOrder] = useState<Order | null>(null)
+  const [printOrderMedia, setPrintOrderMedia] = useState<Array<{name:string;url:string}>>([])
   const [historyEvents, setHistoryEvents] = useState<Array<{id:string;from_status:string|null;to_status:string;description:string|null;created_at:string}>>([])
   const [historyLoading, setHistoryLoading] = useState(false)
   const [customer, setCustomer] = useState({ name: '', phone: '', email: '' })
@@ -449,9 +450,18 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
     finally { setHistoryLoading(false) }
   }
 
-  function printServiceOrder(item: Order) {
-    setPrintOrder(item)
-    window.setTimeout(() => window.print(), 100)
+  async function printServiceOrder(item: Order) {
+    setBusy(true); setError('')
+    try {
+      const media = await listServiceOrderIntakeMedia({ organizationId: organization.id, branchId }, item.id)
+      setPrintOrderMedia(media)
+      setPrintOrder(item)
+      window.setTimeout(() => window.print(), 350)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Não foi possível preparar a ficha de recebimento.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   async function changeStatus(id: string, status: string) {
@@ -546,7 +556,7 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
         <div className="tenant-report-columns"><div><h3>Ordens por situação</h3>{Object.entries(statusLabels).map(([key,label])=>{const count=orders.filter(x=>x.status===key).length;return <div className="tenant-report-row" key={key}><span>{label}</span><b>{count}</b><i><em style={{width:(orders.length?count/orders.length*100:0)+'%'}}/></i></div>})}</div><div><h3>Alertas de estoque</h3>{inventory.filter(row=>Number(row.quantity)<=Number(row.inventory_items?.[0]?.min_stock||0)).length===0?<p className="tenant-empty">Nenhum produto abaixo do estoque mínimo.</p>:inventory.filter(row=>Number(row.quantity)<=Number(row.inventory_items?.[0]?.min_stock||0)).map(row=><div className="tenant-report-row" key={row.item_id}><span>{row.inventory_items?.[0]?.name||'Produto'}</span><b>{Number(row.quantity).toLocaleString('pt-BR')}</b></div>)}</div></div>
         <p className="tenant-report-note">Os indicadores respeitam a filial selecionada e as permissões da sua função. Os totais refletem os registros retornados pelo sistema, não uma auditoria contábil ou fechamento fiscal.</p>
       </section>}
-      {printOrder && <section className="tenant-print-sheet"><header><div><h1>{organization.name}</h1><p>ORDEM DE SERVIÇO</p></div><strong>OS #{printOrder.order_number}</strong></header><hr/><h2>Dados do cliente</h2><p><b>Nome:</b> {printOrder.customers?.name || '—'}</p><p><b>Telefone:</b> {printOrder.customers?.phone || '—'}</p><h2>Dados do aparelho</h2><p><b>Aparelho:</b> {printOrder.devices?.brand || '—'} {printOrder.devices?.model || ''}</p><p><b>IMEI / Série:</b> {printOrder.devices?.imei || 'Não informado'}</p><h2>Atendimento</h2><p><b>Defeito informado:</b> {printOrder.reported_issue}</p><p><b>Acessórios:</b> {printOrder.accessories || 'Não informado'}</p><p><b>Condição física:</b> {printOrder.physical_condition || 'Não informado'}</p><p><b>Valor estimado:</b> {money(printOrder.estimated_amount)}</p><p><b>Status:</b> {statusLabels[printOrder.status] || printOrder.status}</p><p><b>Recebido em:</b> {new Date(printOrder.received_at).toLocaleString('pt-BR')}</p><div className="tenant-print-terms"><p>O orçamento poderá ser alterado após avaliação técnica e autorização do cliente. Aparelhos e acessórios devem ser conferidos no ato da retirada.</p></div><div className="tenant-print-signatures"><span>Assinatura do cliente</span><span>Assinatura do responsável</span></div><button className="tenant-print-close" onClick={()=>setPrintOrder(null)}>Fechar impressão</button></section>}
+      {printOrder && <section className="tenant-print-sheet"><header><div><h1>{organization.name}</h1><p>FICHA DE RECEBIMENTO · ORDEM DE SERVIÇO</p></div><strong>OS #{printOrder.order_number}</strong></header><hr/><h2>Dados do cliente</h2><p><b>Nome:</b> {printOrder.customers?.name || '—'}</p><p><b>Telefone:</b> {printOrder.customers?.phone || '—'}</p><h2>Dados do aparelho</h2><p><b>Aparelho:</b> {printOrder.devices?.brand || '—'} {printOrder.devices?.model || ''}</p><p><b>IMEI / Série:</b> {printOrder.devices?.imei || 'Não informado'}</p><h2>Atendimento</h2><p><b>Defeito informado:</b> {printOrder.reported_issue}</p><p><b>Acessórios:</b> {printOrder.accessories || 'Não informado'}</p><p><b>Condição física:</b> {printOrder.physical_condition?.split('Checklist de entrada:')[0]?.trim() || 'Não informado'}</p><p><b>Valor estimado:</b> {money(printOrder.estimated_amount)}</p><p><b>Status:</b> {statusLabels[printOrder.status] || printOrder.status}</p><p><b>Recebido em:</b> {new Date(printOrder.received_at).toLocaleString('pt-BR')}</p>{printOrder.physical_condition?.includes('Checklist de entrada:')&&<><h2>Checklist de entrada</h2><ul className="tenant-print-checklist">{printOrder.physical_condition.split('Checklist de entrada:')[1].trim().split('\n').filter(Boolean).map((line,index)=><li key={index}>{line.replace(/^-\s*/, '☑ ')}</li>)}</ul></>}{printOrderMedia.length>0&&<><h2>Fotos e assinatura do recebimento</h2><div className="tenant-print-media">{printOrderMedia.map(media=><figure key={media.name}><img src={media.url} alt={media.name}/><figcaption>{media.name.startsWith('signature-')?'Assinatura do cliente':'Foto do aparelho'}</figcaption></figure>)}</div></>}<div className="tenant-print-terms"><p>O orçamento poderá ser alterado após avaliação técnica e autorização do cliente. Aparelhos e acessórios devem ser conferidos no ato da retirada.</p></div><div className="tenant-print-signatures"><span>Assinatura do cliente</span><span>Assinatura do responsável</span></div><button className="tenant-print-close" onClick={()=>setPrintOrder(null)}>Fechar impressão</button></section>}
       {deviceHistory && <div className="tenant-modal-backdrop" onClick={() => setDeviceHistory(null)}>
         <section className="tenant-history-modal" onClick={event => event.stopPropagation()}>
           <div className="tenant-panel-head"><div><b>Histórico do aparelho</b><small>{deviceHistory.brand} {deviceHistory.model} · {deviceCustomer?.name || 'Cliente'} · filial atual</small></div><button className="tenant-modal-close" onClick={() => setDeviceHistory(null)}>Fechar</button></div>
