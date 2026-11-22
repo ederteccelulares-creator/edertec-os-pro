@@ -374,3 +374,12 @@
 .company-error-banner,.company-notice-banner{padding:12px 14px;border-radius:8px;margin-bottom:14px;background:#382126;color:#ffb5b5;font-size:12px}
 .company-notice-banner{background:#1b342b;color:#9be0b8}.company-footer{padding:18px 3px;color:#748196;font-size:10px}
 @media(max-width:760px){.company-app{display:block}.company-sidebar{width:100%;padding:14px;position:relative}.company-logo{padding:0 3px 13px}.company-current{display:none}.company-sidebar nav{display:flex;margin-top:12px}.company-sidebar nav button{flex:1;justify-content:center;padding:10px 7px;font-size:12px}.company-user{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:10px}.company-user small{display:none}.company-user button{margin:0 0 0 auto}.company-main{padding:17px 12px}.company-top{align-items:flex-start;flex-direction:column}.company-top h1{font-size:23px}.company-top-actions{width:100%}.company-top-actions select{flex:1}.company-panel{padding:14px}.company-panel-head{align-items:flex-start}.company-form-grid{grid-template-columns:1fr}.company-auth-card{padding:24px 19px}}
+
+
+.company-inventory-tools{display:flex;gap:9px;align-items:center;margin:0 0 16px}
+.company-inventory-tools label{display:flex;align-items:center;gap:9px;flex:1;max-width:480px;padding:0 11px;border:1px solid #303b4d;border-radius:8px;background:#0d131d;color:#8996aa}
+.company-inventory-tools input{width:100%;min-width:0;padding:11px 0;border:0;outline:0;background:transparent;color:#edf1f7;font:inherit}
+.company-low-stock,.company-stock-ok{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#ffbd78}
+.company-stock-ok{color:#8ce0b1}
+.company-inventory-note{margin:15px 0 0;color:#8290a4;font-size:11px;line-height:1.5}
+@media(max-width:760px){.company-sidebar nav{overflow-x:auto}.company-sidebar nav button{white-space:nowrap;min-width:max-content}}
