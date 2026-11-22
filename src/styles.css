@@ -97,3 +97,23 @@
 .tenant-modal-close{border:1px solid #465367;background:transparent;color:#d9b66e;border-radius:6px;padding:7px 10px;font-size:10px}
 .tenant-timeline{display:grid;gap:0;padding:8px 3px}.tenant-timeline article{display:flex;gap:13px;position:relative;padding:11px 0 17px}.tenant-timeline article:not(:last-child):before{content:"";position:absolute;left:5px;top:22px;bottom:-2px;width:1px;background:#46556a}.tenant-timeline-dot{width:11px;height:11px;flex:none;border-radius:50%;background:#d9ad5b;border:2px solid #4a3c24;margin-top:3px;z-index:1}.tenant-timeline article>div{display:grid;gap:5px}.tenant-timeline b{font-size:11px;color:#f0c777}.tenant-timeline small{font-size:9px;color:#8d9bad}.tenant-timeline p{font-size:10px;color:#c1cad7;margin:0}
 @media(max-width:680px){.tenant-history-modal{padding:14px}.tenant-history-modal .tenant-panel-head{align-items:flex-start}.tenant-history-button{padding:7px;font-size:9px}}
+
+
+.tenant-print-sheet{display:none}
+@media print{
+  @page{size:A4;margin:16mm}
+  body{background:#fff!important;color:#111!important}
+  body *{visibility:hidden!important}
+  .tenant-print-sheet,.tenant-print-sheet *{visibility:visible!important}
+  .tenant-print-sheet{display:block!important;position:absolute;inset:0;width:100%;padding:0;color:#111;background:#fff;font:12px Arial,sans-serif}
+  .tenant-print-sheet header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+  .tenant-print-sheet h1{font-size:22px;margin:0 0 5px}.tenant-print-sheet header p{font-size:11px;letter-spacing:2px;margin:0}
+  .tenant-print-sheet header strong{font-size:18px}
+  .tenant-print-sheet h2{font-size:13px;text-transform:uppercase;border-bottom:1px solid #999;padding-bottom:5px;margin:22px 0 10px}
+  .tenant-print-sheet p{font-size:12px;line-height:1.6;margin:5px 0}
+  .tenant-print-terms{margin-top:28px;border:1px solid #aaa;padding:10px}
+  .tenant-print-signatures{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:75px}
+  .tenant-print-signatures span{border-top:1px solid #333;text-align:center;padding-top:8px;font-size:11px}
+  .tenant-print-close{display:none!important}
+}
+.tenant-print-close{margin-top:18px;border:1px solid #465367;background:#182434;color:#e4b967;border-radius:6px;padding:8px 12px}
