@@ -44,7 +44,7 @@ begin
     'id','a8000000-0000-4000-8000-000000000001',
     'company_id','a3000000-0000-4000-8000-000000000001',
     'branch_id','a5000000-0000-4000-8000-000000000001',
-    'name','Cliente restaurado','phone','47999990000','address','Rua de teste'
+    'name','Cliente restaurado','phone','47999990000','address','{}'::jsonb
    )),
    'employees','[]'::jsonb,
    'service_catalog','[]'::jsonb,
@@ -123,7 +123,7 @@ begin
    )),
    'customers',jsonb_build_array(jsonb_build_object(
     'id','ac000000-0000-4000-8000-000000000001',
-    'company_id','a4000000-0000-4000-8000-000000000002','name','Cliente temporário','address','Rua de teste'
+    'company_id','a4000000-0000-4000-8000-000000000002','name','Cliente temporário','address','{}'::jsonb
    )),
    'employees','[]'::jsonb,'service_catalog','[]'::jsonb,'products','[]'::jsonb,
    'service_orders',jsonb_build_array(jsonb_build_object(
