@@ -71,11 +71,13 @@ A função exige JWT válido, verifica se o solicitante é proprietário ou admi
 A camada inicial de autenticação e criação de organizações foi implementada no frontend, mas depende da criação e configuração do projeto Supabase pelo proprietário. Os módulos iniciais de clientes, aparelhos e ordens de serviço já estão conectados ao PostgreSQL no código, mas dependem da execução das migrações e da configuração do Supabase. A gestão inicial de equipe e o painel Super Admin estão implementados no código. O Super Admin pode cadastrar planos e controlar o status e os períodos de assinatura. Os limites de usuários e filiais são verificados no banco com bloqueio transacional; status suspenso, cancelado, vencido ou em atraso bloqueia operações protegidas por função, preservando a possibilidade de consultar o vínculo da empresa. A tela de equipe permite convidar funcionários por e-mail com funções restritas. O convite é processado por uma Supabase Edge Function autenticada, e o vínculo à empresa é criado no banco quando o usuário convidado conclui o cadastro. Convites para contas que já existem no Supabase ainda não são suportados. Integração de cobrança automática e edição completa de cadastros ainda precisam ser concluídas. Os testes automatizados de isolamento multiempresa e restauração transacional (importação, remapeamento, idempotência e rollback) passaram em PostgreSQL descartável no GitHub Actions, mas ainda não substituem homologação em uma instância Supabase real. O painel de relatórios apresenta indicadores calculados sobre os registros carregados para a filial selecionada. As migrações 0004 a 0018 precisam ser aplicadas no Supabase antes de usar estoque, financeiro, vendas, gestão de equipe, catálogo de serviços, painel Super Admin, convites de equipe e restauração de backups. A migração 0003 também precisa ser aplicada no Supabase real antes de usar a nova abertura transacional de OS. Não comercialize o acesso nem use dados reais até executar as migrações e concluir os testes e a revisão de segurança.
 
 ## Próximas etapas
-1. Finalizar testes e validação de clientes, aparelhos, ordens e histórico no Supabase real.
-2. Implantar a função `invite-team` e validar o fluxo de convite por e-mail em ambiente Supabase real.
-3. Finalizar convites, relatórios e validação de permissões do Super Admin.
-4. Implementar gestão de planos, cobrança recorrente e webhooks no backend.
-5. Testes de isolamento entre empresas, backup, monitoramento, recuperação e publicação.
+1. Conectar o projeto Supabase real e aplicar as migrações 0001–0018 em ordem.
+2. Configurar URLs de autenticação, variáveis públicas do frontend e SMTP de produção.
+3. Publicar as Edge Functions `invite-team`, `export-organization`, `validate-organization-backup` e `restore-organization-backup`.
+4. Criar o primeiro Super Admin e executar o roteiro de homologação com duas empresas fictícias.
+5. Publicar o frontend e monitorar autenticação, permissões, logs, backups e custos.
+
+O roteiro detalhado está em [Checklist de publicação](supabase/docs/production-go-live-checklist.md). A integração real ainda depende do acesso ao projeto Supabase e não deve ser considerada concluída apenas pelos testes do GitHub Actions.
 
 
 ## Endurecimento de segurança de equipe
@@ -179,7 +181,7 @@ O script `supabase/tests/backup_restore_schema_contract.sql` faz uma verificaç�
 
 O workflow executa as migrações 0001–0018 em um PostgreSQL 16 descartável, usando `supabase/tests/postgres_auth_harness.sql` para simular somente os objetos mínimos do Supabase Auth necessários às migrações. Em seguida, executa `security_regression.sql`, `backup_restore_schema_contract.sql`, `tenant_isolation_rls.sql` e `backup_restore_transactional.sql`.
 
-Esse job verifica a compatibilidade SQL das migrações, as asserções estruturais e os cenários automatizados de isolamento, restauração, idempotência e rollback em PostgreSQL isolado. Ele **não** equivale a uma homologação completa no Supabase: não testa PostgREST, Auth real, Edge Functions, políticas com sessões reais de usuários, e-mail, nem restauração transacional. Nenhum banco de produção é acessado ou alterado.
+Esse job verifica a compatibilidade SQL das migrações, as asserções estruturais e os cenários automatizados de isolamento, restauração, idempotência e rollback em PostgreSQL isolado. Ele **não** equivale a uma homologação completa no Supabase: não testa PostgREST, Auth real, Edge Functions em ambiente hospedado, políticas com sessões reais de usuários ou entrega de e-mail. Nenhum banco de produção é acessado ou alterado.
 
 O workflow também cria duas empresas e três usuários sintéticos (proprietários das duas empresas e um técnico da primeira) e verifica, sob o papel `authenticated`, que cada empresa só enxerga seus próprios clientes; tenta bloquear gravação cruzada, vínculo de aparelho com cliente de outra empresa, alteração direta de função de membro e inserção direta de OS. Também cria OS de teste para verificar atribuição por proprietário, atualização de status pelo técnico responsável, bloqueio de atualização de OS não atribuída, bloqueio de atribuição pelo próprio técnico e bloqueio de tentativa de atribuição entre empresas. Esse smoke test valida RLS, privilégios e regras da RPC no PostgreSQL isolado, mas não simula todas as camadas de uma instância Supabase real.
 
