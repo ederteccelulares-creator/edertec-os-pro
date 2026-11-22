@@ -30,19 +30,15 @@ Plataforma SaaS de gestão para assistências técnicas de celulares, preparada 
 - Interface que respeita o perfil do membro ao habilitar atualização de status da OS.
 
 ## Configurar o banco e autenticação
-1. Crie um projeto no [Supabase](https://supabase.com/dashboard).
-2. No SQL Editor do projeto, execute os arquivos em ordem: `supabase/migrations/0001_saas_core.sql`, `supabase/migrations/0002_order_workflow_security.sql` e `supabase/migrations/0003_role_access_atomic_order.sql` e `supabase/migrations/0004_inventory_module.sql` e `supabase/migrations/0005_financial_module.sql` e `supabase/migrations/0006_sales_module.sql` e `supabase/migrations/0007_team_management.sql` e `supabase/migrations/0008_service_catalog.sql` e `supabase/migrations/0009_platform_admin.sql` e `supabase/migrations/0010_team_invitations.sql` e `supabase/migrations/0011_membership_write_hardening.sql` e `supabase/migrations/0012_sales_pricing_and_privacy.sql` e `supabase/migrations/0013_service_order_write_hardening.sql` e `supabase/migrations/0014_tenant_record_immutability.sql` e `supabase/migrations/0015_operational_tenant_key_hardening.sql` e `supabase/migrations/0016_service_history_integrity.sql` e `supabase/migrations/0017_service_order_technician_assignment.sql` e `supabase/migrations/0018_transactional_backup_restore.sql`.
-3. Copie `.env.example` para `.env.local`.
-4. Preencha:
-   - `VITE_SUPABASE_URL`: Project URL.
-   - `VITE_SUPABASE_ANON_KEY`: chave pública anon/publishable do projeto.
-5. Em Authentication > URL Configuration, configure a URL do ambiente publicado e a URL local de desenvolvimento.
-6. Em Authentication > Providers, mantenha Email habilitado. Se a confirmação de e-mail estiver ativa, o usuário deverá confirmar o endereço antes do primeiro login.
-7. Instale e execute:
-   ```bash
-   npm install
-   npm run dev
-   ```
+
+Siga o [guia de preparação e publicação no Supabase](supabase/docs/supabase-production-setup.md). Ele explica a criação do projeto, variáveis do frontend, aplicação segura das migrações 0001–0018, Auth/SMTP, publicação das quatro Edge Functions e homologação.
+
+Para desenvolvimento local, copie `.env.example` para `.env.local`, preencha `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`, depois execute:
+
+```bash
+npm ci
+npm run dev
+```
 
 **Segurança:** nunca coloque a chave `service_role` ou segredo de backend em variáveis `VITE_*` ou no navegador. O frontend usa somente a chave pública; operações privilegiadas, cobrança e webhooks deverão rodar em backend seguro.
 
@@ -58,7 +54,7 @@ values ('UUID-DO-USUARIO-AUTORIZADO');
 A tabela não possui políticas de leitura ou gravação para o navegador. A autorização é verificada por funções SQL; não exponha a chave `service_role`.
 
 ## Publicar a função de convites
-Depois de aplicar as migrações até `0017_service_order_technician_assignment.sql`, vincule o projeto Supabase à CLI e publique a Edge Function:
+Depois de aplicar as migrações `0001`–`0018`, vincule o projeto Supabase à CLI e publique a Edge Function:
 
 ```bash
 supabase link --project-ref SEU_PROJECT_REF
@@ -77,7 +73,7 @@ A camada inicial de autenticação e criação de organizações foi implementad
 4. Criar o primeiro Super Admin e executar o roteiro de homologação com duas empresas fictícias.
 5. Publicar o frontend e monitorar autenticação, permissões, logs, backups e custos.
 
-O roteiro detalhado está em [Checklist de publicação](supabase/docs/production-go-live-checklist.md). A integração real ainda depende do acesso ao projeto Supabase e não deve ser considerada concluída apenas pelos testes do GitHub Actions.
+O roteiro detalhado está em [Preparação para publicar no Supabase](supabase/docs/supabase-production-setup.md). O workflow [Deploy Supabase (manual)](.github/workflows/deploy-supabase.yml) só pode ser executado após cadastrar os secrets no GitHub Environment `production` e proteger esse ambiente com aprovação. A integração real ainda depende do projeto Supabase e não deve ser considerada concluída apenas pelos testes do GitHub Actions.
 
 
 ## Endurecimento de segurança de equipe
