@@ -417,3 +417,14 @@
 .company-finance-summary b{font-size:20px}
 .company-inline-actions{display:flex;align-items:center;gap:8px}
 @media(max-width:640px){.company-finance-summary{grid-template-columns:1fr}.company-finance-summary article{padding:12px}.company-finance-summary b{font-size:18px}}
+
+
+.company-backup-content{display:grid;gap:13px;max-width:760px;color:#aab6c7;font-size:13px;line-height:1.6}
+.company-backup-content p{margin:0}
+.company-backup-content strong{color:#f0d08b}
+.company-backup-content>small{color:#8190a4;font-size:11px}
+.company-backup-restore{display:grid;gap:8px;margin-top:8px;padding:15px;border:1px solid #39465a;border-radius:10px;background:#0e1520}
+.company-backup-restore b{color:#e8edf5;font-size:13px}
+.company-backup-restore p{font-size:12px;color:#9aa7ba}
+.company-backup-restore label{display:inline-flex;width:max-content;max-width:100%;align-items:center;gap:10px;padding:9px 12px;border:1px solid #46546a;border-radius:8px;color:#e3e9f2;cursor:pointer}
+.company-backup-restore input{max-width:100%;font-size:11px}
