@@ -4,6 +4,7 @@ import CompanyInventoryPanel from './CompanyInventoryPanel'
 import CompanySuppliersPanel from './CompanySuppliersPanel'
 import CompanyPurchasesPanel from './CompanyPurchasesPanel'
 import CompanyCashPanel from './CompanyCashPanel'
+import { recordCompanyServiceOrderPayment, type PaymentMethod } from '../lib/company-service-order-payments'
 import { listCompanyBranches, listCompanyCustomers, saveCompanyCustomer, type Company, type CompanyBranch, type CompanyCustomer, type CompanyRole } from '../lib/company-data'
 import { createCompanyServiceOrder, listCompanyServiceOrders, updateCompanyServiceOrderStatus, type CompanyServiceOrder } from '../lib/company-service-orders'
 
@@ -24,6 +25,10 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   const [notice,setNotice] = useState('')
   const [showOrder,setShowOrder] = useState(false)
   const [showCustomer,setShowCustomer] = useState(false)
+  const [paymentOrder,setPaymentOrder] = useState<CompanyServiceOrder|null>(null)
+  const [paymentAmount,setPaymentAmount] = useState('0')
+  const [paymentMethod,setPaymentMethod] = useState<PaymentMethod>('pix')
+  const [paymentNotes,setPaymentNotes] = useState('')
   const [customerForm,setCustomerForm] = useState({name:'',phone:'',email:'',document:'',notes:''})
   const [orderForm,setOrderForm] = useState({customerId:'',deviceType:'Celular',brand:'',model:'',color:'',serial:'',issue:'',condition:'',accessories:'',priority:'normal' as 'low'|'normal'|'high'|'urgent',price:'0',promisedAt:''})
 
@@ -70,6 +75,13 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
     finally {setBusy(false)}
   }
 
+  async function submitOrderPayment(event:FormEvent) {
+    event.preventDefault(); if(!paymentOrder)return; setBusy(true); setError(''); setNotice('')
+    try { await recordCompanyServiceOrderPayment({companyId:company.id,serviceOrderId:paymentOrder.id,amount:Number(paymentAmount),method:paymentMethod,notes:paymentNotes}); setPaymentOrder(null); setPaymentNotes(''); setNotice('Pagamento registrado e lançado no fluxo de caixa.'); await load() }
+    catch(e) {setError(e instanceof Error?e.message:'Falha ao registrar pagamento.')}
+    finally {setBusy(false)}
+  }
+
   async function changeStatus(order:CompanyServiceOrder,status:string) {
     setBusy(true); setError('')
     try { await updateCompanyServiceOrderStatus({companyId:company.id,orderId:order.id,status}); await load() }
@@ -97,8 +109,9 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
           <div className="company-form-grid"><label>Condição de entrada<input value={orderForm.condition} onChange={e=>setOrderForm({...orderForm,condition:e.target.value})}/></label><label>Acessórios<input value={orderForm.accessories} onChange={e=>setOrderForm({...orderForm,accessories:e.target.value})}/></label><label>Valor estimado (R$)<input type="number" min="0" step="0.01" value={orderForm.price} onChange={e=>setOrderForm({...orderForm,price:e.target.value})}/></label><label>Previsão de entrega<input type="datetime-local" value={orderForm.promisedAt} onChange={e=>setOrderForm({...orderForm,promisedAt:e.target.value})}/></label></div>
           <div className="company-form-actions"><button type="button" className="company-secondary" onClick={()=>setShowOrder(false)}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Salvando...':'Criar ordem de serviço'}</button></div>
         </form>}
-        {loading?<p className="company-empty">Carregando...</p>:orders.length===0?<p className="company-empty">Nenhuma OS cadastrada nesta filial.</p>:<div className="company-table-wrap"><table><thead><tr><th>OS</th><th>CLIENTE</th><th>APARELHO</th><th>DEFEITO</th><th>VALOR</th><th>STATUS</th></tr></thead><tbody>{orders.map(o=><tr key={o.id}><td><b>#{o.order_number}</b><small>{new Date(o.received_at).toLocaleDateString('pt-BR')}</small></td><td>{o.customers?.name||'—'}<small>{o.customers?.phone||''}</small></td><td>{[o.device_brand,o.device_model].filter(Boolean).join(' ')||o.device_type||'—'}<small>{o.serial_number||''}</small></td><td>{o.reported_issue}</td><td>{money(o.estimated_price)}</td><td><select disabled={busy} value={o.status} onChange={e=>void changeStatus(o,e.target.value)}>{statusFlow.map(s=><option key={s} value={s}>{statusLabels[s]}</option>)}</select></td></tr>)}</tbody></table></div>}
+        {loading?<p className="company-empty">Carregando...</p>:orders.length===0?<p className="company-empty">Nenhuma OS cadastrada nesta filial.</p>:<div className="company-table-wrap"><table><thead><tr><th>OS</th><th>CLIENTE</th><th>APARELHO</th><th>DEFEITO</th><th>VALOR</th><th>STATUS</th><th>PAGAMENTO</th></tr></thead><tbody>{orders.map(o=><tr key={o.id}><td><b>#{o.order_number}</b><small>{new Date(o.received_at).toLocaleDateString('pt-BR')}</small></td><td>{o.customers?.name||'—'}<small>{o.customers?.phone||''}</small></td><td>{[o.device_brand,o.device_model].filter(Boolean).join(' ')||o.device_type||'—'}<small>{o.serial_number||''}</small></td><td>{o.reported_issue}</td><td>{money(o.estimated_price)}</td><td><select disabled={busy} value={o.status} onChange={e=>void changeStatus(o,e.target.value)}>{statusFlow.map(s=><option key={s} value={s}>{statusLabels[s]}</option>)}</select></td><td><button className="company-secondary company-small-action" disabled={busy||o.status==='cancelled'} onClick={()=>{setPaymentOrder(o);setPaymentAmount(String(o.final_price>0?o.final_price:o.estimated_price));setPaymentMethod('pix')}}>Receber</button></td></tr>)}</tbody></table></div>}
       </section>}
+      {paymentOrder&&<div className="company-modal-backdrop"><form className="company-form company-payment-modal" onSubmit={submitOrderPayment}><h3>Receber pagamento · OS #{paymentOrder.order_number}</h3><p>{paymentOrder.customers?.name||'Cliente não informado'} · {[paymentOrder.device_brand,paymentOrder.device_model].filter(Boolean).join(' ')}</p><label>Valor recebido (R$)<input required type="number" min="0.01" step="0.01" value={paymentAmount} onChange={e=>setPaymentAmount(e.target.value)}/></label><label>Forma de pagamento<select value={paymentMethod} onChange={e=>setPaymentMethod(e.target.value as PaymentMethod)}><option value="pix">PIX</option><option value="cash">Dinheiro</option><option value="debit_card">Cartão de débito</option><option value="credit_card">Cartão de crédito</option><option value="bank_transfer">Transferência</option><option value="boleto">Boleto</option><option value="other">Outro</option></select></label><label>Observações<input value={paymentNotes} onChange={e=>setPaymentNotes(e.target.value)}/></label><div className="company-form-actions"><button type="button" className="company-secondary" onClick={()=>setPaymentOrder(null)}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Registrando...':'Confirmar recebimento'}</button></div></form></div>}
       {tab==='inventory'&&<CompanyInventoryPanel company={company}/>}{tab==='suppliers'&&<CompanySuppliersPanel company={company}/>}{tab==='purchases'&&<CompanyPurchasesPanel company={company}/>}{tab==='cash'&&<CompanyCashPanel company={company}/>}
       {tab==='customers'&&<section className="company-panel">
         <div className="company-panel-head"><div><b>Cadastro de clientes</b><small>{customers.length} clientes cadastrados</small></div><button className="company-primary" onClick={()=>setShowCustomer(v=>!v)}><Plus size={16}/> Novo cliente</button></div>
