@@ -2,37 +2,21 @@
 -- Apply after migrations 0001 through 0008.
 -- Bootstrap the first platform administrator manually with the SQL statement in README.
 
--- Subscription enforcement: suspended/expired tenants lose normal workspace access.
-create or replace function public.is_org_member(target_org uuid)
-returns boolean language sql stable security definer set search_path=public
-as $
-  select exists(
-    select 1 from public.organization_members m
-    join public.subscriptions s on s.organization_id=m.organization_id
-    where m.organization_id=target_org and m.user_id=auth.uid() and m.active
-      and (
-        s.status='active' and (s.current_period_end is null or s.current_period_end>now())
-        or s.status='trialing' and (s.trial_ends_at is null or s.trial_ends_at>now())
-      )
-  );
-$;
-
+-- Subscription enforcement: suspended/expired tenants cannot perform role-protected writes.
 create or replace function public.has_org_role(target_org uuid, allowed public.member_role[])
 returns boolean language sql stable security definer set search_path=public
-as $
+as $$
   select exists(
     select 1 from public.organization_members m
     join public.subscriptions s on s.organization_id=m.organization_id
     where m.organization_id=target_org and m.user_id=auth.uid() and m.active
       and m.role=any(allowed)
       and (
-        s.status='active' and (s.current_period_end is null or s.current_period_end>now())
-        or s.status='trialing' and (s.trial_ends_at is null or s.trial_ends_at>now())
+        (s.status='active' and (s.current_period_end is null or s.current_period_end>now()))
+        or (s.status='trialing' and (s.trial_ends_at is null or s.trial_ends_at>now()))
       )
   );
-$;
-
-
+$$;
 
 create table public.platform_admins (
   user_id uuid primary key references auth.users(id) on delete cascade,
