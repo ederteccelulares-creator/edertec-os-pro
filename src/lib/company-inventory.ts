@@ -65,17 +65,15 @@ export async function createCompanyProduct(input: {
   description?: string
   costPrice?: number
   salePrice?: number
-  initialStock?: number
   minimumStock?: number
 }) {
   const name = input.name.trim()
   if (!name) throw new Error('Informe o nome do produto.')
   const costPrice = Number(input.costPrice ?? 0)
   const salePrice = Number(input.salePrice ?? 0)
-  const initialStock = Number(input.initialStock ?? 0)
   const minimumStock = Number(input.minimumStock ?? 0)
-  if (![costPrice,salePrice,initialStock,minimumStock].every(Number.isFinite) ||
-      costPrice < 0 || salePrice < 0 || initialStock < 0 || minimumStock < 0) {
+  if (![costPrice,salePrice,minimumStock].every(Number.isFinite) ||
+      costPrice < 0 || salePrice < 0 || minimumStock < 0) {
     throw new Error('Preços e quantidades devem ser números positivos ou zero.')
   }
 
@@ -88,7 +86,7 @@ export async function createCompanyProduct(input: {
       description: input.description?.trim() || null,
       cost_price: costPrice,
       sale_price: salePrice,
-      stock_quantity: initialStock,
+      stock_quantity: 0,
       min_stock: minimumStock,
       is_active: true,
     })
