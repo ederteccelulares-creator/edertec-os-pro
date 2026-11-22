@@ -12,7 +12,7 @@ drop policy if exists "Company members upload company logos" on storage.objects;
 create policy "Company members upload company logos" on storage.objects for insert to authenticated
 with check (bucket_id='company-logos' and exists (
  select 1 from public.company_members cm where cm.company_id::text=(storage.foldername(name))[1]
- and cm.user_id=(select auth.uid()) and cm.is_active=true
+ and cm.user_id=(select auth.uid()) and cm.is_active=true and cm.role in ('owner','admin')
 ));
 
 drop policy if exists "Company admins update company logos" on storage.objects;
