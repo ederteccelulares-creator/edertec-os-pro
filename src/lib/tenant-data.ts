@@ -579,6 +579,8 @@ export async function validateOrganizationBackup(organizationId: string, backup:
   return data as {
     valid: boolean
     applied: false
+    restore_ready: boolean
+    restore_blockers: string[]
     message: string
     organization: { id: string; name: string }
     exported_at: string | null
