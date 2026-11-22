@@ -926,3 +926,9 @@ td b { font-weight:650; }
 @media print {
   .company-app,.company-modal-backdrop { display:none!important; }
 }
+
+
+.company-print-settings { display:grid;gap:10px;max-width:520px;padding:18px;border:1px solid #3a2b3b;border-radius:13px;background:#111019; }
+.company-print-settings label { color:#cfc3d3;font-size:12px;font-weight:700; }
+.company-print-settings select { width:100%;min-height:48px;padding:0 12px;border:1px solid #49344a;border-radius:9px;background:#1b1721;color:#fff;font-size:14px; }
+.company-print-settings p { margin:0;color:#aaa0b0;font-size:12px;line-height:1.6; }
