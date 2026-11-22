@@ -92,3 +92,29 @@ Performance Advisor:
 A contagem zero foi observada nas 20 tabelas públicas. Isso não comprova ausência de usuários no Supabase Auth, arquivos no Storage ou configurações externas. Essas áreas precisam de inspeção própria antes de qualquer operação destrutiva.
 
 Nenhuma alteração de schema, política, função, usuário, Storage ou dado foi realizada durante esta auditoria.
+
+
+## Inventário da camada de dados do frontend (verificação adicional)
+
+A camada `src/lib/tenant-data.ts` consulta estas tabelas:
+
+`branch_inventory`, `branches`, `customers`, `devices`, `financial_entries`, `sales`, `service_catalog`, `service_order_events`, `service_order_notifications`, `service_orders`.
+
+Também chama estas RPCs:
+
+`add_service_to_order`, `adjust_branch_stock`, `assign_service_order_technician`, `create_financial_entry`, `create_inventory_item_for_branch`, `create_sale`, `create_service_order_portal_link`, `create_service_order_with_device`, `get_service_order_whatsapp_settings`, `is_platform_admin`, `list_organization_team`, `mark_service_order_notification_read`, `platform_dashboard_summary`, `platform_list_organizations`, `platform_list_plans`, `platform_save_plan`, `platform_update_subscription`, `save_service_catalog_item`, `save_service_order_whatsapp_settings`, `set_financial_entry_status`, `set_organization_member_active`, `set_organization_member_role`, `update_service_order_status`.
+
+O projeto BR, na inspeção de `information_schema.routines`, expõe apenas três funções no schema public: `is_company_member`, `register_company` e `rls_auto_enable`. Portanto, as RPCs usadas pelo frontend ainda não estão implantadas no projeto BR. O frontend não deve ser considerado integrado/operacional contra esse banco até que essas chamadas sejam substituídas ou implementadas com autorização equivalente.
+
+A camada também usa o bucket Storage `service-order-intake`; a existência e as políticas desse bucket ainda precisam ser verificadas separadamente.
+
+### Ordem recomendada para compatibilidade
+
+1. Autenticação, perfil, registro da empresa via RPC existente `register_company`, associação em `company_members` e leitura da empresa ativa.
+2. Filiais e clientes: alinhar colunas `company_id`, `is_active` e campos opcionais ao esquema real.
+3. Ordens de serviço: mapear aparelho para colunas `device_type`, `device_brand`, `device_model`, `device_color`, `serial_number` da própria `service_orders`; validar estados e permissões.
+4. Estoque, catálogo, compras, vendas, caixa e pagamentos: alinhar os módulos atuais com `products`, `stock_movements`, `service_catalog`, `purchases`, `purchase_items`, `payments`, `cash_sessions` e `cash_transactions`.
+5. Super Admin e assinaturas: implementar RPCs de plataforma com autorização server-side; nunca confiar em papel enviado pelo navegador.
+6. Portal do cliente, eventos de OS, notificações, upload e WhatsApp: criar apenas após desenho de segurança e revisão de Storage/RLS.
+
+Nenhuma chamada RPC ausente foi criada nesta etapa.
