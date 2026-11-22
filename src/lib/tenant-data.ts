@@ -414,3 +414,59 @@ export async function setOrganizationMemberActive(
   })
   if (error) throw error
 }
+
+
+export type ServiceCatalogItem = {
+  id: string
+  name: string
+  description: string | null
+  category: string
+  price: number
+  estimated_minutes: number
+  active: boolean
+}
+
+export async function listServiceCatalog(organizationId: string): Promise<ServiceCatalogItem[]> {
+  const { data, error } = await client().from('service_catalog')
+    .select('id,name,description,category,price,estimated_minutes,active')
+    .eq('organization_id', organizationId).order('name')
+  if (error) throw error
+  return (data ?? []) as ServiceCatalogItem[]
+}
+
+export async function saveServiceCatalogItem(
+  organizationId: string,
+  item: Omit<ServiceCatalogItem, 'id'> & { id?: string },
+) {
+  const { data, error } = await client().rpc('save_service_catalog_item', {
+    p_organization_id: organizationId,
+    p_service_id: item.id || null,
+    p_name: required(item.name, 'o nome do serviço'),
+    p_description: item.description || null,
+    p_category: item.category || 'Geral',
+    p_price: item.price,
+    p_estimated_minutes: item.estimated_minutes,
+    p_active: item.active,
+  })
+  if (error) throw error
+  return data as string
+}
+
+export async function addServiceToOrder(
+  organizationId: string,
+  branchId: string,
+  orderId: string,
+  serviceId: string,
+  quantity = 1,
+) {
+  if (!Number.isFinite(quantity) || quantity <= 0) throw new Error('Informe uma quantidade válida.')
+  const { data, error } = await client().rpc('add_service_to_order', {
+    p_organization_id: organizationId,
+    p_branch_id: branchId,
+    p_order_id: orderId,
+    p_service_id: serviceId,
+    p_quantity: quantity,
+  })
+  if (error) throw error
+  return data as string
+}
