@@ -41,6 +41,7 @@ declare
  identity_always boolean;
  identity_clause text;
  row_count integer;
+ has_rows boolean;
  total_rows integer := 0;
  restored_counts jsonb := '{}'::jsonb;
  backup_hash text;
