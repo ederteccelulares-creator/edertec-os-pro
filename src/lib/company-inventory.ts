@@ -11,6 +11,7 @@ export type CompanyProduct = {
   sku: string | null
   name: string
   description: string | null
+  image_url: string | null
   cost_price: number
   sale_price: number
   stock_quantity: number
@@ -42,7 +43,7 @@ export type InventoryFilters = {
 export async function listCompanyProducts(filters: InventoryFilters): Promise<CompanyProduct[]> {
   let query = db()
     .from('products')
-    .select('id,company_id,sku,name,description,cost_price,sale_price,stock_quantity,min_stock,is_active,created_at,updated_at')
+    .select('id,company_id,sku,name,description,image_url,cost_price,sale_price,stock_quantity,min_stock,is_active,created_at,updated_at')
     .eq('company_id', filters.companyId)
     .order('name')
     .limit(Math.min(Math.max(filters.limit ?? 250, 1), 500))
@@ -66,6 +67,7 @@ export async function createCompanyProduct(input: {
   costPrice?: number
   salePrice?: number
   minimumStock?: number
+  imageFile?: File | null
 }) {
   const name = input.name.trim()
   if (!name) throw new Error('Informe o nome do produto.')
@@ -84,16 +86,34 @@ export async function createCompanyProduct(input: {
       sku: input.sku?.trim() || null,
       name,
       description: input.description?.trim() || null,
+      image_url: null,
       cost_price: costPrice,
       sale_price: salePrice,
       stock_quantity: 0,
       min_stock: minimumStock,
       is_active: true,
     })
-    .select('id,company_id,sku,name,description,cost_price,sale_price,stock_quantity,min_stock,is_active,created_at,updated_at')
+    .select('id,company_id,sku,name,description,image_url,cost_price,sale_price,stock_quantity,min_stock,is_active,created_at,updated_at')
     .single()
   if (error) throw error
-  return data as CompanyProduct
+  let product = data as CompanyProduct
+  if (input.imageFile) {
+    const file = input.imageFile
+    if (!['image/jpeg','image/png','image/webp'].includes(file.type)) throw new Error('A foto deve estar em JPG, PNG ou WebP.')
+    if (file.size > 5 * 1024 * 1024) throw new Error('A foto deve ter no máximo 5 MB.')
+    const extension = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg'
+    const path = input.companyId + '/' + product.id + '.' + extension
+    const { error: uploadError } = await db().storage.from('product-images').upload(path, file, { upsert: true, contentType: file.type })
+    if (uploadError) throw uploadError
+    const { data: publicData } = db().storage.from('product-images').getPublicUrl(path)
+    const { data: updated, error: updateError } = await db().from('products')
+      .update({ image_url: publicData.publicUrl, updated_at: new Date().toISOString() })
+      .eq('company_id', input.companyId).eq('id', product.id)
+      .select('id,company_id,sku,name,description,image_url,cost_price,sale_price,stock_quantity,min_stock,is_active,created_at,updated_at').single()
+    if (updateError) throw updateError
+    product = updated as CompanyProduct
+  }
+  return product
 }
 
 export async function setCompanyProductActive(input: {
