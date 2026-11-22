@@ -29,6 +29,7 @@ export default function CompanyAuthGate() {
   const [startingCheckout, setStartingCheckout] = useState(false)
 
   const refreshMemberships = useCallback(async () => {
+    setSelected(null)
     const rows = await listMyCompanies()
     setMemberships(rows)
     const { data, error } = await supabase!.rpc('is_platform_admin')
@@ -55,7 +56,7 @@ export default function CompanyAuthGate() {
     const {data:{subscription}} = supabase.auth.onAuthStateChange((_event,next) => {
       setSession(next)
       if (!next) { setMemberships([]); setSelected(null); setPlatformAdmin(false) }
-      else window.setTimeout(() => { refreshMemberships().catch(e => setError(e instanceof Error ? e.message : 'Erro ao carregar assistências.')) },0)
+      else { setMemberships([]); setSelected(null); setPlatformAdmin(false); window.setTimeout(() => { refreshMemberships().catch(e => setError(e instanceof Error ? e.message : 'Erro ao carregar assistências.')) },0) }
     })
     return () => { alive = false; subscription.unsubscribe() }
   }, [refreshMemberships])
