@@ -88,6 +88,12 @@ Deno.serve(async (req) => {
     return response({ error: "A assinatura da empresa não permite convidar novos membros." }, 403);
   }
 
+  await adminClient.from("pending_team_invitations")
+    .update({ status: "expired" })
+    .eq("organization_id", organizationId)
+    .eq("status", "pending")
+    .lte("expires_at", new Date().toISOString());
+
   const { count: memberCount, error: countError } = await adminClient
     .from("organization_members")
     .select("id", { count: "exact", head: true })
