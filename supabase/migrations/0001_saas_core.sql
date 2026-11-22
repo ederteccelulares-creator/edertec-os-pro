@@ -108,7 +108,7 @@ create table public.service_orders (
   constraint orders_customer_org_fk foreign key (customer_id,organization_id)
     references public.customers(id,organization_id) on delete restrict,
   constraint orders_device_org_fk foreign key (device_id,organization_id)
-    references public.devices(id,organization_id) on delete set null
+    references public.devices(id,organization_id) on delete restrict
 );
 
 create table public.service_order_events (
@@ -225,7 +225,7 @@ create policy "Users update own profile" on public.profiles for update to authen
 create policy "Members read organizations" on public.organizations for select to authenticated using(public.is_org_member(id));
 create policy "Owners update organization" on public.organizations for update to authenticated using(public.has_org_role(id,array['owner','admin']::public.member_role[])) with check(public.has_org_role(id,array['owner','admin']::public.member_role[]));
 create policy "Members read memberships" on public.organization_members for select to authenticated using(public.is_org_member(organization_id));
-create policy "Admins manage memberships" on public.organization_members for all to authenticated using(public.has_org_role(organization_id,array['owner','admin']::public.member_role[])) with check(public.has_org_role(organization_id,array['owner','admin']::public.member_role[]));
+create policy "Admins manage memberships" on public.organization_members for all to authenticated using(public.has_org_role(organization_id,array['owner','admin']::public.member_role[])) with check(public.has_org_role(organization_id,array['owner']::public.member_role[]) or (public.has_org_role(organization_id,array['admin']::public.member_role[]) and role <> 'owner'));
 create policy "Members read branches" on public.branches for select to authenticated using(public.is_org_member(organization_id));
 create policy "Admins manage branches" on public.branches for all to authenticated using(public.has_org_role(organization_id,array['owner','admin','manager']::public.member_role[])) with check(public.has_org_role(organization_id,array['owner','admin','manager']::public.member_role[]));
 create policy "Members manage customers" on public.customers for all to authenticated using(public.is_org_member(organization_id)) with check(public.is_org_member(organization_id));
