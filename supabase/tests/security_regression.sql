@@ -164,3 +164,37 @@ begin
   end if;
 end;
 $$;
+
+
+-- Quote decisions are token-gated and cannot be submitted twice.
+do $$
+begin
+  if not has_function_privilege('anon',
+    'public.respond_service_order_quote(text,text)', 'EXECUTE') then
+    raise exception 'Anonymous customers must be able to submit a decision using a valid portal token';
+  end if;
+
+  if not has_function_privilege('authenticated',
+    'public.respond_service_order_quote(text,text)', 'EXECUTE') then
+    raise exception 'Authenticated portal clients must be able to submit a decision';
+  end if;
+
+  if not has_column_privilege('anon',
+    'public.service_orders', 'customer_quote_decision', 'UPDATE') then
+    -- The public role must not directly modify order decisions.
+    null;
+  else
+    raise exception 'Anonymous users must not directly update customer quote decisions';
+  end if;
+
+  if not exists (
+    select 1 from pg_proc p
+    join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='public'
+      and p.proname='respond_service_order_quote'
+      and p.prosecdef
+  ) then
+    raise exception 'Customer quote decision RPC must be security definer';
+  end if;
+end;
+$$;
