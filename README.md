@@ -19,6 +19,7 @@ Plataforma SaaS de gestão para assistências técnicas de celulares, preparada 
 - Atualização de status por função SQL transacional, com gravação do evento e log de auditoria.
 - Abertura de OS e cadastro do aparelho em uma única transação SQL, evitando aparelhos órfãos em caso de falha.
 - Módulo inicial de estoque por filial, cadastro de produtos, custo, preço, estoque mínimo e movimentações auditadas de entrada, saída e ajuste.
+- Módulo inicial de fluxo de caixa por filial, com entradas, saídas, vencimentos, formas de pagamento, pendências e auditoria.
 - Políticas de leitura e gravação por papel para clientes e aparelhos; escrita de histórico e auditoria restrita às funções do banco.
 - Políticas de função para limitar quem abre, atualiza e exclui ordens.
 - Impressão de ordem de serviço em formato A4 no novo painel, com dados do cliente, aparelho, atendimento e campos de assinatura.
@@ -26,7 +27,7 @@ Plataforma SaaS de gestão para assistências técnicas de celulares, preparada 
 
 ## Configurar o banco e autenticação
 1. Crie um projeto no [Supabase](https://supabase.com/dashboard).
-2. No SQL Editor do projeto, execute os arquivos em ordem: `supabase/migrations/0001_saas_core.sql`, `supabase/migrations/0002_order_workflow_security.sql` e `supabase/migrations/0003_role_access_atomic_order.sql` e `supabase/migrations/0004_inventory_module.sql`.
+2. No SQL Editor do projeto, execute os arquivos em ordem: `supabase/migrations/0001_saas_core.sql`, `supabase/migrations/0002_order_workflow_security.sql` e `supabase/migrations/0003_role_access_atomic_order.sql` e `supabase/migrations/0004_inventory_module.sql` e `supabase/migrations/0005_financial_module.sql`.
 3. Copie `.env.example` para `.env.local`.
 4. Preencha:
    - `VITE_SUPABASE_URL`: Project URL.
@@ -42,11 +43,11 @@ Plataforma SaaS de gestão para assistências técnicas de celulares, preparada 
 **Segurança:** nunca coloque a chave `service_role` ou segredo de backend em variáveis `VITE_*` ou no navegador. O frontend usa somente a chave pública; operações privilegiadas, cobrança e webhooks deverão rodar em backend seguro.
 
 ## Estado atual
-A camada inicial de autenticação e criação de organizações foi implementada no frontend, mas depende da criação e configuração do projeto Supabase pelo proprietário. Os módulos iniciais de clientes, aparelhos e ordens de serviço já estão conectados ao PostgreSQL no código, mas dependem da execução das duas migrações e da configuração do Supabase. Convites de equipe, edição completa de cadastros, financeiro, vendas, cobrança e testes de isolamento ainda precisam ser concluídos. A migração 0004 precisa ser aplicada no Supabase antes de usar o estoque. A migração 0003 também precisa ser aplicada no Supabase real antes de usar a nova abertura transacional de OS. Não comercialize o acesso nem use dados reais até executar as migrações e concluir os testes e a revisão de segurança.
+A camada inicial de autenticação e criação de organizações foi implementada no frontend, mas depende da criação e configuração do projeto Supabase pelo proprietário. Os módulos iniciais de clientes, aparelhos e ordens de serviço já estão conectados ao PostgreSQL no código, mas dependem da execução das duas migrações e da configuração do Supabase. Convites de equipe, edição completa de cadastros, vendas, cobrança e testes de isolamento ainda precisam ser concluídos. As migrações 0004 e 0005 precisam ser aplicadas no Supabase antes de usar estoque e financeiro. A migração 0003 também precisa ser aplicada no Supabase real antes de usar a nova abertura transacional de OS. Não comercialize o acesso nem use dados reais até executar as migrações e concluir os testes e a revisão de segurança.
 
 ## Próximas etapas
 1. Finalizar testes e validação de clientes, aparelhos, ordens e histórico no Supabase real.
 2. Implementar equipes, convites, permissões por papel e Super Admin separado.
-3. Finalizar estoque, serviços, vendas, financeiro e relatórios.
+3. Finalizar serviços, vendas, relatórios e ampliar os recursos do financeiro.
 4. Implementar gestão de planos, cobrança recorrente e webhooks no backend.
 5. Testes de isolamento entre empresas, backup, monitoramento, recuperação e publicação.
