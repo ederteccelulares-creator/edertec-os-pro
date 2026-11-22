@@ -8,6 +8,7 @@ import CompanyCashPanel from './CompanyCashPanel'
 import CompanyFinancialEntriesPanel from './CompanyFinancialEntriesPanel'
 import CustomerPortalAdminPanel from './CustomerPortalAdminPanel'
 import CompanySupportPanel from './CompanySupportPanel'
+import CompanyTeamPanel from './CompanyTeamPanel'
 import { recordCompanyServiceOrderPayment, type PaymentMethod } from '../lib/company-service-order-payments'
 import { listCompanyBranches, listCompanyCustomers, saveCompanyCustomer, type Company, type CompanyBranch, type CompanyCustomer, type CompanyRole, updateCompanyProfile } from '../lib/company-data'
 import { createCompanyServiceOrder, createCompanyServiceOrderTrackingLink, listCompanyServiceOrders, updateCompanyServiceOrder, updateCompanyServiceOrderStatus, type CompanyServiceOrder } from '../lib/company-service-orders'
@@ -20,7 +21,7 @@ const statusFlow = ['received','diagnosis','waiting_approval','approved','waitin
 const money = (n:number) => Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 
 export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
-  const [tab,setTab] = useState<'dashboard'|'orders'|'customers'|'inventory'|'suppliers'|'purchases'|'cash'|'entries'|'pos'|'backup'|'settings'|'customerPortal'|'support'>('dashboard')
+  const [tab,setTab] = useState<'dashboard'|'orders'|'customers'|'inventory'|'suppliers'|'purchases'|'cash'|'entries'|'pos'|'backup'|'settings'|'customerPortal'|'support'|'team'>('dashboard')
   const [menuOpen,setMenuOpen] = useState(false)
   const [companyInfo,setCompanyInfo] = useState(company)
   const [companySaving,setCompanySaving] = useState(false)
@@ -203,7 +204,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   const navigate = (next: typeof tab) => {
     const managementTabs = ['pos','customerPortal','inventory','suppliers','purchases','cash','entries']
     if (managementTabs.includes(next) && !canManage) return
-    if (next==='settings' && !canAdmin) return
+    if ((next==='settings'||next==='backup'||next==='team') && !canAdmin) return
     if (next==='backup' && !canAdmin) return
     setTab(next); setMenuOpen(false); setShowOrder(false); setShowCustomer(false)
   }
@@ -232,6 +233,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
         {canManage&&<button className={tab==='purchases'?'active':''} onClick={()=>navigate('purchases')}><ShoppingCart size={18}/> Compras</button>}
         {canManage&&<button className={tab==='cash'?'active':''} onClick={()=>navigate('cash')}><Wallet size={18}/> Fluxo de caixa</button>}
         {canManage&&<button className={tab==='entries'?'active':''} onClick={()=>navigate('entries')}><Wallet size={18}/> Contas a pagar/receber</button>}
+        {canAdmin&&<button className={tab==='team'?'active':''} onClick={()=>navigate('team')}><Users size={18}/> Funcionários e usuários</button>}
         {canAdmin&&<button className={tab==='backup'?'active':''} onClick={()=>navigate('backup')}><Database size={18}/> Backup e segurança</button>}
         {canAdmin&&<button className={tab==='settings'?'active':''} onClick={()=>navigate('settings')}><Settings size={18}/> Configurações</button>}
       </nav>
@@ -239,9 +241,10 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
     </aside>
     <main className="company-main">
       <div className="company-mobilebar"><button onClick={()=>setMenuOpen(true)} aria-label="Abrir menu"><Menu/></button><div><b>EDERTEC <i>OS PRO</i></b><small>{companyInfo.name}</small></div><span className="company-mobile-avatar">{(email[0]||'U').toUpperCase()}</span></div>
-      <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='backup'?'Backup de dados':tab==='settings'?'Configurações':tab==='customerPortal'?'Compartilhar Área do Cliente':tab==='support'?'Suporte e chamados':tab==='pos'?'PDV / Vendas':'Financeiro'}</h1></div><div className="company-top-actions"><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
+      <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='backup'?'Backup de dados':tab==='settings'?'Configurações':tab==='team'?'Funcionários e usuários':tab==='customerPortal'?'Compartilhar Área do Cliente':tab==='support'?'Suporte e chamados':tab==='pos'?'PDV / Vendas':'Financeiro'}</h1></div><div className="company-top-actions"><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
       {tab==='customerPortal'&&<CustomerPortalAdminPanel company={company} customers={customers}/>}
       {tab==='support'&&<CompanySupportPanel companyId={company.id} companyName={company.name}/ >}
+      {tab==='team'&&canAdmin&&<CompanyTeamPanel companyId={company.id} actorRole={role}/ >}
       {tab==='dashboard'&&<section className="company-dashboard">
         <p className="company-dashboard-subtitle">Visão geral da assistência técnica</p>
         <div className="company-dashboard-stats">
