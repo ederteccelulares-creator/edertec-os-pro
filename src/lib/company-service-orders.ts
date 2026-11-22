@@ -224,3 +224,39 @@ export async function createCompanyServiceOrderTrackingLink(input:{companyId:str
   if (typeof data !== 'string' || data.length !== 64) throw new Error('Não foi possível gerar o link de acompanhamento.')
   return new URL(`?acompanhar=${data}`, window.location.origin + window.location.pathname).toString()
 }
+
+
+export type UpdateCompanyServiceOrderInput = {
+  companyId:string; orderId:string; customerId?:string|null; deviceType?:string;
+  deviceBrand?:string; deviceModel?:string; deviceColor?:string; serialNumber?:string;
+  reportedIssue:string; intakeCondition?:string; includedAccessories?:string;
+  priority?:'low'|'normal'|'high'|'urgent'; estimatedPrice?:number; finalPrice?:number;
+  diagnosis?:string|null; promisedAt?:string|null;
+}
+
+export async function updateCompanyServiceOrder(input:UpdateCompanyServiceOrderInput) {
+  const reportedIssue=input.reportedIssue.trim()
+  if(!reportedIssue) throw new Error('Descreva o defeito informado pelo cliente.')
+  const estimatedPrice=Math.max(0,Number(input.estimatedPrice??0))
+  const finalPrice=Math.max(0,Number(input.finalPrice??0))
+  if(!Number.isFinite(estimatedPrice)||!Number.isFinite(finalPrice)) throw new Error('Valor inválido.')
+  const {data,error}=await db().from('service_orders').update({
+    customer_id:input.customerId||null,
+    device_type:input.deviceType?.trim()||null,
+    device_brand:input.deviceBrand?.trim()||null,
+    device_model:input.deviceModel?.trim()||null,
+    device_color:input.deviceColor?.trim()||null,
+    serial_number:input.serialNumber?.trim()||null,
+    reported_issue:reportedIssue,
+    intake_condition:input.intakeCondition?.trim()||null,
+    included_accessories:input.includedAccessories?.trim()||null,
+    priority:input.priority||'normal',
+    estimated_price:estimatedPrice,
+    final_price:finalPrice,
+    diagnosis:input.diagnosis?.trim()||null,
+    promised_at:input.promisedAt||null,
+    updated_at:new Date().toISOString(),
+  }).eq('company_id',input.companyId).eq('id',input.orderId).select('id,order_number,updated_at').single()
+  if(error) throw error
+  return data
+}
