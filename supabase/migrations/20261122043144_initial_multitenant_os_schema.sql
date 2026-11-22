@@ -2,6 +2,19 @@
 -- This migration creates only the company-scoped schema; legacy public.financial_entries is untouched.
 create extension if not exists pgcrypto;
 
+-- Keep the original organization-based tables and their foreign keys/data intact.
+-- The current company-scoped application uses the canonical names below.
+do $
+declare t text;
+begin
+ foreach t in array array['branches','customers','service_orders','service_catalog','stock_movements','audit_logs','platform_admins'] loop
+  if to_regclass('public.'||t) is not null and to_regclass('public.legacy_'||t) is null then
+   execute format('alter table public.%I rename to %I',t,'legacy_'||t);
+  end if;
+ end loop;
+end $;
+
+
 create table public.companies (
  id uuid primary key default gen_random_uuid(), name text not null, legal_name text, tax_id text, email text, phone text,
  status text not null default 'active' check(status in ('active','suspended','cancelled')),
