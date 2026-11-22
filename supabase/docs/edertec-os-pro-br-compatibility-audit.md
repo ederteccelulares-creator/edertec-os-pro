@@ -2,11 +2,22 @@
 
 Data da inspeção: 22/11/2026
 
-## Resultado
+## Identificação correta dos projetos
 
-O projeto Supabase **Edertec OS Pro BR** está ativo na região `sa-east-1`. A inspeção foi somente de leitura: nenhuma tabela, política, função, migração ou dado foi alterado.
+Foram encontrados dois projetos Supabase ativos:
 
-O banco contém 20 tabelas públicas, todas com RLS habilitado e sem registros de negócio. O histórico remoto contém cinco migrações próprias:
+- **Edertec OS Pro BR** — ref `btouoeftgatyrvuobicr`, região `sa-east-1`.
+- **Edertec OS Pro** — ref `rxxchkqvkmophtovvisi`, região `us-east-1`.
+
+> Correção de identificação: a primeira versão deste relatório trocou os nomes dos projetos. Esta versão corrige a associação. O projeto BR é o que contém o banco de dados operacional.
+
+## Projeto Edertec OS Pro BR
+
+O projeto BR possui 20 tabelas públicas, todas com RLS habilitado e contagem de zero registros de negócio no momento da inspeção:
+
+`companies`, `company_members`, `branches`, `customers`, `employees`, `service_catalog`, `products`, `service_orders`, `service_order_items`, `stock_movements`, `payments`, `suppliers`, `purchases`, `purchase_items`, `cash_sessions`, `cash_transactions`, `platform_admins`, `subscription_plans`, `company_subscriptions`, `audit_logs`.
+
+O histórico remoto contém cinco migrações:
 
 - `initial_multitenant_os_schema`
 - `lock_down_rls_auto_enable_rpc`
@@ -16,46 +27,68 @@ O banco contém 20 tabelas públicas, todas com RLS habilitado e sem registros d
 
 Não há Edge Functions implantadas no projeto BR.
 
-## Incompatibilidade identificada
+### Modelo de dados do projeto BR
 
-O código atual do repositório foi construído para um modelo multiempresa baseado em `organizations` e `organization_id`. O banco BR existente usa um modelo diferente baseado em `companies` e `company_id`.
+O modelo usa `companies` e `company_id`, não `organizations` e `organization_id`.
 
-Exemplos:
+- `companies`: cadastro das assistências.
+- `company_members`: associação de usuários às empresas e seus papéis.
+- `branches`: filiais vinculadas a `company_id`.
+- `customers`: clientes vinculados à empresa e opcionalmente à filial.
+- `employees`: equipe e técnicos.
+- `service_orders`: OS com marca/modelo/IMEI do aparelho armazenados diretamente no registro.
+- `products` e `stock_movements`: produtos e estoque.
+- `service_catalog` e `service_order_items`: catálogo e itens de serviço.
+- `payments`, `cash_sessions`, `cash_transactions`: pagamentos e caixa.
+- `suppliers`, `purchases`, `purchase_items`: fornecedores e compras.
+- `subscription_plans` e `company_subscriptions`: planos e assinaturas.
+- `platform_admins`: cadastro de Super Admin.
+- `audit_logs`: auditoria.
 
-| Repositório atual | Banco BR |
+As RPCs públicas identificadas são `is_company_member`, `register_company` e `rls_auto_enable`. As duas últimas foram identificadas como SECURITY DEFINER; não devem ser expostas ou alteradas sem revisão do corpo, permissões e verificações de autorização.
+
+## Projeto Edertec OS Pro (EUA)
+
+O projeto `rxxchkqvkmophtovvisi`, região `us-east-1`, está ativo, mas não possui tabelas públicas, migrações remotas ou Edge Functions no momento da inspeção.
+
+## Incompatibilidade com o repositório GitHub
+
+O repositório `ederteccelulares-creator/edertec-os-pro` contém um frontend e 23 migrações preparados para outro modelo multiempresa:
+
+| Repositório atual | Projeto BR |
 | --- | --- |
 | `organizations` | `companies` |
 | `organization_members` | `company_members` |
-| `branches.organization_id` | `branches.company_id` |
-| `customers.organization_id` | `customers.company_id` |
-| `devices` | dados do aparelho armazenados diretamente em `service_orders` |
-| `create_organization(org_name, org_slug)` | `register_company(company_name, company_tax_id, main_phone)` |
+| `organization_id` | `company_id` |
+| `devices` | campos do aparelho em `service_orders` |
+| `plans` / `subscriptions` | `subscription_plans` / `company_subscriptions` |
+| `service_order_events` | não identificada entre as 20 tabelas do BR |
 
-O frontend atual também consulta tabelas e funções que não existem no banco BR, como `devices`, `service_order_events`, `organization_members` e RPCs do modelo `organization_id`.
+O frontend atual consulta tabelas, colunas e RPCs do modelo `organization_id`. O banco BR já tem um modelo próprio e tabelas com nomes iguais, mas colunas diferentes. Aplicar diretamente as 23 migrações ao BR pode causar conflitos e não é uma migração compatível.
 
-Portanto, aplicar diretamente as 23 migrações do repositório ao banco BR não é seguro: há colisões de nomes e estruturas incompatíveis. O histórico remoto também não corresponde às versões locais.
+## Alertas de segurança e desempenho do projeto BR
 
-## Outro projeto Supabase
+Security Advisor:
+- `platform_admins` tem RLS habilitado sem política. Pode ser intencional para bloquear acesso direto; confirmar que o fluxo administrativo privilegiado funciona.
+- `register_company(company_name, company_tax_id, main_phone)` é SECURITY DEFINER e executável por usuários autenticados. Revisar o corpo, checagem de `auth.uid()`, validação, search_path e privilégios.
+- `rls_auto_enable` também é SECURITY DEFINER; revisar se está inacessível aos papéis públicos e autenticados.
 
-Foi encontrado um segundo projeto chamado **Edertec OS Pro**, na região `us-east-1`. A inspeção retornou zero tabelas públicas, zero migrações e zero Edge Functions. Ele está vazio e não foi alterado.
+Performance Advisor:
+- 25 chaves estrangeiras sem índices de cobertura.
+- Uma ocorrência de múltiplas políticas permissivas de SELECT em `company_subscriptions`.
+- 16 índices reportados como não utilizados. Como o banco ainda tem poucos dados/uso, não remover índices apenas por esse alerta.
 
-## Alertas observados no projeto BR
+## Plano seguro
 
-O Security Advisor apontou:
-- `platform_admins` tem RLS habilitado sem política; isso pode ser intencional para impedir acesso direto, mas precisa ser validado com o fluxo Super Admin.
-- `register_company` é uma função `SECURITY DEFINER` executável por usuários autenticados; revisar autorização, validação e privilégios.
+1. Preservar o banco BR como fonte de verdade e não executar reset, renomeação ou reaplicação das migrações antigas.
+2. Adaptar o frontend e a camada de dados para o esquema `company_id` existente, ou criar uma migração nova, isolada e cuidadosamente versionada para uma arquitetura diferente. Não misturar os modelos.
+3. Fazer o desenvolvimento em branch/projeto de teste, com testes de isolamento entre duas empresas e papéis owner/admin/manager/attendant/technician.
+4. Implementar as tabelas e fluxos ausentes somente depois de confirmar a necessidade funcional (por exemplo, histórico de OS e portal público).
+5. Revisar RLS, SECURITY DEFINER, grants de Data API e Storage.
+6. Publicar no projeto BR somente após build, testes de autorização e plano de rollback.
 
-O Performance Advisor apontou 25 chaves estrangeiras sem índice de cobertura e uma situação de políticas permissivas duplicadas em `company_subscriptions`. Esses alertas devem ser priorizados após a definição do modelo definitivo.
+## Limites
 
-## Plano seguro recomendado
+A contagem zero foi observada nas 20 tabelas públicas. Isso não comprova ausência de usuários no Supabase Auth, arquivos no Storage ou configurações externas. Essas áreas precisam de inspeção própria antes de qualquer operação destrutiva.
 
-1. Manter o banco BR intacto enquanto o contrato de dados é definido.
-2. Escolher explicitamente um único modelo de tenancy: `company_id` ou `organization_id`.
-3. Como o frontend e as 23 migrações atuais já usam `organization_id`, avaliar uma migração de compatibilidade reversível ou adaptar o frontend para o modelo BR. Não misturar os dois modelos parcialmente.
-4. Validar a solução em ambiente de desenvolvimento isolado e executar os testes de RLS com duas empresas e usuários de papéis diferentes.
-5. Só depois publicar as migrações e Edge Functions necessárias.
-6. Corrigir os alertas de segurança e performance antes de liberar o SaaS para clientes.
-
-## Limite desta auditoria
-
-A ausência de registros nas 20 tabelas públicas foi confirmada pela inspeção do Supabase. Isso não prova, por si só, que não existam usuários no Supabase Auth, arquivos no Storage ou configurações externas. Não executar reset, exclusão ou renomeação de tabelas sem inspecionar também essas dependências e obter um plano de reversão.
+Nenhuma alteração de schema, política, função, usuário, Storage ou dado foi realizada durante esta auditoria.
