@@ -22,6 +22,7 @@ Plataforma SaaS de gestão para assistências técnicas de celulares, preparada 
 - Módulo inicial de fluxo de caixa por filial, com entradas, saídas, vencimentos, formas de pagamento, pendências e auditoria.
 - Módulo de vendas com carrinho, desconto, cliente opcional, baixa atômica de estoque, histórico de itens e integração automática com o fluxo de caixa.
 - Catálogo de serviços por empresa, com categorias, preço, tempo estimado, ativação e inclusão de serviços nas ordens com atualização transacional do valor estimado.
+- Painel Super Admin separado das contas das assistências, com resumo global, lista de empresas, status de assinatura, planos, preços e limites.
 - Políticas de leitura e gravação por papel para clientes e aparelhos; escrita de histórico e auditoria restrita às funções do banco.
 - Políticas de função para limitar quem abre, atualiza e exclui ordens.
 - Impressão de ordem de serviço em formato A4 no novo painel, com dados do cliente, aparelho, atendimento e campos de assinatura.
@@ -29,7 +30,7 @@ Plataforma SaaS de gestão para assistências técnicas de celulares, preparada 
 
 ## Configurar o banco e autenticação
 1. Crie um projeto no [Supabase](https://supabase.com/dashboard).
-2. No SQL Editor do projeto, execute os arquivos em ordem: `supabase/migrations/0001_saas_core.sql`, `supabase/migrations/0002_order_workflow_security.sql` e `supabase/migrations/0003_role_access_atomic_order.sql` e `supabase/migrations/0004_inventory_module.sql` e `supabase/migrations/0005_financial_module.sql` e `supabase/migrations/0006_sales_module.sql` e `supabase/migrations/0007_team_management.sql` e `supabase/migrations/0008_service_catalog.sql`.
+2. No SQL Editor do projeto, execute os arquivos em ordem: `supabase/migrations/0001_saas_core.sql`, `supabase/migrations/0002_order_workflow_security.sql` e `supabase/migrations/0003_role_access_atomic_order.sql` e `supabase/migrations/0004_inventory_module.sql` e `supabase/migrations/0005_financial_module.sql` e `supabase/migrations/0006_sales_module.sql` e `supabase/migrations/0007_team_management.sql` e `supabase/migrations/0008_service_catalog.sql` e `supabase/migrations/0009_platform_admin.sql`.
 3. Copie `.env.example` para `.env.local`.
 4. Preencha:
    - `VITE_SUPABASE_URL`: Project URL.
@@ -44,12 +45,12 @@ Plataforma SaaS de gestão para assistências técnicas de celulares, preparada 
 
 **Segurança:** nunca coloque a chave `service_role` ou segredo de backend em variáveis `VITE_*` ou no navegador. O frontend usa somente a chave pública; operações privilegiadas, cobrança e webhooks deverão rodar em backend seguro.
 
-## Estado atual
-A camada inicial de autenticação e criação de organizações foi implementada no frontend, mas depende da criação e configuração do projeto Supabase pelo proprietário. Os módulos iniciais de clientes, aparelhos e ordens de serviço já estão conectados ao PostgreSQL no código, mas dependem da execução das migrações e da configuração do Supabase. Convites de equipe, edição completa de cadastros, cobrança, equipe/convites, painel Super Admin e testes de isolamento ainda precisam ser concluídos. As migrações 0004 a 0008 precisam ser aplicadas no Supabase antes de usar estoque, financeiro, vendas, gestão de equipe e catálogo de serviços. A migração 0003 também precisa ser aplicada no Supabase real antes de usar a nova abertura transacional de OS. Não comercialize o acesso nem use dados reais até executar as migrações e concluir os testes e a revisão de segurança.
+## Ativar o primeiro Super Admin\nApós executar a migração `0009_platform_admin.sql`, localize o usuário já cadastrado em Authentication > Users e execute no SQL Editor, substituindo pelo UUID real da conta administrativa:\n\n```sql\ninsert into public.platform_admins (user_id)\nvalues ('UUID-DO-USUARIO-AUTORIZADO');\n```\n\nA tabela não possui políticas de leitura ou gravação para o navegador. A autorização é verificada por funções SQL; não exponha a chave `service_role`.\n\n## Estado atual
+A camada inicial de autenticação e criação de organizações foi implementada no frontend, mas depende da criação e configuração do projeto Supabase pelo proprietário. Os módulos iniciais de clientes, aparelhos e ordens de serviço já estão conectados ao PostgreSQL no código, mas dependem da execução das migrações e da configuração do Supabase. A gestão inicial de equipe e o painel Super Admin estão implementados no código; convites por e-mail, integração de cobrança automática, edição completa de cadastros e testes de isolamento ainda precisam ser concluídos. As migrações 0004 a 0009 precisam ser aplicadas no Supabase antes de usar estoque, financeiro, vendas, gestão de equipe, catálogo de serviços e painel Super Admin. A migração 0003 também precisa ser aplicada no Supabase real antes de usar a nova abertura transacional de OS. Não comercialize o acesso nem use dados reais até executar as migrações e concluir os testes e a revisão de segurança.
 
 ## Próximas etapas
 1. Finalizar testes e validação de clientes, aparelhos, ordens e histórico no Supabase real.
 2. Implementar convites seguros de equipe e validar as permissões por papel.
-3. Finalizar serviços, equipe, painel Super Admin e relatórios.
+3. Finalizar convites, relatórios e validação de permissões do Super Admin.
 4. Implementar gestão de planos, cobrança recorrente e webhooks no backend.
 5. Testes de isolamento entre empresas, backup, monitoramento, recuperação e publicação.
