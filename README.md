@@ -172,3 +172,10 @@ O plano `supabase/docs/backup-restore-implementation-plan.md` documenta a ordem 
 ## Contrato do schema para futura restauração
 
 O script `supabase/tests/backup_restore_schema_contract.sql` faz uma verificação somente de leitura das chaves de organização, das relações entre as tabelas exportadas e das colunas identity de OS e vendas. Também confirma que cada relacionamento operacional entre empresas está protegido por uma chave estrangeira composta que inclui `organization_id` no mesmo vínculo, que as restrições de unicidade de filiais/categorias/estoque e o índice parcial de SKU estão presentes para detectar colisões, e que `service_order_lines.line_total` continua sendo uma coluna gerada. Execute-o em um projeto Supabase descartável depois das migrações 0001 a 0016. Ele não testa nem executa a restauração; serve para detectar divergências entre o schema instalado e o plano documentado em `supabase/docs/backup-restore-implementation-plan.md`.
+
+
+## Verificação automatizada de banco no GitHub Actions
+
+O workflow executa as migrações 0001–0016 em um PostgreSQL 16 descartável, usando `supabase/tests/postgres_auth_harness.sql` para simular somente os objetos mínimos do Supabase Auth necessários às migrações. Em seguida, executa `security_regression.sql` e `backup_restore_schema_contract.sql`.
+
+Esse job verifica a compatibilidade SQL das migrações e as asserções estruturais em PostgreSQL isolado. Ele **não** equivale a uma homologação completa no Supabase: não testa PostgREST, Auth real, Edge Functions, políticas com sessões reais de usuários, e-mail, nem restauração transacional. Nenhum banco de produção é acessado ou alterado.
