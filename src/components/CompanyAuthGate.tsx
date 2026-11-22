@@ -4,10 +4,12 @@ import { Building2, LoaderCircle, LogOut, Mail, ShieldCheck, Smartphone } from '
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 import { listMyCompanies, registerCompany, type Company, type CompanyMembership } from '../lib/company-data'
 import CompanyWorkspace from './CompanyWorkspace'
+import PlatformAdminPanel from './PlatformAdminPanel'
 
 export default function CompanyAuthGate() {
   const [session, setSession] = useState<Session | null>(null)
   const [memberships, setMemberships] = useState<CompanyMembership[]>([])
+  const [platformAdmin, setPlatformAdmin] = useState(false)
   const [selected, setSelected] = useState<Company | null>(null)
   const [mode, setMode] = useState<'login'|'signup'>('login')
   const [email, setEmail] = useState('')
@@ -24,6 +26,9 @@ export default function CompanyAuthGate() {
   const refreshMemberships = useCallback(async () => {
     const rows = await listMyCompanies()
     setMemberships(rows)
+    const { data, error } = await supabase!.rpc('is_platform_admin')
+    if (error) throw error
+    setPlatformAdmin(data === true)
     if (rows.length === 1) {
       const company = Array.isArray(rows[0].companies) ? rows[0].companies[0] : rows[0].companies
       if (company) setSelected(company)
@@ -44,7 +49,7 @@ export default function CompanyAuthGate() {
     })
     const {data:{subscription}} = supabase.auth.onAuthStateChange((_event,next) => {
       setSession(next)
-      if (!next) { setMemberships([]); setSelected(null) }
+      if (!next) { setMemberships([]); setSelected(null); setPlatformAdmin(false) }
       else window.setTimeout(() => { refreshMemberships().catch(e => setError(e instanceof Error ? e.message : 'Erro ao carregar assistências.')) },0)
     })
     return () => { alive = false; subscription.unsubscribe() }
@@ -81,7 +86,7 @@ export default function CompanyAuthGate() {
 
   async function signOut() {
     await supabase!.auth.signOut()
-    setSession(null); setMemberships([]); setSelected(null)
+    setSession(null); setMemberships([]); setSelected(null); setPlatformAdmin(false)
   }
 
   if (!session) return <main className="company-auth"><section className="company-auth-card">
@@ -96,6 +101,8 @@ export default function CompanyAuthGate() {
     </form>
     <button className="company-link" onClick={()=>{setMode(mode==='login'?'signup':'login');setError('');setNotice('')}}>{mode==='login'?'Ainda não tem conta? Criar acesso':'Já tem conta? Entrar'}</button>
   </section></main>
+
+  if (platformAdmin) return <PlatformAdminPanel email={session.user.email||''} onSignOut={signOut}/>
 
   if (selected) return <CompanyWorkspace company={selected} role={memberships.find(m=>m.company_id===selected.id)?.role||'technician'} email={session.user.email||''} onSignOut={signOut}/>
 
