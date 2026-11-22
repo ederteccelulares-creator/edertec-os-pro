@@ -281,13 +281,19 @@ Deno.serve(async (req) => {
   const occupiedTables = targetResults
     .filter(result => result.count > 0)
     .map(result => ({ table: result.table, records: result.count }));
-  const branchMappingSatisfied = sourceBranches.length === 0 || branchMappingValid;
-  const userMappingSatisfied = !requiresUserMapping || mappingValid;
+  const branchMappingSatisfied = sourceBranches.length === 0
+    ? Object.keys(submittedBranchMapping).length === 0
+    : branchMappingValid;
+  const userMappingSatisfied = sourceUsers.length === 0
+    ? Object.keys(submittedMapping).length === 0
+    : mappingValid;
 
   const totalRecords = Object.values(counts).reduce((sum, count) => sum + count, 0);
   const restoreBlockers = [
     ...(sourceBranches.length > 0 && !branchMappingValid ? ["As associações das filiais ainda não foram validadas com sucesso no servidor."] : []),
     ...(requiresUserMapping && !mappingValid ? ["As associações de usuários ainda não foram validadas com sucesso no servidor."] : []),
+    ...mappingErrors,
+    ...branchMappingErrors,
     ...(!destinationEmpty ? ["O destino contém registros operacionais; a restauração não faz mesclagem nem sobrescrita."] : []),
   ];
   const restoreReady = errors.length === 0 && destinationEmpty && branchMappingSatisfied && userMappingSatisfied;
