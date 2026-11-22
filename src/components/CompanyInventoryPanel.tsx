@@ -67,6 +67,6 @@ export default function CompanyInventoryPanel({company}:{company:Company}) {
       <div className="company-table-wrap"><table><thead><tr><th>PRODUTO</th><th>SKU</th><th>CUSTO</th><th>VENDA</th><th>ESTOQUE</th><th>MÍNIMO</th><th>SITUAÇÃO</th></tr></thead><tbody>
         {products.map(p=><tr key={p.id}><td><b>{p.name}</b><small>{p.description||'—'}</small></td><td>{p.sku||'—'}</td><td>{money(p.cost_price)}</td><td>{money(p.sale_price)}</td><td><b>{Number(p.stock_quantity).toLocaleString('pt-BR')}</b></td><td>{Number(p.min_stock).toLocaleString('pt-BR')}</td><td>{Number(p.stock_quantity)<=Number(p.min_stock)?<span className="company-low-stock"><AlertTriangle size={13}/> Estoque baixo</span>:<span className="company-stock-ok">Normal</span>}</td></tr>)}
       </tbody></table></div>}
-    <p className="company-inventory-note">O estoque inicial é registrado no cadastro do produto. Entradas, saídas e transferências serão liberadas após a rotina transacional de movimentação estar pronta.</p>
+    <p className="company-inventory-note">O cadastro inicia com saldo zero. Entradas, saídas e transferências serão liberadas após a rotina transacional de movimentação estar pronta.</p>
   </section>
 }
