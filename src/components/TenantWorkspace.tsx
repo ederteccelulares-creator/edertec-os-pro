@@ -90,6 +90,9 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
       setUserMappingDraft(Object.fromEntries(report.source_users
         .filter(source => report.destination_members.some(member => member.user_id === source.source_user_id && member.active))
         .map(source => [source.source_user_id, source.source_user_id])))
+      setBranchMappingDraft(Object.fromEntries(report.source_branches
+        .filter(source => report.destination_branches.some(branch => branch.id === source.source_branch_id && branch.active))
+        .map(source => [source.source_branch_id, source.source_branch_id])))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível validar o arquivo.')
     } finally {
