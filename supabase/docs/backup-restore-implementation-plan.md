@@ -74,13 +74,22 @@ Qualquer erro deve abortar a transação inteira. A operação deve ter um ident
 
 ## 6. Critérios de liberação
 
-A restauração só poderá ser habilitada depois de:
-1. implementar a rotina transacional e rollback;
-2. aplicar o remapeamento de filiais e usuários em todas as referências;
-3. resolver colisões e colunas identity/sequências;
-4. validar dependências e constraints do schema real;
-5. criar testes automatizados de sucesso, falha no meio da importação, rollback, repetição, duplicidades e tenant isolation;
-6. testar com duas organizações e membros com papéis distintos em projeto Supabase isolado;
-7. demonstrar que a falha não deixa registros parciais, estoque alterado ou lançamentos duplicados.
+A primeira versão foi implementada e os seguintes cenários passaram no GitHub Actions, em PostgreSQL 16 descartável:
+1. importação das tabelas operacionais na ordem de dependências;
+2. remapeamento de filial e de todas as referências Auth presentes no fixture;
+3. preservação de snapshots de venda e serviço, histórico de estoque e número de OS/venda;
+4. recalculação de coluna gerada e avanço das sequências identity;
+5. repetição com a mesma chave de idempotência sem duplicar dados;
+6. bloqueio de mesclagem quando o destino já contém dados;
+7. bloqueio de mapeamentos de filial e usuário entre empresas;
+8. rollback integral quando uma FK falha depois de inserções anteriores;
+9. isolamento entre empresas e privilégio da RPC restrito ao service role.
 
-Até lá, manter a restauração indisponível e não executar importação manual em produção.
+Antes de usar dados reais, ainda é obrigatório:
+- aplicar as migrações 0001–0018 em um projeto Supabase de homologação;
+- publicar as Edge Functions `export-organization`, `validate-organization-backup` e `restore-organization-backup`;
+- validar autenticação JWT, associação ativa, envio de arquivo, limites do PostgREST e execução pelo service role;
+- testar uma restauração completa com dados fictícios e comparar contagens, relacionamentos, snapshots, estoque, financeiro e números identity;
+- guardar evidências e fazer revisão de segurança antes de liberar para produção.
+
+Não usar a restauração com dados reais até concluir essa homologação. Não habilitar mesclagem, sobrescrita ou criação automática de filiais sem nova implementação e testes específicos.
