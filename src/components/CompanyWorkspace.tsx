@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent, type ChangeEvent } from 'react'
-import { Building2, ClipboardList, Users, Package, Truck, ShoppingCart, Wallet, Plus, RefreshCw, LogOut, Database, Download } from 'lucide-react'
+import { Building2, ClipboardList, Users, Package, Truck, ShoppingCart, Wallet, Plus, RefreshCw, LogOut, Database, Download, LayoutDashboard, Menu, X } from 'lucide-react'
 import CompanyInventoryPanel from './CompanyInventoryPanel'
 import CompanySuppliersPanel from './CompanySuppliersPanel'
 import CompanyPurchasesPanel from './CompanyPurchasesPanel'
@@ -16,7 +16,8 @@ const statusFlow = ['received','diagnosis','waiting_approval','approved','waitin
 const money = (n:number) => Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 
 export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
-  const [tab,setTab] = useState<'orders'|'customers'|'inventory'|'suppliers'|'purchases'|'cash'|'entries'|'backup'>('orders')
+  const [tab,setTab] = useState<'dashboard'|'orders'|'customers'|'inventory'|'suppliers'|'purchases'|'cash'|'entries'|'backup'>('dashboard')
+  const [menuOpen,setMenuOpen] = useState(false)
   const [branches,setBranches] = useState<CompanyBranch[]>([])
   const [branchId,setBranchId] = useState('')
   const [customers,setCustomers] = useState<CompanyCustomer[]>([])
@@ -116,15 +117,44 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
     finally {setBusy(false)}
   }
 
+  const activeOrders = orders.filter(o=>!['delivered','cancelled'].includes(o.status))
+  const pendingOrders = orders.filter(o=>o.status==='waiting_approval')
+  const orderRevenue = orders.reduce((sum,o)=>sum+Number(o.final_price||o.estimated_price||0),0)
+  const navigate = (next: typeof tab) => { setTab(next); setMenuOpen(false); setShowOrder(false); setShowCustomer(false) }
+
   return <div className="company-app">
-    <aside className="company-sidebar">
-      <div className="company-logo"><span><Building2/></span><div><b>EDERTEC <i>OS PRO</i></b><small>GESTÃO DE ASSISTÊNCIAS</small></div></div>
+    <button className={menuOpen?'company-drawer-scrim visible':'company-drawer-scrim'} onClick={()=>setMenuOpen(false)} aria-label="Fechar menu"/>
+    <aside className={menuOpen?'company-sidebar drawer-open':'company-sidebar'}>
+      <div className="company-logo"><span><Smartphone/></span><div><b>EDERTEC <i>OS PRO</i></b><small>GESTÃO DE ASSISTÊNCIAS</small></div><button className="company-drawer-close" onClick={()=>setMenuOpen(false)} aria-label="Fechar menu"><X/></button></div>
       <div className="company-current">{company.name}</div>
-      <nav><button className={tab==='orders'?'active':''} onClick={()=>setTab('orders')}><ClipboardList size={17}/> Ordens de serviço</button><button className={tab==='customers'?'active':''} onClick={()=>setTab('customers')}><Users size={17}/> Clientes</button><button className={tab==='inventory'?'active':''} onClick={()=>setTab('inventory')}><Package size={17}/> Estoque</button><button className={tab==='suppliers'?'active':''} onClick={()=>setTab('suppliers')}><Truck size={17}/> Fornecedores</button><button className={tab==='purchases'?'active':''} onClick={()=>setTab('purchases')}><ShoppingCart size={17}/> Compras</button><button className={tab==='cash'?'active':''} onClick={()=>setTab('cash')}><Wallet size={17}/> Fluxo de caixa</button><button className={tab==='entries'?'active':''} onClick={()=>setTab('entries')}><Wallet size={17}/> Contas a pagar/receber</button>{(role==='owner'||role==='admin')&&<button className={tab==='backup'?'active':''} onClick={()=>setTab('backup')}><Database size={17}/> Backup e segurança</button>}</nav>
+      <nav>
+        <button className={tab==='dashboard'?'active':''} onClick={()=>navigate('dashboard')}><LayoutDashboard size={18}/> Dashboard</button>
+        <button className={tab==='orders'?'active':''} onClick={()=>navigate('orders')}><ClipboardList size={18}/> Ordens de serviço</button>
+        <button className={tab==='customers'?'active':''} onClick={()=>navigate('customers')}><Users size={18}/> Clientes</button>
+        <button className={tab==='inventory'?'active':''} onClick={()=>navigate('inventory')}><Package size={18}/> Estoque</button>
+        <button className={tab==='suppliers'?'active':''} onClick={()=>navigate('suppliers')}><Truck size={18}/> Fornecedores</button>
+        <button className={tab==='purchases'?'active':''} onClick={()=>navigate('purchases')}><ShoppingCart size={18}/> Compras</button>
+        <button className={tab==='cash'?'active':''} onClick={()=>navigate('cash')}><Wallet size={18}/> Fluxo de caixa</button>
+        <button className={tab==='entries'?'active':''} onClick={()=>navigate('entries')}><Wallet size={18}/> Contas a pagar/receber</button>
+        {(role==='owner'||role==='admin')&&<button className={tab==='backup'?'active':''} onClick={()=>navigate('backup')}><Database size={18}/> Backup e segurança</button>}
+      </nav>
       <div className="company-user"><b>{email}</b><small>Perfil: {role}</small><button onClick={onSignOut}><LogOut size={15}/> Sair</button></div>
     </aside>
     <main className="company-main">
-      <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':'Financeiro'}</h1></div><div className="company-top-actions"><select value={branchId} onChange={e=>setBranchId(e.target.value)}><option value="">Todas as filiais</option>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
+      <div className="company-mobilebar"><button onClick={()=>setMenuOpen(true)} aria-label="Abrir menu"><Menu/></button><div><b>EDERTEC <i>OS PRO</i></b><small>{company.name}</small></div><span className="company-mobile-avatar">{(email[0]||'U').toUpperCase()}</span></div>
+      <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='backup'?'Backup de dados':'Financeiro'}</h1></div><div className="company-top-actions"><select value={branchId} onChange={e=>setBranchId(e.target.value)}><option value="">Todas as filiais</option>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
+      {tab==='dashboard'&&<section className="company-dashboard">
+        <p className="company-dashboard-subtitle">Visão geral da assistência técnica</p>
+        <div className="company-dashboard-stats">
+          <article className="pink"><span><ClipboardList/></span><div><b>OS Ativas</b><strong>{activeOrders.length}</strong><small>ordens em andamento</small></div></article>
+          <article className="blue"><span><Users/></span><div><b>Clientes</b><strong>{customers.length}</strong><small>cadastrados</small></div></article>
+          <article className="green"><span><Package/></span><div><b>Aguardando aprovação</b><strong>{pendingOrders.length}</strong><small>aguardando retorno do cliente</small></div></article>
+          <article className="orange"><span><Wallet/></span><div><b>Valores em OS</b><strong>{money(orderRevenue)}</strong><small>valor total registrado</small></div></article>
+        </div>
+        <section className="company-panel company-dashboard-recent"><div className="company-panel-head"><div><b>Últimas ordens de serviço</b><small>Acompanhe os atendimentos recentes</small></div><button className="company-text-link" onClick={()=>navigate('orders')}>Ver todas →</button></div>
+          {loading?<p className="company-empty">Carregando...</p>:orders.length===0?<p className="company-empty">Nenhuma OS registrada</p>:orders.slice(0,5).map(o=><div className="company-dashboard-order" key={o.id}><span>#{o.order_number}</span><div><b>{o.customers?.name||'Cliente não informado'}</b><small>{[o.device_brand,o.device_model].filter(Boolean).join(' ')}</small></div><em>{statusLabels[o.status]||o.status}</em></div>)}
+        </section>
+      </section>}
       {error&&<div className="company-error-banner">{error}</div>}{notice&&<div className="company-notice-banner">{notice}</div>}
       {tab==='orders'&&<section className="company-panel">
         <div className="company-panel-head"><div><b>Ordens cadastradas</b><small>{orders.length} registros nesta visualização</small></div><button className="company-primary" onClick={()=>setShowOrder(v=>!v)}><Plus size={16}/> Nova OS</button></div>
