@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { Building2, LoaderCircle, LogOut, Mail, ShieldCheck, Smartphone } from 'lucide-react'
+import { Building2, CreditCard, ExternalLink, LoaderCircle, LogOut, Mail, ShieldCheck, Smartphone } from 'lucide-react'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 import { listMyCompanies, registerCompany, type Company, type CompanyMembership } from '../lib/company-data'
 import CompanyWorkspace from './CompanyWorkspace'
@@ -24,6 +24,9 @@ export default function CompanyAuthGate() {
   const [notice, setNotice] = useState('')
   const [accessStatus, setAccessStatus] = useState<any>(null)
   const [checkingAccess, setCheckingAccess] = useState(false)
+  const [availablePlans, setAvailablePlans] = useState<Array<{id:string;name:string;price:number;billing_interval:string}>>([])
+  const [selectedPlanId, setSelectedPlanId] = useState('')
+  const [startingCheckout, setStartingCheckout] = useState(false)
 
   const refreshMemberships = useCallback(async () => {
     const rows = await listMyCompanies()
@@ -75,6 +78,33 @@ export default function CompanyAuthGate() {
     })
     return () => { alive = false }
   }, [selected, platformAdmin])
+
+  useEffect(() => {
+    if (!selected || platformAdmin || accessStatus?.is_allowed !== false) return
+    let alive = true
+    supabase!.from('subscription_plans').select('id,name,price,billing_interval').eq('is_active', true).order('price')
+      .then(({data,error}) => {
+        if (!alive || error) return
+        const rows = (data || []) as Array<{id:string;name:string;price:number;billing_interval:string}>
+        setAvailablePlans(rows)
+        if (rows[0]) setSelectedPlanId(rows[0].id)
+      })
+    return () => { alive = false }
+  }, [selected, platformAdmin, accessStatus?.is_allowed])
+
+  async function startPlanCheckout() {
+    if (!selected || !selectedPlanId) return
+    setStartingCheckout(true); setError('')
+    try {
+      const {data,error} = await supabase!.functions.invoke('mercadopago-billing', { body: { company_id: selected.id, plan_id: selectedPlanId } })
+      if (error) throw error
+      if (!data?.checkout_url) throw new Error('O Mercado Pago não retornou o link de pagamento.')
+      window.location.assign(data.checkout_url)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Não foi possível iniciar o pagamento.')
+      setStartingCheckout(false)
+    }
+  }
 
   if (!isSupabaseConfigured || !supabase) return <main className="company-auth"><section className="company-auth-card"><h1>EDERTEC OS PRO</h1><p>Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY para conectar o banco.</p></section></main>
   if (loading) return <main className="company-auth"><div className="company-auth-card"><LoaderCircle className="spin"/> Verificando acesso...</div></main>
@@ -133,7 +163,16 @@ export default function CompanyAuthGate() {
       <h1>{accessStatus.company_status!=='active'?'Acesso suspenso':'Seu período de teste terminou'}</h1>
       <p>O acesso aos módulos está bloqueado. Seus clientes, ordens de serviço, produtos, fotos e demais dados continuam armazenados e serão liberados após a contratação ou renovação de um plano.</p>
       {accessStatus.plan_name&&<p>Plano: <b>{accessStatus.plan_name}</b></p>}
-      <button className="company-primary" onClick={()=>window.open('https://wa.me/5547992454773?text='+encodeURIComponent('Olá! Quero contratar um plano do Edertec OS Pro para minha empresa: '+selected.name),'_blank','noopener,noreferrer')}>Entrar em contato para contratar um plano</button>
+      {availablePlans.length>0&&<div className="company-billing-choice">
+        <label>Escolha seu plano
+          <select value={selectedPlanId} onChange={e=>setSelectedPlanId(e.target.value)}>
+            {availablePlans.map(plan=><option key={plan.id} value={plan.id}>{plan.name} · {Number(plan.price).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})} / {plan.billing_interval==='monthly'?'mês':plan.billing_interval==='six_months'?'6 meses':plan.billing_interval==='yearly'?'ano':'vitalício'}</option>)}
+          </select>
+        </label>
+        <button className="company-primary" disabled={startingCheckout||!selectedPlanId} onClick={startPlanCheckout}><CreditCard size={17}/>{startingCheckout?'Preparando pagamento...':'Pagar com Mercado Pago'}</button>
+      </div>}
+      {error&&<p className="company-error">{error}</p>}
+      <button className="company-link" onClick={()=>window.open('https://wa.me/5547992454773?text='+encodeURIComponent('Olá! Quero contratar um plano do Edertec OS Pro para minha empresa: '+selected.name),'_blank','noopener,noreferrer')}><ExternalLink size={15}/> Falar com atendimento pelo WhatsApp</button>
       <button className="company-link" onClick={signOut}>Sair da conta</button>
     </section></main>
     return <CompanyWorkspace company={selected} role={memberships.find(m=>m.company_id===selected.id)?.role||'technician'} email={session.user.email||''} onSignOut={signOut}/>
