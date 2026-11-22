@@ -125,8 +125,14 @@ export default function AuthGate() {
     event.preventDefault(); setBusy(true); setError(''); setNotice('')
     try {
       if (mode === 'signup') {
+        const appUrl = (import.meta.env.VITE_APP_URL as string | undefined)?.trim().replace(/\\/$/, '') || 'https://edertecospro.com.br'
         const { data, error: authError } = await db.auth.signUp({
-          email, password, options: { data: { full_name: fullName } }
+          email,
+          password,
+          options: {
+            data: { full_name: fullName },
+            emailRedirectTo: appUrl,
+          },
         })
         if (authError) throw authError
         if (!data.session) setNotice('Cadastro recebido. Confirme seu e-mail para ativar o acesso e depois entre no sistema.')
