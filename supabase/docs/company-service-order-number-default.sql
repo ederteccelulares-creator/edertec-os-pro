@@ -1,29 +1,20 @@
--- PROPOSTA DE MIGRACAO — NAO EXECUTADA
--- Projeto alvo: Edertec OS Pro BR (btouoeftgatyrvuobicr)
--- Objetivo: preencher order_number automaticamente sem MAX()+1 no navegador.
--- Revisar e converter em migration formal com Supabase CLI antes de aplicar.
-
-begin;
-
--- Alinha a sequência ao maior número já existente.
-select setval(
-  'public.service_orders_order_number_seq'::regclass,
-  greatest(coalesce((select max(order_number) from public.service_orders), 1), 1),
-  exists(select 1 from public.service_orders)
-);
-
--- A sequência já existe e a chave (company_id, order_number) já é UNIQUE.
-alter table public.service_orders
-  alter column order_number
-  set default nextval('public.service_orders_order_number_seq'::regclass);
-
--- O DEFAULT executa nextval no contexto do usuário autenticado.
-grant usage, select on sequence public.service_orders_order_number_seq to authenticated;
-
-commit;
-
--- Testes pós-aplicação (executar com uma conta de teste autenticada):
--- 1) INSERT de OS sem informar order_number deve retornar um número.
--- 2) Dois INSERTs simultâneos devem retornar números distintos.
--- 3) Usuário de outra empresa não deve conseguir consultar/alterar a OS (RLS).
--- 4) Confirmar que nenhuma chave service_role está no frontend.
+-- NOTA TECNICA — NUMERACAO DE ORDEM DE SERVICO
+-- Projeto: Edertec OS Pro BR (btouoeftgatyrvuobicr)
+--
+-- Resultado da verificacao:
+-- service_orders.order_number JA E uma coluna IDENTITY BY DEFAULT.
+-- A sequence service_orders_order_number_seq ja esta vinculada a ela.
+-- Portanto, INSERT omitindo order_number recebe um numero automaticamente.
+--
+-- Nao aplicar ALTER COLUMN SET DEFAULT nesta coluna: o PostgreSQL rejeita
+-- essa operacao porque a coluna ja e IDENTITY.
+--
+-- O indice UNIQUE (company_id, order_number) ja impede repeticao de numero
+-- dentro da mesma empresa. A sequencia e global ao banco, nao reinicia por
+-- empresa. Isso e seguro para concorrencia e produz numeracao sem colisao.
+--
+-- Teste recomendado em ambiente autenticado:
+-- INSERT em service_orders sem order_number; conferir retorno do numero.
+-- Confirmar tambem RLS e relacionamentos de customer_id/branch_id.
+--
+-- Nenhuma alteracao de schema foi necessaria para a numeracao.
