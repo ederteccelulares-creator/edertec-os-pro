@@ -48,6 +48,7 @@ const statusToDatabase: Record<string, string> = {
   ready: 'ready',
   delivered: 'delivered',
   cancelled: 'cancelled',
+  rejected: 'rejected',
 }
 
 function toDatabaseStatus(status: string) {
