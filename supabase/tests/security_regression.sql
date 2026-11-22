@@ -256,3 +256,61 @@ begin
   end if;
 end;
 $$;
+
+
+-- WhatsApp integration settings and delivery logs remain server-side.
+do $$
+begin
+  if not exists (
+    select 1 from pg_class c
+    join pg_namespace n on n.oid=c.relnamespace
+    where n.nspname='public'
+      and c.relname='organization_whatsapp_alert_settings'
+      and c.relrowsecurity
+  ) then
+    raise exception 'WhatsApp settings must have RLS enabled';
+  end if;
+
+  if has_table_privilege('authenticated',
+    'public.organization_whatsapp_alert_settings', 'SELECT')
+     or has_table_privilege('authenticated',
+    'public.organization_whatsapp_alert_settings', 'INSERT')
+     or has_table_privilege('anon',
+    'public.organization_whatsapp_alert_settings', 'SELECT') then
+    raise exception 'Browser roles must not access WhatsApp settings directly';
+  end if;
+
+  if not has_function_privilege('authenticated',
+    'public.get_service_order_whatsapp_settings(uuid)', 'EXECUTE')
+     or not has_function_privilege('authenticated',
+    'public.save_service_order_whatsapp_settings(uuid,text,boolean)', 'EXECUTE') then
+    raise exception 'Organization admins need WhatsApp settings RPC access';
+  end if;
+
+  if has_function_privilege('anon',
+    'public.save_service_order_whatsapp_settings(uuid,text,boolean)', 'EXECUTE') then
+    raise exception 'Anonymous users must not change WhatsApp settings';
+  end if;
+
+  if not has_function_privilege('service_role',
+    'public.get_service_order_whatsapp_target(text)', 'EXECUTE')
+     or has_function_privilege('anon',
+    'public.get_service_order_whatsapp_target(text)', 'EXECUTE')
+     or has_function_privilege('authenticated',
+    'public.get_service_order_whatsapp_target(text)', 'EXECUTE') then
+    raise exception 'WhatsApp delivery target must be service-role only';
+  end if;
+
+  if has_table_privilege('authenticated',
+    'public.whatsapp_notification_logs', 'SELECT')
+     or has_table_privilege('anon',
+    'public.whatsapp_notification_logs', 'SELECT') then
+    raise exception 'Browser roles must not read WhatsApp delivery logs';
+  end if;
+
+  if not has_table_privilege('service_role',
+    'public.whatsapp_notification_logs', 'INSERT') then
+    raise exception 'Service role must be able to log WhatsApp delivery results';
+  end if;
+end;
+$$;
