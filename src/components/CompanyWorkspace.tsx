@@ -12,8 +12,8 @@ import { createCompanyServiceOrder, createCompanyServiceOrderTrackingLink, listC
 import { downloadCompanyBackup, restoreCompanyBackup } from '../lib/company-backups'
 
 type Props = { company: Company; role: CompanyRole; email: string; onSignOut: () => void }
-const statusLabels: Record<string,string> = {received:'Recebido',diagnosis:'Em diagnóstico',waiting_approval:'Aguardando aprovação',approved:'Aprovado',in_repair:'Em conserto',waiting_parts:'Aguardando peça',ready:'Pronto',delivered:'Entregue',cancelled:'Cancelado'}
-const statusFlow = ['received','diagnosis','waiting_approval','approved','waiting_parts','in_repair','ready','delivered','cancelled']
+const statusLabels: Record<string,string> = {received:'Recebido',diagnosis:'Em diagnóstico',waiting_approval:'Aguardando aprovação',approved:'Aprovado',in_repair:'Em conserto',waiting_parts:'Aguardando peça',ready:'Pronto',delivered:'Entregue',cancelled:'Cancelado',rejected:'Serviço recusado'}
+const statusFlow = ['received','diagnosis','waiting_approval','approved','waiting_parts','in_repair','ready','delivered','cancelled','rejected']
 const money = (n:number) => Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 
 export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
