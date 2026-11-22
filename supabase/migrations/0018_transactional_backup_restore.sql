@@ -64,7 +64,7 @@ returns integer
 language plpgsql
 security definer
 set search_path = public, pg_temp
-as $$$
+as $$
 declare
   row_value jsonb;
   user_field text;
@@ -170,7 +170,7 @@ returns jsonb
 language plpgsql
 security definer
 set search_path = public, pg_temp
-as $$$
+as $$
 declare
   expected_tables text[] := array[
     'branches','customers','devices','service_orders','service_order_events',
