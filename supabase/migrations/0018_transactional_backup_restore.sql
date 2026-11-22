@@ -11,7 +11,7 @@ returns trigger
 language plpgsql
 security definer
 set search_path = public
-as $
+as $$
 begin
   perform 1 from public.organizations
   where id = new.organization_id
@@ -19,9 +19,9 @@ begin
   if not found then raise exception 'Organization not found for operational record'; end if;
   return new;
 end;
-$;
+$$;
 
-do $
+do $$
 declare table_name text;
 begin
   foreach table_name in array array[
@@ -38,7 +38,7 @@ begin
     );
   end loop;
 end;
-$;
+$$;
 
 create table if not exists public.backup_restore_runs (
   id uuid primary key default gen_random_uuid(),
@@ -64,7 +64,7 @@ returns integer
 language plpgsql
 security definer
 set search_path = public, pg_temp
-as $$
+as $$$
 declare
   row_value jsonb;
   user_field text;
@@ -170,7 +170,7 @@ returns jsonb
 language plpgsql
 security definer
 set search_path = public, pg_temp
-as $$
+as $$$
 declare
   expected_tables text[] := array[
     'branches','customers','devices','service_orders','service_order_events',
