@@ -143,3 +143,4 @@ supabase functions deploy validate-organization-backup
 ```
 
 No painel da empresa, use **Backup e restauração → Validar arquivo JSON**. O arquivo deve ter até 10 MB e pertencer à mesma empresa selecionada. Um resultado válido significa apenas que a estrutura e a separação por empresa passaram nas verificações básicas; não comprova integridade de todas as relações nem executa uma restauração. A restauração automática continua desabilitada até a implementação de importação transacional e testes em homologação.
+A validação também confere referências internas entre clientes, aparelhos, OS, filiais, estoque, vendas, serviços e lançamentos financeiros. O relatório sinaliza quando há referências a usuários do Supabase Auth: essas contas não são exportadas e precisarão ser mapeadas para usuários já existentes no destino antes de qualquer restauração. A checagem é estrutural e não substitui constraints/testes de banco.
