@@ -24,6 +24,8 @@ export type DeviceInput = {
   notes?: string
 }
 
+export type ServiceOrderStatus = 'received' | 'diagnosing' | 'waiting_approval' | 'waiting_parts' | 'repairing' | 'ready' | 'delivered' | 'cancelled'
+
 export type ServiceOrderInput = {
   customerId: string
   deviceId?: string
@@ -32,7 +34,7 @@ export type ServiceOrderInput = {
   accessories?: string
   physicalCondition?: string
   estimatedAmount?: number
-  status?: 'received' | 'diagnosing' | 'waiting_approval' | 'waiting_parts' | 'repairing' | 'ready' | 'delivered' | 'cancelled'
+  status?: ServiceOrderStatus
   warrantyDays?: number
   internalNotes?: string
 }
