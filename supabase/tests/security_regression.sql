@@ -105,6 +105,26 @@ begin
     raise exception 'Security regression checks failed: %', array_to_string(missing, '; ');
   end if;
 
-  raise notice 'Security regression checks passed for migrations 0001-0017.';
+  raise notice 'Security regression checks passed for migrations 0001-0018.';
+end;
+$$;
+
+
+-- Backup restore is callable only by the trusted service role, never by
+-- browser sessions or anonymous clients.
+do $$
+begin
+  if not has_function_privilege('service_role',
+    'public.restore_organization_backup(uuid,uuid,uuid,jsonb,jsonb,jsonb)', 'EXECUTE') then
+    raise exception 'Restore RPC must be executable by service_role';
+  end if;
+  if has_function_privilege('authenticated',
+    'public.restore_organization_backup(uuid,uuid,uuid,jsonb,jsonb,jsonb)', 'EXECUTE') then
+    raise exception 'Authenticated users must not execute restore RPC directly';
+  end if;
+  if has_function_privilege('anon',
+    'public.restore_organization_backup(uuid,uuid,uuid,jsonb,jsonb,jsonb)', 'EXECUTE') then
+    raise exception 'Anonymous users must not execute restore RPC';
+  end if;
 end;
 $$;
