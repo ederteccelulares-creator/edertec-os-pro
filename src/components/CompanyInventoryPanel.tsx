@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Plus, RefreshCw, Search, Package, AlertTriangle } from 'lucide-react'
-import { createCompanyProduct, listCompanyProducts, recordCompanyStockMovement, type CompanyProduct } from '../lib/company-inventory'
+import { createCompanyProduct, listCompanyProducts, listCompanyStockMovements, recordCompanyStockMovement, type CompanyProduct, type CompanyStockMovement } from '../lib/company-inventory'
 import type { Company } from '../lib/company-data'
 
 const money = (n:number) => Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 
 export default function CompanyInventoryPanel({company}:{company:Company}) {
   const [products,setProducts] = useState<CompanyProduct[]>([])
+  const [movements,setMovements] = useState<CompanyStockMovement[]>([])
   const [loading,setLoading] = useState(true)
   const [busy,setBusy] = useState(false)
   const [error,setError] = useState('')
@@ -19,7 +20,7 @@ export default function CompanyInventoryPanel({company}:{company:Company}) {
 
   const load = useCallback(async()=>{
     setLoading(true);setError('')
-    try { setProducts(await listCompanyProducts({companyId:company.id,search,limit:300})) }
+    try { const [items,history] = await Promise.all([listCompanyProducts({companyId:company.id,search,limit:300}),listCompanyStockMovements({companyId:company.id,limit:100})]); setProducts(items); setMovements(history) }
     catch(e) {setError(e instanceof Error?e.message:'Erro ao carregar produtos.')}
     finally {setLoading(false)}
   },[company.id,search])
@@ -94,6 +95,12 @@ export default function CompanyInventoryPanel({company}:{company:Company}) {
       <div className="company-table-wrap"><table><thead><tr><th>PRODUTO</th><th>SKU</th><th>CUSTO</th><th>VENDA</th><th>ESTOQUE</th><th>MÍNIMO</th><th>SITUAÇÃO</th><th>AÇÃO</th></tr></thead><tbody>
         {products.map(p=><tr key={p.id}><td><b>{p.name}</b><small>{p.description||'—'}</small></td><td>{p.sku||'—'}</td><td>{money(p.cost_price)}</td><td>{money(p.sale_price)}</td><td><b>{Number(p.stock_quantity).toLocaleString('pt-BR')}</b></td><td>{Number(p.min_stock).toLocaleString('pt-BR')}</td><td>{Number(p.stock_quantity)<=Number(p.min_stock)?<span className="company-low-stock"><AlertTriangle size={13}/> Estoque baixo</span>:<span className="company-stock-ok">Normal</span>}</td><td><button className="company-secondary company-small-action" onClick={()=>{setMovementProduct(p);setMovement({type:'in',quantity:'1',unitCost:String(p.cost_price||0),reason:''})}}>Movimentar</button></td></tr>)}
       </tbody></table></div>}
+    <div className="company-inventory-history">
+      <div className="company-panel-head"><div><b>Histórico de movimentações</b><small>Últimos {movements.length} registros</small></div></div>
+      {movements.length===0?<p className="company-empty">Nenhuma movimentação registrada.</p>:<div className="company-table-wrap"><table><thead><tr><th>DATA</th><th>PRODUTO</th><th>OPERAÇÃO</th><th>QUANTIDADE</th><th>CUSTO UNITÁRIO</th><th>MOTIVO</th></tr></thead><tbody>
+        {movements.map(m=><tr key={m.id}><td>{new Date(m.created_at).toLocaleString('pt-BR')}</td><td>{products.find(p=>p.id===m.product_id)?.name||'Produto'}</td><td>{m.movement_type==='in'?'Entrada':m.movement_type==='out'?'Saída':'Ajuste'}</td><td>{Number(m.quantity).toLocaleString('pt-BR')}</td><td>{money(m.unit_cost||0)}</td><td>{m.reason||'—'}</td></tr>)}
+      </tbody></table></div>}
+    </div>
     <p className="company-inventory-note">Entradas, saídas e ajustes de saldo são registrados de forma transacional e ficam no histórico do banco. O saldo mostrado é consolidado por empresa; a filial informada no histórico ainda não mantém saldo separado por filial.</p>
   </section>
 }
