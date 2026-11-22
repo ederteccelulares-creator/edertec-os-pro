@@ -227,3 +227,15 @@ Esta seção registra alterações já aplicadas no banco BR; não é um arquivo
 - Criados `src/lib/company-service-order-payments.ts` e formulário de recebimento na listagem de OS. O usuário informa valor, forma de pagamento e observação; após sucesso o fluxo de caixa é atualizado automaticamente.
 - O fluxo permite recebimentos parciais e múltiplos pagamentos para uma mesma OS; cada pagamento individual gera exatamente um lançamento de caixa.
 - Não foi criado limite automático baseado no preço estimado/final da OS, pois o modelo atual não mantém saldo devedor calculado. A conciliação de saldo e estornos permanece como etapa futura.
+
+
+## Contas a pagar e receber — 22/11/2026
+
+- Criada a tabela `financial_entries` para lançamentos a pagar e a receber, com empresa, filial opcional, categoria, descrição, contraparte, valor, vencimento, status, forma de pagamento e observações.
+- RLS habilitado com política de membros da empresa; grant de leitura/escrita concedido a authenticated e verificado que anon não tem SELECT.
+- Criada RPC `settle_financial_entry`, SECURITY INVOKER, com validação de usuário, vínculo à empresa, status em aberto e forma de pagamento. A baixa atualiza o lançamento e cria uma entrada ou saída em `cash_transactions` na mesma transação.
+- Adicionada referência `cash_transactions.financial_entry_id`, FK composta com company_id e índice único parcial para impedir duplicação do lançamento de caixa.
+- Criada tela Contas a pagar/receber com cadastro, vencimento, categoria, contraparte, valor, totais em aberto e baixa integrada ao fluxo de caixa.
+- A tela permite cadastrar obrigações manualmente. A geração automática de contas a pagar a partir de compras e a geração automática de contas a receber a partir do saldo restante das OS ainda são etapas futuras.
+- Migração registrada no projeto: `20261122045705_accounts_payable_receivable_cash_integration`; migração de pagamentos OS: `20261122045728_service_order_payment_cash_integration`.
+- Verificação SQL confirmou RLS=true, uma política ativa, authenticated SELECT=true, anon SELECT=false, execução da RPC permitida a authenticated e negada a anon.
