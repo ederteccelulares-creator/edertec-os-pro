@@ -180,7 +180,7 @@ O workflow executa as migrações 0001–0017 em um PostgreSQL 16 descartável, 
 
 Esse job verifica a compatibilidade SQL das migrações e as asserções estruturais em PostgreSQL isolado. Ele **não** equivale a uma homologação completa no Supabase: não testa PostgREST, Auth real, Edge Functions, políticas com sessões reais de usuários, e-mail, nem restauração transacional. Nenhum banco de produção é acessado ou alterado.
 
-O workflow também cria dois usuários e duas empresas sintéticas e verifica, sob o papel `authenticated`, que cada empresa só enxerga seus próprios clientes; tenta bloquear gravação cruzada, vínculo de aparelho com cliente de outra empresa, alteração direta de função de membro e inserção direta de OS. Esse smoke test valida RLS e privilégios básicos no PostgreSQL isolado, mas não simula todas as camadas de uma instância Supabase real.
+O workflow também cria duas empresas e três usuários sintéticos (proprietários das duas empresas e um técnico da primeira) e verifica, sob o papel `authenticated`, que cada empresa só enxerga seus próprios clientes; tenta bloquear gravação cruzada, vínculo de aparelho com cliente de outra empresa, alteração direta de função de membro e inserção direta de OS. Também cria OS de teste para verificar atribuição por proprietário, atualização de status pelo técnico responsável, bloqueio de atualização de OS não atribuída, bloqueio de atribuição pelo próprio técnico e bloqueio de tentativa de atribuição entre empresas. Esse smoke test valida RLS, privilégios e regras da RPC no PostgreSQL isolado, mas não simula todas as camadas de uma instância Supabase real.
 
 
 ## Atribuição de técnico nas ordens de serviço
