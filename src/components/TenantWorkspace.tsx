@@ -57,7 +57,7 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
   const [backupBusy, setBackupBusy] = useState(false)
   const [backupNotice, setBackupNotice] = useState('')
   const [validationBusy, setValidationBusy] = useState(false)
-  const [validationReport, setValidationReport] = useState<{valid:boolean;applied:false;message:string;organization:{id:string;name:string};exported_at:string|null;total_records:number;counts:Record<string,number>;requires_user_mapping:boolean;user_mapping_requirements:Array<{table:string;field:string;records:number}>;source_users:Array<{source_user_id:string;references:Array<{table:string;field:string;records:number}>;same_id_member_exists:boolean}>;destination_members:Array<{user_id:string;full_name:string;role:string;active:boolean}>;mapping_provided:boolean;mapping_valid:boolean;mapping_errors:string[];source_branches:Array<{source_branch_id:string;name:string;code:string;active:boolean;references:Array<{table:string;field:string;records:number}>}>;destination_branches:Array<{id:string;name:string;code:string;active:boolean}>;branch_mapping_provided:boolean;branch_mapping_valid:boolean;branch_mapping_errors:string[];restore_ready:boolean;restore_blockers:string[];destination_empty:boolean;target_counts:Record<string,number>;occupied_tables:Array<{table:string;records:number}>;errors:string[]}|null>(null)
+  const [validationReport, setValidationReport] = useState<Awaited<ReturnType<typeof validateOrganizationBackup>> | null>(null)
   const [userMappingDraft, setUserMappingDraft] = useState<Record<string,string>>({})
   const [branchMappingDraft, setBranchMappingDraft] = useState<Record<string,string>>({})
   const [backupDraft, setBackupDraft] = useState<Record<string,unknown> | null>(null)
