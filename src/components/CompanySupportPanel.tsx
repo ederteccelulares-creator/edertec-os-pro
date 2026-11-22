@@ -10,8 +10,9 @@ export default function CompanySupportPanel({companyId,companyName}:{companyId:s
  async function load(){try{setTickets(await listCompanySupportTickets(companyId))}catch(e){setError(e instanceof Error?e.message:'Erro ao carregar chamados.')}}
  useEffect(()=>{void load()},[companyId])
  useEffect(()=>{
-  if(!supabase)return
-  const channel=supabase.channel('company-support-alerts-'+companyId)
+  const client=supabase
+  if(!client)return
+  const channel=client.channel('company-support-alerts-'+companyId)
    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'support_tickets',filter:'company_id=eq.'+companyId},payload=>{
     if(soundOn)playSupportNotification()
     void load()
@@ -24,7 +25,7 @@ export default function CompanySupportPanel({companyId,companyName}:{companyId:s
     void load()
    })
    .subscribe()
-  return()=>{void supabase.removeChannel(channel)}
+  return()=>{void client.removeChannel(channel)}
  },[companyId,soundOn,active?.id])
  async function open(t:SupportTicket){setActive(t);try{setMessages(await listSupportMessages(t.id))}catch(e){setError(e instanceof Error?e.message:'Erro ao abrir conversa.')}}
  async function create(e:FormEvent){e.preventDefault();setBusy(true);setError('');try{const t=await createCompanySupportTicket({companyId,subject,description,category,priority});setForm(false);setSubject('');setDescription('');await load();await open(t)}catch(e){setError(e instanceof Error?e.message:'Erro ao abrir chamado.')}finally{setBusy(false)}}
