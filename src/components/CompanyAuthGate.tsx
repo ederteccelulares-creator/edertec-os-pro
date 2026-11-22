@@ -22,6 +22,8 @@ export default function CompanyAuthGate() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [accessStatus, setAccessStatus] = useState<any>(null)
+  const [checkingAccess, setCheckingAccess] = useState(false)
 
   const refreshMemberships = useCallback(async () => {
     const rows = await listMyCompanies()
@@ -54,6 +56,25 @@ export default function CompanyAuthGate() {
     })
     return () => { alive = false; subscription.unsubscribe() }
   }, [refreshMemberships])
+
+
+  useEffect(() => {
+    if (!selected || !supabase || platformAdmin) { setAccessStatus(null); return }
+    let alive = true
+    setCheckingAccess(true)
+    supabase.rpc('get_company_access_status', { target_company_id: selected.id }).then(({data,error}) => {
+      if (!alive) return
+      if (error) {
+        setAccessStatus({is_allowed:false,company_status:'unknown',subscription_status:null,trial_ends_at:null,ends_at:null,plan_name:null})
+        setError('Não foi possível validar a assinatura. Entre em contato com o suporte.')
+      } else {
+        const row = Array.isArray(data) ? data[0] : data
+        setAccessStatus(row || {is_allowed:false,company_status:'unknown',subscription_status:null,trial_ends_at:null,ends_at:null,plan_name:null})
+      }
+      setCheckingAccess(false)
+    })
+    return () => { alive = false }
+  }, [selected, platformAdmin])
 
   if (!isSupabaseConfigured || !supabase) return <main className="company-auth"><section className="company-auth-card"><h1>EDERTEC OS PRO</h1><p>Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY para conectar o banco.</p></section></main>
   if (loading) return <main className="company-auth"><div className="company-auth-card"><LoaderCircle className="spin"/> Verificando acesso...</div></main>
@@ -104,7 +125,19 @@ export default function CompanyAuthGate() {
 
   if (platformAdmin) return <PlatformAdminPanel email={session.user.email||''} onSignOut={signOut}/>
 
-  if (selected) return <CompanyWorkspace company={selected} role={memberships.find(m=>m.company_id===selected.id)?.role||'technician'} email={session.user.email||''} onSignOut={signOut}/>
+
+  if (selected) {
+    if (checkingAccess || !accessStatus) return <main className="company-auth"><section className="company-auth-card"><LoaderCircle className="spin"/> Verificando período de teste e assinatura...</section></main>
+    if (!accessStatus.is_allowed) return <main className="company-auth"><section className="company-auth-card">
+      <div className="company-auth-brand"><ShieldCheck size={25}/><div><b>EDERTEC <i>OS PRO</i></b><small>ASSINATURA DA EMPRESA</small></div></div>
+      <h1>{accessStatus.company_status!=='active'?'Acesso suspenso':'Seu período de teste terminou'}</h1>
+      <p>O acesso aos módulos está bloqueado. Seus clientes, ordens de serviço, produtos, fotos e demais dados continuam armazenados e serão liberados após a contratação ou renovação de um plano.</p>
+      {accessStatus.plan_name&&<p>Plano: <b>{accessStatus.plan_name}</b></p>}
+      <button className="company-primary" onClick={()=>window.open('https://wa.me/?text='+encodeURIComponent('Olá! Quero contratar um plano do Edertec OS Pro para minha empresa: '+selected.name),'_blank','noopener,noreferrer')}>Entrar em contato para contratar um plano</button>
+      <button className="company-link" onClick={signOut}>Sair da conta</button>
+    </section></main>
+    return <CompanyWorkspace company={selected} role={memberships.find(m=>m.company_id===selected.id)?.role||'technician'} email={session.user.email||''} onSignOut={signOut}/>
+  }
 
   if (memberships.length>1) return <main className="company-auth"><section className="company-auth-card"><h1>Selecione sua assistência</h1><div className="company-select-list">{memberships.map(m=>{const c=Array.isArray(m.companies)?m.companies[0]:m.companies;return c?<button key={m.company_id} onClick={()=>setSelected(c)}><Building2/><span><b>{c.name}</b><small>{m.role}</small></span></button>:null})}</div><button className="company-link" onClick={signOut}><LogOut size={15}/> Sair</button></section></main>
 
