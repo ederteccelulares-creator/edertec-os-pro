@@ -21,7 +21,7 @@ begin
   if p_token is null or length(p_token) <> 64 or p_token !~ '^[0-9a-f]{64}$' then
     raise exception 'Invalid or expired customer link';
   end if;
-  if p_decision not in ('approved','declined') then
+  if p_decision is null or p_decision not in ('approved','declined') then
     raise exception 'Invalid customer decision';
   end if;
 
