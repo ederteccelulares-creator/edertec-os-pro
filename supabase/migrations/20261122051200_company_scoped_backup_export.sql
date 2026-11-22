@@ -16,7 +16,7 @@ declare
     'branches','customers','employees','service_catalog','products',
     'service_orders','service_order_items','stock_movements','payments',
     'suppliers','purchases','purchase_items','cash_sessions','cash_transactions',
-    'company_financial_entries','audit_logs'
+    'company_financial_entries'
   ];
   result_value jsonb;
 begin
