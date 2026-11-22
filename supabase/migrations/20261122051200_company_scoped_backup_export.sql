@@ -39,7 +39,7 @@ begin
 
   foreach table_name in array allowed_tables loop
     execute format(
-      'select coalesce(jsonb_agg(to_jsonb(t) order by t.created_at, t.id), ''[]''::jsonb)
+      'select coalesce(jsonb_agg(to_jsonb(t)), ''[]''::jsonb)
        from public.%I t where t.company_id = $1',
       table_name
     ) into rows_value using p_company_id;
