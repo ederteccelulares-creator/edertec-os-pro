@@ -49,14 +49,15 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
   useEffect(()=>{void load()},[load])
 
   useEffect(()=>{
-    if(!supabase)return
-    const channel=supabase.channel('platform-dashboard-open-tickets')
+    const client=supabase
+    if(!client)return
+    const channel=client.channel('platform-dashboard-open-tickets')
       .on('postgres_changes',{event:'*',schema:'public',table:'support_tickets'},()=>{
-        void supabase.from('support_tickets').select('id',{count:'exact',head:true}).eq('status','open')
+        void client.from('support_tickets').select('id',{count:'exact',head:true}).eq('status','open')
           .then(({count,error})=>{if(!error)setOpenTickets(count||0)})
       })
       .subscribe()
-    return()=>{void supabase.removeChannel(channel)}
+    return()=>{void client.removeChannel(channel)}
   },[])
 
   async function createCompany(event:FormEvent){
