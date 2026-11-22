@@ -118,3 +118,23 @@ A camada também usa o bucket Storage `service-order-intake`; a existência e as
 6. Portal do cliente, eventos de OS, notificações, upload e WhatsApp: criar apenas após desenho de segurança e revisão de Storage/RLS.
 
 Nenhuma chamada RPC ausente foi criada nesta etapa.
+
+
+## Hardening de integridade entre empresas — 22/11/2026
+
+Aplicado diretamente ao projeto Supabase BR `btouoeftgatyrvuobicr` e verificado após execução.
+
+- Criadas chaves únicas compostas `(id, company_id)` em `branches`, `customers`, `employees` e `service_orders`.
+- Criadas chaves estrangeiras compostas para exigir que filial, cliente e técnico associados a uma OS pertençam à mesma empresa.
+- Criada chave estrangeira composta para exigir que cada item de OS pertença à mesma empresa da OS referenciada.
+- Corrigida a política RLS de `service_order_items`: a condição anterior comparava `so.company_id = so.company_id`, que era sempre verdadeira. Agora compara `so.company_id = service_order_items.company_id`.
+- Antes da alteração, as tabelas verificadas estavam vazias e não havia referências cruzadas existentes.
+- Verificação posterior confirmou a presença das quatro chaves únicas e das quatro chaves estrangeiras compostas.
+
+### Alertas de segurança ainda pendentes
+
+O Supabase Security Advisor ainda sinaliza:
+1. `platform_admins` está com RLS habilitado e sem política. Isso pode ser intencional para impedir acesso direto; revisar o fluxo Super Admin antes de criar políticas.
+2. `register_company(text,text,text)` é SECURITY DEFINER e executável por usuários autenticados. A chamada autenticada é necessária ao cadastro de empresa; revisar e restringir explicitamente grants a PUBLIC/anon, mantendo apenas o acesso intencional a authenticated, após confirmar o fluxo.
+
+Esta seção registra alterações já aplicadas no banco BR; não é um arquivo de migração executável.
