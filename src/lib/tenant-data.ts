@@ -593,6 +593,11 @@ export async function validateOrganizationBackup(organizationId: string, backup:
     mapping_provided: boolean
     mapping_valid: boolean
     mapping_errors: string[]
+    source_branches: Array<{source_branch_id:string;name:string;code:string;active:boolean;references:Array<{table:string;field:string;records:number}>}>
+    destination_branches: Array<{id:string;name:string;code:string;active:boolean}>
+    branch_mapping_provided: boolean
+    branch_mapping_valid: boolean
+    branch_mapping_errors: string[]
     destination_empty: boolean
     target_counts: Record<string, number>
     occupied_tables: Array<{table: string; records: number}>
