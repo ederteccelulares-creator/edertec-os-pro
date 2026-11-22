@@ -16,7 +16,7 @@ Este documento descreve a implementação necessária. **Não existe restauraç�
 
 A ordem abaixo respeita as chaves estrangeiras observadas nas migrações atuais:
 
-1. **branches** — primeiro resolver cada ID de filial de origem para uma filial de destino. A filial Matriz criada automaticamente no onboarding pode ser reutilizada se o administrador a selecionar.
+1. **branches** — resolver cada ID de filial de origem para uma filial ativa já existente no destino. A filial Matriz criada automaticamente no onboarding pode ser reutilizada se o administrador a selecionar; esta versão não insere filiais.
 2. **customers**, **inventory_items**, **financial_categories**, **service_catalog** — entidades-base sem dependência operacional entre si.
 3. **devices** — depende de customers.
 4. **branch_inventory** — depende de branches e inventory_items; a chave única é (branch_id, item_id), então o remapeamento não pode gerar duplicidade.
