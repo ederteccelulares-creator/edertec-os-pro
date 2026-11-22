@@ -68,9 +68,8 @@ export default function CustomerPortal({ token }: { token: string }) {
     setError('')
     try {
       if (!supabase) throw new Error('Portal não conectado ao banco de dados.')
-      const { data: result, error: requestError } = await supabase.rpc('respond_service_order_quote', {
-        p_token: token,
-        p_decision: decision,
+      const { data: result, error: requestError } = await supabase.functions.invoke('respond-service-order-quote', {
+        body: { token, decision },
       })
       if (requestError) throw requestError
       setData(current => current ? {
@@ -81,9 +80,10 @@ export default function CustomerPortal({ token }: { token: string }) {
         approved_amount: result.approved_amount,
         updated_at: result.decided_at,
       } : current)
-      setDecisionNotice(decision === 'approved'
-        ? 'Orçamento aprovado. A assistência foi avisada e poderá iniciar o reparo.'
-        : 'Orçamento recusado. A assistência foi avisada da sua decisão.')
+      const decisionText = decision === 'approved' ? 'Orçamento aprovado.' : 'Orçamento recusado.'
+      setDecisionNotice(result.whatsapp_sent
+        ? decisionText + ' A assistência também recebeu o aviso pelo WhatsApp.'
+        : decisionText + ' A assistência foi avisada no painel do sistema.')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Não foi possível registrar sua decisão. Atualize a página e tente novamente.')
     } finally {
