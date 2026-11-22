@@ -215,3 +215,8 @@
 
 .tenant-device-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
 @media(max-width:600px){.tenant-device-actions{width:100%}.tenant-device-actions button{flex:1}}
+
+
+.tenant-order-device-selected{display:grid;gap:5px}
+.tenant-order-device-selected strong{color:#e7f2eb;font-size:13px}
+.tenant-order-device-selected small{color:#a8c9b3;font-size:11px;line-height:1.5;overflow-wrap:anywhere}
