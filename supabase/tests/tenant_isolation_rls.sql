@@ -116,6 +116,7 @@ $$;
 
 -- Technician assignment is tenant- and role-scoped.
 SELECT set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false);
+SELECT set_config('test.branch_a', (SELECT id::text FROM public.branches WHERE organization_id=current_setting('test.org_a')::uuid LIMIT 1), false);
 SELECT (public.create_service_order_with_device(
   current_setting('test.org_a')::uuid,
   (SELECT id FROM public.branches WHERE organization_id=current_setting('test.org_a')::uuid LIMIT 1),
@@ -133,7 +134,7 @@ SELECT set_config('test.unassigned_order_id', :'unassigned_order_id', false);
 
 SELECT public.assign_service_order_technician(
   current_setting('test.org_a')::uuid,
-  (SELECT branch_id FROM public.service_orders WHERE id=current_setting('test.assigned_order_id')::uuid),
+  current_setting('test.branch_a')::uuid,
   current_setting('test.assigned_order_id')::uuid,
   '30000000-0000-4000-8000-000000000003'
 );
@@ -152,7 +153,7 @@ BEGIN
   BEGIN
     PERFORM public.update_service_order_status(
       current_setting('test.org_a')::uuid,
-      (SELECT branch_id FROM public.service_orders WHERE id=current_setting('test.unassigned_order_id')::uuid),
+      current_setting('test.branch_a')::uuid,
       current_setting('test.unassigned_order_id')::uuid,
       'diagnosing',
       'Tentativa em OS não atribuída'
