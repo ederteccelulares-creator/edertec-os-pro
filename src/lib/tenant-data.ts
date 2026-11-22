@@ -389,6 +389,16 @@ export async function listOrganizationTeam(organizationId: string): Promise<Team
   return (data ?? []) as TeamMember[]
 }
 
+export async function inviteOrganizationMember(organizationId: string, email: string, role: Exclude<TeamMember['member_role'], 'owner'>) {
+  const normalizedEmail = required(email, 'o e-mail').toLowerCase()
+  const { data, error } = await client().functions.invoke('invite-team', {
+    body: { organization_id: organizationId, email: normalizedEmail, role },
+  })
+  if (error) throw error
+  if (data?.error) throw new Error(data.error)
+  return data as { success: boolean; message: string }
+}
+
 export async function setOrganizationMemberRole(
   organizationId: string,
   memberId: string,
