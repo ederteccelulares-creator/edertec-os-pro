@@ -175,3 +175,14 @@
 .tenant-customer-details{flex:1;min-width:0}
 .tenant-customer-details b,.tenant-customer-details small{display:block;overflow-wrap:anywhere}
 .tenant-customer-list article .tenant-history-button{flex-shrink:0}
+
+
+/* Customer device history */
+.tenant-device-panel{margin-top:18px;padding:16px;border:1px solid #344153;border-radius:12px;background:#111a26;display:grid;gap:12px}
+.tenant-device-list{display:grid;gap:8px}
+.tenant-device-list article{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #2d3949;border-radius:9px;min-width:0}
+.tenant-device-list article>div{flex:1;min-width:0}
+.tenant-device-list b,.tenant-device-list small{display:block;overflow-wrap:anywhere}
+.tenant-device-list small{color:#9eacbd;font-size:11px;margin-top:3px}
+.tenant-device-list time{color:#9eacbd;font-size:11px;white-space:nowrap}
+@media(max-width:700px){.tenant-device-panel{padding:12px}.tenant-device-list article{align-items:flex-start;flex-wrap:wrap}.tenant-device-list time{margin-left:30px}}
