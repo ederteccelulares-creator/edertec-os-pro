@@ -23,3 +23,32 @@ export async function downloadCompanyBackup(companyId: string): Promise<void> {
   anchor.remove()
   URL.revokeObjectURL(url)
 }
+
+export async function restoreCompanyBackup(companyId: string, file: File): Promise<void> {
+  if (!supabase) throw new Error('Supabase não está configurado.')
+  if (file.size > 10 * 1024 * 1024) throw new Error('O arquivo ultrapassa o limite de 10 MB.')
+
+  let backup: unknown
+  try {
+    backup = JSON.parse(await file.text())
+  } catch {
+    throw new Error('O arquivo selecionado não contém um JSON válido.')
+  }
+
+  const value = backup as { format?: string; version?: number; company?: { id?: string } }
+  if (value?.format !== 'edertec-os-pro-company-backup' || value?.version !== 1) {
+    throw new Error('Este arquivo não é um backup compatível do Edertec OS Pro.')
+  }
+  if (value.company?.id !== companyId) {
+    throw new Error('O backup pertence a outra empresa. A restauração foi bloqueada.')
+  }
+
+  const { error } = await supabase.functions.invoke('restore-company-backup', {
+    body: {
+      company_id: companyId,
+      idempotency_key: crypto.randomUUID(),
+      backup,
+    },
+  })
+  if (error) throw error
+}
