@@ -142,7 +142,7 @@ begin
   if to_regclass('public.inventory_items_org_sku_unique') is null
      or not exists (
        select 1 from pg_index i
-       where i.indexrelid='public.inventory_items_org_sku_unique'::regclass
+       where i.indexrelid=to_regclass('public.inventory_items_org_sku_unique')
          and i.indisunique and i.indpred is not null
      ) then
     raise exception 'Backup schema contract failed: partial unique SKU index is missing';
