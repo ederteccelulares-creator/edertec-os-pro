@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Building2, ClipboardList, LogOut, Plus, RefreshCw, Smartphone, Users, Boxes, ArrowDownUp, Wallet, ShoppingCart, Trash2, ShieldCheck, UserCog, BarChart3 } from 'lucide-react'
-import { changeInventoryStock, createInventoryItem, createFinancialEntry, createSale, createServiceOrderWithDevice, listBranches, listCustomers, listFinancialEntries, listInventory, listSales, listServiceOrderEvents, listServiceOrders, saveCustomer, listOrganizationTeam, setOrganizationMemberActive, setOrganizationMemberRole, listServiceCatalog, saveServiceCatalogItem, addServiceToOrder, updateFinancialEntryStatus, updateServiceOrderStatus } from '../lib/tenant-data'
+import { changeInventoryStock, createInventoryItem, createFinancialEntry, createSale, createServiceOrderWithDevice, listBranches, listCustomers, listFinancialEntries, listInventory, listSales, listServiceOrderEvents, listServiceOrders, saveCustomer, listOrganizationTeam, setOrganizationMemberActive, setOrganizationMemberRole, listServiceCatalog, saveServiceCatalogItem, addServiceToOrder, inviteOrganizationMember, updateFinancialEntryStatus, updateServiceOrderStatus } from '../lib/tenant-data'
 import type { Organization, Branch } from '../lib/supabase'
 import type { ServiceOrderStatus, TeamMember, ServiceCatalogItem } from '../lib/tenant-data'
 
@@ -49,6 +49,8 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
   const canViewTeam = ['owner','admin','manager'].includes(role)
   const canManageTeam = ['owner','admin'].includes(role)
   const [teamRows, setTeamRows] = useState<TeamMember[]>([])
+  const [inviteForm, setInviteForm] = useState({email:'',role:'technician' as Exclude<TeamMember['member_role'],'owner'>})
+  const [teamNotice, setTeamNotice] = useState('')
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -177,6 +179,17 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
     finally { setBusy(false) }
   }
 
+  async function submitTeamInvite(event: React.FormEvent) {
+    event.preventDefault(); setBusy(true); setError(''); setTeamNotice('')
+    try {
+      const result = await inviteOrganizationMember(organization.id, inviteForm.email, inviteForm.role)
+      setTeamNotice(result.message || 'Convite enviado com sucesso.')
+      setInviteForm({email:'',role:'technician'})
+      setTeamRows(await listOrganizationTeam(organization.id))
+    } catch(e) { setError(e instanceof Error ? e.message : 'Não foi possível enviar o convite.') }
+    finally { setBusy(false) }
+  }
+
   async function updateTeamRole(member: TeamMember, nextRole: TeamMember['member_role']) {
     if (member.member_role===nextRole) return
     setBusy(true);setError('')
@@ -272,7 +285,8 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
         {serviceRows.length===0?<p className="tenant-empty">Nenhum serviço cadastrado. Cadastre troca de tela, bateria, conector e reparo de placa.</p>:<div className="tenant-table-wrap"><table><thead><tr><th>SERVIÇO</th><th>CATEGORIA</th><th>PREÇO</th><th>TEMPO</th><th>SITUAÇÃO</th><th>AÇÃO</th></tr></thead><tbody>{serviceRows.map(item=><tr key={item.id}><td><b>{item.name}</b><small>{item.description||'Sem descrição'}</small></td><td>{item.category}</td><td>{money(Number(item.price))}</td><td>{item.estimated_minutes?item.estimated_minutes+' min':'Não definido'}</td><td><span className={item.active?'tenant-stock-ok':'tenant-stock-low'}>{item.active?'Ativo':'Inativo'}</span></td><td>{canManageServices?<button className="tenant-history-button" onClick={()=>editService(item)}>Editar</button>:<span>Somente leitura</span>}</td></tr>)}</tbody></table></div>}
       </section>}
       {tab==='team'&&canViewTeam&&<section className="tenant-panel"><div className="tenant-panel-head"><div><b>Equipe e permissões</b><small>Gerencie as funções e os acessos dos usuários já vinculados a esta empresa</small></div><button className="tenant-history-button" onClick={()=>listOrganizationTeam(organization.id).then(setTeamRows).catch(e=>setError(e.message||'Falha ao atualizar equipe.'))}><RefreshCw size={14}/> Atualizar equipe</button></div>
-        <div className="tenant-team-notice"><UserCog size={17}/><span>Convites para novos usuários por e-mail serão habilitados em uma etapa de backend seguro. Esta tela administra apenas contas que já fazem parte da empresa.</span></div>
+        {canManageTeam&&<form className="tenant-form" onSubmit={submitTeamInvite}><b>Convidar novo funcionário</b><div className="tenant-grid"><label className="wide">E-mail do funcionário<input required type="email" maxLength={254} value={inviteForm.email} onChange={e=>setInviteForm({...inviteForm,email:e.target.value})} placeholder="funcionario@email.com"/></label><label>Função<select value={inviteForm.role} onChange={e=>setInviteForm({...inviteForm,role:e.target.value as Exclude<TeamMember['member_role'],'owner'>})}>{role==='owner'&&<option value="admin">Administrador</option>}<option value="manager">Gerente</option><option value="attendant">Atendente</option><option value="technician">Técnico</option></select></label></div><div className="tenant-form-actions"><button className="tenant-primary" disabled={busy||!inviteForm.email.trim()}><Plus size={14}/> Enviar convite por e-mail</button></div></form>}
+        {teamNotice&&<div className="tenant-team-notice"><UserCog size={17}/><span>{teamNotice}</span></div>}
         {teamRows.length===0?<p className="tenant-empty">Nenhum membro encontrado ou a migração 0007 ainda não foi aplicada.</p>:<div className="tenant-table-wrap"><table><thead><tr><th>MEMBRO</th><th>FUNÇÃO</th><th>ENTRADA</th><th>ACESSO</th><th>AÇÃO</th></tr></thead><tbody>{teamRows.map(member=><tr key={member.member_id}><td><b>{member.full_name||'Usuário sem nome'}</b><small>{member.phone||member.user_id}</small></td><td>{canManageTeam?<select value={member.member_role} disabled={busy||!member.is_active||member.user_id===undefined} onChange={e=>updateTeamRole(member,e.target.value as TeamMember['member_role'])}><option value="owner">Proprietário</option><option value="admin">Administrador</option><option value="manager">Gerente</option><option value="attendant">Atendente</option><option value="technician">Técnico</option></select>:({owner:'Proprietário',admin:'Administrador',manager:'Gerente',attendant:'Atendente',technician:'Técnico'}[member.member_role])}</td><td>{new Date(member.joined_at).toLocaleDateString('pt-BR')}</td><td><span className={member.is_active?'tenant-stock-ok':'tenant-stock-low'}>{member.is_active?'Ativo':'Inativo'}</span></td><td>{canManageTeam&&member.member_role!=='owner'&&member.user_id!==undefined?<button className="tenant-history-button" disabled={busy} onClick={()=>toggleTeamAccess(member)}>{member.is_active?'Desativar':'Reativar'}</button>:<span>—</span>}</td></tr>)}</tbody></table></div>}
       </section>}
       {tab==='sales'&&<section className="tenant-panel"><div className="tenant-panel-head"><div><b>Vendas</b><small>Venda de produtos com baixa automática no estoque e lançamento no financeiro</small></div>{canSell&&<button className="tenant-primary" onClick={()=>setShowSaleForm(v=>!v)}><Plus size={16}/> Nova venda</button>}</div>
