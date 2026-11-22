@@ -9,17 +9,18 @@ export default function PlatformSupportPanel(){
  async function load(){setBusy(true);setError('');try{const rows=await listPlatformSupportTickets();setTickets(rows);if(active){const t=rows.find(x=>x.id===active.id);if(t)setActive(t)}}catch(e){setError(e instanceof Error?e.message:'Falha ao carregar chamados.')}finally{setBusy(false)}}
  useEffect(()=>{void load()},[])
  useEffect(()=>{
-  if(!supabase)return
-  const channel=supabase.channel('platform-support-alerts')
+  const client=supabase
+  if(!client)return
+  const channel=client.channel('platform-support-alerts')
    .on('postgres_changes',{event:'INSERT',schema:'public',table:'support_tickets'},()=>{if(soundOn)playSupportNotification();void load()})
    .on('postgres_changes',{event:'INSERT',schema:'public',table:'support_ticket_messages'},payload=>{
     const row=payload.new as SupportMessage
-    if(!row.is_internal&&soundOn){void supabase.auth.getUser().then(({data})=>{if(row.author_id!==data.user?.id)playSupportNotification()})}
+    if(!row.is_internal&&soundOn){void client.auth.getUser().then(({data})=>{if(row.author_id!==data.user?.id)playSupportNotification()})}
     void load()
     if(active?.id===row.ticket_id)void listSupportMessages(row.ticket_id).then(setMessages).catch(()=>{})
    })
    .subscribe()
-  return()=>{void supabase.removeChannel(channel)}
+  return()=>{void client.removeChannel(channel)}
  },[soundOn,active?.id])
  async function open(t:SupportTicket){setActive(t);setStatus(t.status);setPriority(t.priority);try{setMessages(await listSupportMessages(t.id))}catch(e){setError(e instanceof Error?e.message:'Falha ao carregar conversa.')}}
  async function save(){if(!active)return;setBusy(true);setError('');try{await updatePlatformSupportTicket({ticketId:active.id,status,priority});await load()}catch(e){setError(e instanceof Error?e.message:'Falha ao atualizar chamado.')}finally{setBusy(false)}}
