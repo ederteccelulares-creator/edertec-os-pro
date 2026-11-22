@@ -196,19 +196,19 @@ Deno.serve(async (req) => {
     same_id_member_exists: destinationMemberIds.has(user.source_user_id),
   }));
   const submittedMapping = body.user_mapping ?? {};
+  const mappingProvided = Object.keys(submittedMapping).length > 0;
   const mappingErrors: string[] = [];
   const expectedSourceIds = new Set(sourceUsers.map(user => user.source_user_id));
   for (const sourceId of expectedSourceIds) {
     const targetId = submittedMapping[sourceId];
-    if (!targetId) mappingErrors.push("Usuário de origem sem associação: " + sourceId);
-    else if (!activeDestinationMemberIds.has(targetId)) mappingErrors.push("O destino selecionado não é membro ativo da empresa: " + targetId);
+    if (mappingProvided && !targetId) mappingErrors.push("Usuário de origem sem associação: " + sourceId);
+    else if (targetId && !activeDestinationMemberIds.has(targetId)) mappingErrors.push("O destino selecionado não é membro ativo da empresa: " + targetId);
   }
   for (const sourceId of Object.keys(submittedMapping)) {
     if (!expectedSourceIds.has(sourceId)) mappingErrors.push("Mapeamento contém usuário de origem não reconhecido: " + sourceId);
   }
   const mappedTargets = Object.values(submittedMapping).filter(Boolean);
   if (new Set(mappedTargets).size !== mappedTargets.length) mappingErrors.push("Cada usuário de origem deve ser associado a um membro diferente do destino.");
-  const mappingProvided = Object.keys(submittedMapping).length > 0;
   const mappingValid = mappingProvided && mappingErrors.length === 0 && Object.keys(submittedMapping).length === expectedSourceIds.size;
 
   const unknownTables = Object.keys(tables).filter(name => !TABLES.includes(name as typeof TABLES[number]));
