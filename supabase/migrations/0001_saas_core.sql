@@ -108,18 +108,21 @@ create table public.service_orders (
   constraint orders_customer_org_fk foreign key (customer_id,organization_id)
     references public.customers(id,organization_id) on delete restrict,
   constraint orders_device_org_fk foreign key (device_id,organization_id)
-    references public.devices(id,organization_id) on delete restrict
+    references public.devices(id,organization_id) on delete restrict,
+  unique (id,organization_id)
 );
 
 create table public.service_order_events (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
-  service_order_id uuid not null references public.service_orders(id) on delete cascade,
+  service_order_id uuid not null,
   from_status public.service_order_status,
   to_status public.service_order_status not null,
   description text,
   changed_by uuid not null default auth.uid() references auth.users(id),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  constraint events_order_org_fk foreign key (service_order_id,organization_id)
+    references public.service_orders(id,organization_id) on delete cascade
 );
 
 create table public.plans (
@@ -225,7 +228,7 @@ create policy "Users update own profile" on public.profiles for update to authen
 create policy "Members read organizations" on public.organizations for select to authenticated using(public.is_org_member(id));
 create policy "Owners update organization" on public.organizations for update to authenticated using(public.has_org_role(id,array['owner','admin']::public.member_role[])) with check(public.has_org_role(id,array['owner','admin']::public.member_role[]));
 create policy "Members read memberships" on public.organization_members for select to authenticated using(public.is_org_member(organization_id));
-create policy "Admins manage memberships" on public.organization_members for all to authenticated using(public.has_org_role(organization_id,array['owner','admin']::public.member_role[])) with check(public.has_org_role(organization_id,array['owner']::public.member_role[]) or (public.has_org_role(organization_id,array['admin']::public.member_role[]) and role <> 'owner'));
+create policy "Admins manage memberships" on public.organization_members for all to authenticated using(public.has_org_role(organization_id,array['owner']::public.member_role[]) or (public.has_org_role(organization_id,array['admin']::public.member_role[]) and role <> 'owner')) with check(public.has_org_role(organization_id,array['owner']::public.member_role[]) or (public.has_org_role(organization_id,array['admin']::public.member_role[]) and role <> 'owner'));
 create policy "Members read branches" on public.branches for select to authenticated using(public.is_org_member(organization_id));
 create policy "Admins manage branches" on public.branches for all to authenticated using(public.has_org_role(organization_id,array['owner','admin','manager']::public.member_role[])) with check(public.has_org_role(organization_id,array['owner','admin','manager']::public.member_role[]));
 create policy "Members manage customers" on public.customers for all to authenticated using(public.is_org_member(organization_id)) with check(public.is_org_member(organization_id));
@@ -238,6 +241,7 @@ create policy "Members read subscription" on public.subscriptions for select to 
 create policy "Members read audit logs" on public.audit_logs for select to authenticated using(public.is_org_member(organization_id));
 create policy "Members insert audit logs" on public.audit_logs for insert to authenticated with check(public.is_org_member(organization_id) and actor_id=auth.uid());
 
+revoke all on function public.create_organization(text,text) from public;
 grant execute on function public.create_organization(text,text) to authenticated;
 grant execute on function public.is_org_member(uuid) to authenticated;
 grant execute on function public.has_org_role(uuid,public.member_role[]) to authenticated;
