@@ -31,7 +31,8 @@ Plataforma SaaS de gestão para assistências técnicas de celulares, preparada 
 
 ## Configurar o banco e autenticação
 1. Crie um projeto no [Supabase](https://supabase.com/dashboard).
-2. No SQL Editor do projeto, execute os arquivos em ordem: `supabase/migrations/0001_saas_core.sql`, `supabase/migrations/0002_order_workflow_security.sql` e `supabase/migrations/0003_role_access_atomic_order.sql` e `supabase/migrations/0004_inventory_module.sql` e `supabase/migrations/0005_financial_module.sql` e `supabase/migrations/0006_sales_module.sql` e `supabase/migrations/0007_team_management.sql` e `supabase/migrations/0008_service_catalog.sql` e `supabase/migrations/0009_platform_admin.sql` e `supabase/migrations/0010_team_invitations.sql` e `supabase/migrations/0011_membership_write_hardening.sql` e `supabase/migrations/0012_sales_pricing_and_privacy.sql` e `supabase/migrations/0013_service_order_write_hardening.sql` e `supabase/migrations/0014_tenant_record_immutability.sql` e `supabase/migrations/0015_operational_tenant_key_hardening.sql`.
+2. No SQL Editor do projeto, execute os arquivos em ordem: `supabase/migrations/0001_saas_core.sql`, `supabase/migrations/0002_order_workflow_security.sql` e `supabase/migrations/0003_role_access_atomic_order.sql` e `supabase/migrations/0004_inventory_module.sql` e `supabase/migrations/0005_financial_module.sql` e `supabase/migrations/0006_sales_module.sql` e `supabase/migrations/0007_team_management.sql` e `supabase/migrations/0008_service_catalog.sql` e `supabase/migrations/0009_platform_admin.sql` e `supabase/migrations/0010_team_invitations.sql` e `supabase/migrations/0011_membership_write_hardening.sql` e `supabase/migrations/0012_sales_pricing_and_privacy.sql` e `supabase/migrations/0013_service_order_write_hardening.sql` e `supabase/migrations/0014_tenant_record_immutability.sql` e `supabase/migrations/0015_operational_tenant_key_hardening.sql
+16. `0016_service_history_integrity.sql``.
 3. Copie `.env.example` para `.env.local`.
 4. Preencha:
    - `VITE_SUPABASE_URL`: Project URL.
@@ -58,7 +59,8 @@ values ('UUID-DO-USUARIO-AUTORIZADO');
 A tabela não possui políticas de leitura ou gravação para o navegador. A autorização é verificada por funções SQL; não exponha a chave `service_role`.
 
 ## Publicar a função de convites
-Depois de aplicar as migrações até `0015_operational_tenant_key_hardening.sql`, vincule o projeto Supabase à CLI e publique a Edge Function:
+Depois de aplicar as migrações até `0015_operational_tenant_key_hardening.sql
+16. `0016_service_history_integrity.sql``, vincule o projeto Supabase à CLI e publique a Edge Function:
 
 ```bash
 supabase link --project-ref SEU_PROJECT_REF
@@ -100,7 +102,8 @@ A migração `0014_tenant_record_immutability.sql` impede mover clientes entre e
 
 ## Proteção das chaves operacionais multiempresa
 
-A migração `0015_operational_tenant_key_hardening.sql` torna imutáveis os IDs e vínculos de organização das filiais, produtos, categorias e lançamentos financeiros, estoque, vendas e itens vendidos. Também impede reatribuir um registro de estoque a outra filial ou produto. Campos operacionais editáveis continuam sujeitos às permissões existentes.
+A migração `0015_operational_tenant_key_hardening.sql
+16. `0016_service_history_integrity.sql`` torna imutáveis os IDs e vínculos de organização das filiais, produtos, categorias e lançamentos financeiros, estoque, vendas e itens vendidos. Também impede reatribuir um registro de estoque a outra filial ou produto. Campos operacionais editáveis continuam sujeitos às permissões existentes.
 
 
 ## Verificação de segurança do banco
