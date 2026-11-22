@@ -243,15 +243,16 @@ export async function createInventoryItem(context: TenantContext, input: Invento
   if (![cost, sale, minimum].every(value => Number.isFinite(value) && value >= 0)) {
     throw new Error('Preços e estoque mínimo devem ser zero ou maiores.')
   }
-  const { data, error } = await client().from('inventory_items').insert({
-    organization_id: context.organizationId,
-    name: required(input.name, 'o nome do produto'),
-    sku: input.sku?.trim() || null,
-    category: input.category?.trim() || 'Geral',
-    cost_price: cost,
-    sale_price: sale,
-    min_stock: minimum,
-  }).select().single()
+  const { data, error } = await client().rpc('create_inventory_item_for_branch', {
+    p_organization_id: context.organizationId,
+    p_branch_id: context.branchId,
+    p_name: required(input.name, 'o nome do produto'),
+    p_sku: input.sku?.trim() || null,
+    p_category: input.category?.trim() || 'Geral',
+    p_cost_price: cost,
+    p_sale_price: sale,
+    p_min_stock: minimum,
+  })
   if (error) throw error
   return data
 }
