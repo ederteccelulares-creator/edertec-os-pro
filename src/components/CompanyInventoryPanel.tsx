@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Plus, RefreshCw, Search, Package, AlertTriangle } from 'lucide-react'
-import { createCompanyProduct, listCompanyProducts, type CompanyProduct } from '../lib/company-inventory'
+import { createCompanyProduct, listCompanyProducts, recordCompanyStockMovement, type CompanyProduct } from '../lib/company-inventory'
 import type { Company } from '../lib/company-data'
 
 const money = (n:number) => Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
@@ -13,6 +13,8 @@ export default function CompanyInventoryPanel({company}:{company:Company}) {
   const [notice,setNotice] = useState('')
   const [search,setSearch] = useState('')
   const [showForm,setShowForm] = useState(false)
+  const [movementProduct,setMovementProduct] = useState<CompanyProduct|null>(null)
+  const [movement,setMovement] = useState({type:'in' as 'in'|'out'|'adjustment',quantity:'1',unitCost:'0',reason:''})
   const [form,setForm] = useState({sku:'',name:'',description:'',costPrice:'0',salePrice:'0',minimumStock:'0'})
 
   const load = useCallback(async()=>{
@@ -38,6 +40,21 @@ export default function CompanyInventoryPanel({company}:{company:Company}) {
     finally {setBusy(false)}
   }
 
+  async function submitMovement(event:FormEvent) {
+    event.preventDefault()
+    if (!movementProduct) return
+    setBusy(true);setError('');setNotice('')
+    try {
+      await recordCompanyStockMovement({
+        companyId:company.id,productId:movementProduct.id,movementType:movement.type,
+        quantity:Number(movement.quantity),unitCost:Number(movement.unitCost),reason:movement.reason,
+      })
+      setMovementProduct(null);setMovement({type:'in',quantity:'1',unitCost:'0',reason:''})
+      setNotice('Movimentação registrada e saldo atualizado.');await load()
+    } catch(e) {setError(e instanceof Error?e.message:'Falha ao registrar movimentação.')}
+    finally {setBusy(false)}
+  }
+
   const lowStock = products.filter(p=>Number(p.stock_quantity)<=Number(p.min_stock)).length
 
   return <section className="company-panel">
@@ -51,6 +68,16 @@ export default function CompanyInventoryPanel({company}:{company:Company}) {
       <label><Search size={16}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar por nome ou SKU"/></label>
       <button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button>
     </div>
+    {movementProduct&&<form className="company-form" onSubmit={submitMovement}>
+      <h3>Movimentar estoque · {movementProduct.name}</h3>
+      <div className="company-form-grid">
+        <label>Operação<select value={movement.type} onChange={e=>setMovement({...movement,type:e.target.value as typeof movement.type})}><option value="in">Entrada</option><option value="out">Saída</option><option value="adjustment">Ajustar saldo para</option></select></label>
+        <label>{movement.type==='adjustment'?'Novo saldo':'Quantidade'}<input required type="number" min="0.01" step="0.01" value={movement.quantity} onChange={e=>setMovement({...movement,quantity:e.target.value})}/></label>
+        <label>Custo unitário (R$)<input type="number" min="0" step="0.01" value={movement.unitCost} onChange={e=>setMovement({...movement,unitCost:e.target.value})}/></label>
+      </div>
+      <label>Motivo / observação<input value={movement.reason} onChange={e=>setMovement({...movement,reason:e.target.value})} placeholder="Ex.: compra, venda, perda, inventário"/></label>
+      <div className="company-form-actions"><button type="button" className="company-secondary" onClick={()=>setMovementProduct(null)}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Registrando...':'Confirmar movimentação'}</button></div>
+    </form>}
     {showForm&&<form className="company-form" onSubmit={submit}>
       <h3>Novo produto</h3>
       <div className="company-form-grid">
@@ -64,9 +91,9 @@ export default function CompanyInventoryPanel({company}:{company:Company}) {
       <div className="company-form-actions"><button type="button" className="company-secondary" onClick={()=>setShowForm(false)}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Salvando...':'Salvar produto'}</button></div>
     </form>}
     {loading?<p className="company-empty">Carregando estoque...</p>:products.length===0?<p className="company-empty"><Package size={22}/><br/>Nenhum produto encontrado.</p>:
-      <div className="company-table-wrap"><table><thead><tr><th>PRODUTO</th><th>SKU</th><th>CUSTO</th><th>VENDA</th><th>ESTOQUE</th><th>MÍNIMO</th><th>SITUAÇÃO</th></tr></thead><tbody>
-        {products.map(p=><tr key={p.id}><td><b>{p.name}</b><small>{p.description||'—'}</small></td><td>{p.sku||'—'}</td><td>{money(p.cost_price)}</td><td>{money(p.sale_price)}</td><td><b>{Number(p.stock_quantity).toLocaleString('pt-BR')}</b></td><td>{Number(p.min_stock).toLocaleString('pt-BR')}</td><td>{Number(p.stock_quantity)<=Number(p.min_stock)?<span className="company-low-stock"><AlertTriangle size={13}/> Estoque baixo</span>:<span className="company-stock-ok">Normal</span>}</td></tr>)}
+      <div className="company-table-wrap"><table><thead><tr><th>PRODUTO</th><th>SKU</th><th>CUSTO</th><th>VENDA</th><th>ESTOQUE</th><th>MÍNIMO</th><th>SITUAÇÃO</th><th>AÇÃO</th></tr></thead><tbody>
+        {products.map(p=><tr key={p.id}><td><b>{p.name}</b><small>{p.description||'—'}</small></td><td>{p.sku||'—'}</td><td>{money(p.cost_price)}</td><td>{money(p.sale_price)}</td><td><b>{Number(p.stock_quantity).toLocaleString('pt-BR')}</b></td><td>{Number(p.min_stock).toLocaleString('pt-BR')}</td><td>{Number(p.stock_quantity)<=Number(p.min_stock)?<span className="company-low-stock"><AlertTriangle size={13}/> Estoque baixo</span>:<span className="company-stock-ok">Normal</span>}</td><td><button className="company-secondary company-small-action" onClick={()=>{setMovementProduct(p);setMovement({type:'in',quantity:'1',unitCost:String(p.cost_price||0),reason:''})}}>Movimentar</button></td></tr>)}
       </tbody></table></div>}
-    <p className="company-inventory-note">O cadastro inicia com saldo zero. Entradas, saídas e transferências serão liberadas após a rotina transacional de movimentação estar pronta.</p>
+    <p className="company-inventory-note">Entradas, saídas e ajustes de saldo são registrados de forma transacional e ficam no histórico do banco. O saldo mostrado é consolidado por empresa; a filial informada no histórico ainda não mantém saldo separado por filial.</p>
   </section>
 }
