@@ -7,6 +7,8 @@ const methods=[['pix','PIX'],['cash','Dinheiro'],['debit_card','Cartão de débi
 export default function CompanyCashPanel({company}:{company:Company}){
  const [rows,setRows]=useState<CashTransaction[]>([]),[branches,setBranches]=useState<CompanyBranch[]>([]),[sessions,setSessions]=useState<CashSession[]>([])
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[show,setShow]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('')
+ useEffect(()=>{if(!notice)return;const timer=window.setTimeout(()=>setNotice(''),5000);return()=>window.clearTimeout(timer)},[notice])
+ useEffect(()=>{if(!error)return;const timer=window.setTimeout(()=>setError(''),8000);return()=>window.clearTimeout(timer)},[error])
  const [direction,setDirection]=useState<'in'|'out'>('in'),[branchId,setBranchId]=useState(''),[openingAmount,setOpeningAmount]=useState('0'),[closingAmounts,setClosingAmounts]=useState<Record<string,string>>({}),[cashNotes,setCashNotes]=useState(''),[cashBusy,setCashBusy]=useState(false),[category,setCategory]=useState('Serviços'),[description,setDescription]=useState(''),[amount,setAmount]=useState(''),[method,setMethod]=useState('pix')
  const load=useCallback(async()=>{setLoading(true);setError('');try{const [r,b,s]=await Promise.all([listCompanyCashTransactions(company.id),listCompanyBranches(company.id),listCompanyCashSessions(company.id)]);setRows(r);setBranches(b);setSessions(s)}catch(e){setError(e instanceof Error?e.message:'Erro ao carregar fluxo de caixa.')}finally{setLoading(false)}},[company.id])
  useEffect(()=>{void load()},[load])
