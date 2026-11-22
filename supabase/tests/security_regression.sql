@@ -1,5 +1,5 @@
 -- Edertec OS Pro - database security regression checks
--- Run in Supabase SQL Editor only after applying migrations 0001 through 0015.
+-- Run in Supabase SQL Editor only after applying migrations 0001 through 0016.
 -- These checks validate critical policies and triggers; they do not replace
 -- end-to-end tests with separate authenticated users and organizations.
 
@@ -12,7 +12,8 @@ begin
   foreach required_table in array array[
     'customers','devices','service_orders','branches','inventory_items',
     'branch_inventory','stock_movements','financial_categories',
-    'financial_entries','sales','sale_items'
+    'financial_entries','sales','sale_items','service_order_events',
+    'service_catalog','service_order_lines'
   ] loop
     if not exists (
       select 1 from pg_class c
@@ -50,7 +51,10 @@ begin
     'branch_inventory_prevent_tenant_key_changes',
     'sales_prevent_tenant_key_changes',
     'sale_items_prevent_tenant_key_changes',
-    'stock_movements_prevent_tenant_key_changes'
+    'stock_movements_prevent_tenant_key_changes',
+    'service_order_events_prevent_reassignment',
+    'service_order_lines_prevent_reassignment',
+    'service_catalog_prevent_tenant_key_changes'
   ] loop
     if not exists (
       select 1 from pg_trigger t
@@ -83,6 +87,6 @@ begin
     raise exception 'Security regression checks failed: %', array_to_string(missing, '; ');
   end if;
 
-  raise notice 'Security regression checks passed for migrations 0001-0015.';
+  raise notice 'Security regression checks passed for migrations 0001-0016.';
 end;
 $$;
