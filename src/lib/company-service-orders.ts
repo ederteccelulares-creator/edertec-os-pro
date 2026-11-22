@@ -79,8 +79,8 @@ export async function listCompanyServiceOrders(
       reported_issue,intake_condition,included_accessories,diagnosis,status,
       priority,estimated_price,final_price,received_at,promised_at,delivered_at,
       notes,created_at,updated_at,
-      customers(id,name,phone),
-      employees(id,name)
+      customers!service_orders_customer_id_fkey(id,name,phone),
+      employees!service_orders_assigned_employee_id_fkey(id,name)
     `)
     .eq('company_id', filters.companyId)
     .order('received_at', { ascending: false })
