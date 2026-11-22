@@ -189,14 +189,26 @@ returns trigger language plpgsql security definer set search_path=public
 as $$
 declare user_limit integer; current_count bigint;
 begin
-  if new.active and (tg_op='INSERT' or not old.active or old.organization_id<>new.organization_id) then
+  if tg_op='INSERT' then
+    if new.active then
+      select p.max_users into user_limit from public.subscriptions s
+        left join public.plans p on p.id=s.plan_id
+        where s.organization_id=new.organization_id for update of s;
+      if not found then raise exception 'Organization subscription not found'; end if;
+      if user_limit is not null then
+        select count(*) into current_count from public.organization_members m
+          where m.organization_id=new.organization_id and m.active;
+        if current_count>=user_limit then raise exception 'User limit reached for the current plan'; end if;
+      end if;
+    end if;
+  elsif tg_op='UPDATE' and new.active and (not old.active or old.organization_id<>new.organization_id) then
     select p.max_users into user_limit from public.subscriptions s
-      left join public.plans p on p.id=s.plan_id where s.organization_id=new.organization_id;
+      left join public.plans p on p.id=s.plan_id
+      where s.organization_id=new.organization_id for update of s;
     if not found then raise exception 'Organization subscription not found'; end if;
     if user_limit is not null then
       select count(*) into current_count from public.organization_members m
-        where m.organization_id=new.organization_id and m.active
-          and (tg_op='INSERT' or m.id<>new.id);
+        where m.organization_id=new.organization_id and m.active and m.id<>new.id;
       if current_count>=user_limit then raise exception 'User limit reached for the current plan'; end if;
     end if;
   end if;
@@ -209,14 +221,26 @@ returns trigger language plpgsql security definer set search_path=public
 as $$
 declare branch_limit integer; current_count bigint;
 begin
-  if new.active and (tg_op='INSERT' or not old.active or old.organization_id<>new.organization_id) then
+  if tg_op='INSERT' then
+    if new.active then
+      select p.max_branches into branch_limit from public.subscriptions s
+        left join public.plans p on p.id=s.plan_id
+        where s.organization_id=new.organization_id for update of s;
+      if not found then raise exception 'Organization subscription not found'; end if;
+      if branch_limit is not null then
+        select count(*) into current_count from public.branches b
+          where b.organization_id=new.organization_id and b.active;
+        if current_count>=branch_limit then raise exception 'Branch limit reached for the current plan'; end if;
+      end if;
+    end if;
+  elsif tg_op='UPDATE' and new.active and (not old.active or old.organization_id<>new.organization_id) then
     select p.max_branches into branch_limit from public.subscriptions s
-      left join public.plans p on p.id=s.plan_id where s.organization_id=new.organization_id;
+      left join public.plans p on p.id=s.plan_id
+      where s.organization_id=new.organization_id for update of s;
     if not found then raise exception 'Organization subscription not found'; end if;
     if branch_limit is not null then
       select count(*) into current_count from public.branches b
-        where b.organization_id=new.organization_id and b.active
-          and (tg_op='INSERT' or b.id<>new.id);
+        where b.organization_id=new.organization_id and b.active and b.id<>new.id;
       if current_count>=branch_limit then raise exception 'Branch limit reached for the current plan'; end if;
     end if;
   end if;
