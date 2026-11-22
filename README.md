@@ -101,3 +101,8 @@ A migração `0014_tenant_record_immutability.sql` impede mover clientes entre e
 ## Proteção das chaves operacionais multiempresa
 
 A migração `0015_operational_tenant_key_hardening.sql` torna imutáveis os IDs e vínculos de organização das filiais, produtos, categorias e lançamentos financeiros, estoque, vendas e itens vendidos. Também impede reatribuir um registro de estoque a outra filial ou produto. Campos operacionais editáveis continuam sujeitos às permissões existentes.
+
+
+## Verificação de segurança do banco
+
+Depois de aplicar todas as migrações `0001` a `0015` em um projeto Supabase de teste, execute `supabase/tests/security_regression.sql` no SQL Editor. O script verifica se as tabelas operacionais mantêm RLS, se a gravação direta de OS foi removida, se os triggers de imutabilidade estão instalados e se as políticas de privacidade de vendas existem. Esse teste estrutural não substitui testes de integração com duas empresas e usuários autenticados com funções diferentes.
