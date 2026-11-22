@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Building2, ClipboardList, LogOut, Plus, RefreshCw, Smartphone, Users } from 'lucide-react'
-import { createServiceOrder, listBranches, listCustomers, listServiceOrderEvents, listServiceOrders, saveCustomer, saveDevice, updateServiceOrderStatus } from '../lib/tenant-data'
+import { createServiceOrderWithDevice, listBranches, listCustomers, listServiceOrderEvents, listServiceOrders, saveCustomer, updateServiceOrderStatus } from '../lib/tenant-data'
 import type { Organization, Branch } from '../lib/supabase'
 import type { ServiceOrderStatus } from '../lib/tenant-data'
 
@@ -72,11 +72,10 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
       const context = { organizationId: organization.id, branchId }
       const savedCustomer = customers.find(item => item.id === order.customerId)
       if (!savedCustomer) throw new Error('Selecione um cliente cadastrado.')
-      const device = await saveDevice(context, { customerId: savedCustomer.id, brand: order.brand, model: order.model, imei: order.imei })
-      await createServiceOrder(context, {
-        customerId: savedCustomer.id, deviceId: device.id, reportedIssue: order.issue,
-        estimatedAmount: Number(order.amount || 0), accessories: order.accessories,
-        physicalCondition: order.condition,
+      await createServiceOrderWithDevice(context, {
+        customerId: savedCustomer.id, brand: order.brand, model: order.model, imei: order.imei,
+        reportedIssue: order.issue, estimatedAmount: Number(order.amount || 0),
+        accessories: order.accessories, physicalCondition: order.condition,
       })
       setShowOrder(false); setOrder({ customerId: '', brand: 'Apple', model: '', imei: '', issue: '', amount: '0', accessories: '', condition: '' })
       await loadWorkspace()
