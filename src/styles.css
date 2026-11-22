@@ -1300,3 +1300,67 @@ td b { font-weight:650; }
 @keyframes edertec-splash-pulse{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1.15)}}
 @media(max-width:540px){.auth-splash{padding:16px}.auth-splash-image{width:min(94vw,520px);max-height:76dvh}.auth-splash p{font-size:8px;letter-spacing:1.8px}}
 @media(prefers-reduced-motion:reduce){.auth-splash-image,.auth-splash-progress span{animation:none}}
+
+/* Edertec OS Pro — visual refresh: graphite, clean surfaces and restrained brand red */
+.company-app{background:#0b0d11;color:#f1f3f5}
+.company-sidebar{background:#101318;border-right:1px solid #252a31}
+.company-logo>span{background:#252a31;color:#f2f4f7;border:1px solid #3a414a}
+.company-logo i{color:#e14a50}
+.company-current{color:#e7e9ec;border-color:#30363e;background:#15191f}
+.company-sidebar nav button{color:#aeb5bf;border-radius:8px;transition:background .16s,color .16s}
+.company-sidebar nav button:hover{background:#1b2027;color:#fff}
+.company-sidebar nav button.active{background:#2a171a;color:#fff;box-shadow:inset 3px 0 #d83b43}
+.company-user{border-color:#292f37}
+.company-main{background:#0b0d11}
+.company-top{border-bottom:1px solid #20262e;padding-bottom:17px}
+.company-top small{color:#929ba7}
+.company-top h1{color:#f4f5f6;font-weight:650;letter-spacing:-.5px}
+.company-icon-button{background:#171c22;border-color:#303741;color:#e2e6eb}
+.company-icon-button:hover{background:#222831}
+.company-panel,.company-dashboard-recent{background:#13171d;border:1px solid #2a3038;border-radius:12px;box-shadow:0 5px 18px #0002}
+.company-panel-head b{color:#f0f2f4}
+.company-panel-head small,.company-dashboard-subtitle{color:#9aa3ad}
+.company-dashboard-stats{gap:14px}
+.company-dashboard-stats article{background:#14191f;border:1px solid #2c333c;border-radius:12px;box-shadow:none;min-height:132px;padding:18px}
+.company-dashboard-stats article>span{width:46px;height:46px;flex-basis:46px;border-radius:10px}
+.company-dashboard-stats article>span svg{width:22px;height:22px}
+.company-dashboard-stats b{color:#cbd1d8!important;font-size:13px}
+.company-dashboard-stats strong{color:#f5f6f7;font-size:29px}
+.company-dashboard-stats small{color:#8e98a4}
+.company-dashboard-stats .pink{border-color:#393137;box-shadow:none}
+.company-dashboard-stats .pink>span{background:#54252a;color:#ffb9bc}
+.company-dashboard-stats .pink b{color:#e7a4a7!important}
+.company-dashboard-stats .blue{border-color:#303a48;box-shadow:none}
+.company-dashboard-stats .blue>span{background:#20364c;color:#9cc9f2}
+.company-dashboard-stats .green{border-color:#2c4038;box-shadow:none}
+.company-dashboard-stats .green>span{background:#1d3b30;color:#8ed9b7}
+.company-dashboard-stats .orange{border-color:#44392b;box-shadow:none}
+.company-dashboard-stats .orange>span{background:#46351f;color:#f0c27c}
+.company-dashboard-recent{padding:19px}
+.company-dashboard-order{border-color:#282f37}
+.company-dashboard-order>span{color:#ef777c}
+.company-dashboard-order em{color:#e7b3b5;background:#352125}
+.company-text-link{color:#e47c80}
+.company-primary{background:#b92e36!important;color:#fff!important;border:1px solid #c43b43!important;box-shadow:none!important}
+.company-primary:hover{background:#cf3942!important}
+.company-form{background:#10151b;border-color:#303741}
+.company-form input,.company-form select,.company-form textarea{background:#0c1015;border-color:#333b45;color:#f0f2f4}
+.company-error-banner{background:#321d20;color:#f1b5b8}
+.company-notice-banner{background:#1b3028;color:#a8dfc2}
+.company-mobilebar{background:#101419;border-bottom:1px solid #292f37}
+.company-mobilebar b{color:#f4f5f6}
+.company-mobilebar i{color:#e14a50}
+.company-mobile-avatar{background:#2b1a1d;color:#f3b9bc}
+.company-drawer-scrim.visible{background:#0009}
+@media(max-width:760px){
+ .company-main{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+ .company-top{border-bottom:1px solid #252b33}
+ .company-dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .company-dashboard-stats article{min-height:112px;padding:12px;gap:10px}
+ .company-dashboard-stats article>span{width:36px;height:36px;flex-basis:36px;border-radius:9px}
+ .company-dashboard-stats article>span svg{width:18px;height:18px}
+ .company-dashboard-stats strong{font-size:23px}
+ .company-dashboard-stats b{font-size:11px}
+ .company-dashboard-stats small{font-size:10px}
+ .company-dashboard-recent{padding:14px}
+}
