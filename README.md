@@ -109,3 +109,24 @@ Depois de aplicar todas as migrações `0001` a `0015` em um projeto Supabase de
 
 
 O roteiro `supabase/tests/tenant_isolation_manual.md` descreve os cenários de homologação com duas empresas e usuários proprietários, atendentes e técnicos. Execute-o em um projeto Supabase separado, com dados fictícios, e guarde as evidências antes de liberar o sistema.
+
+
+## Backup por empresa (exportação JSON)
+
+A Edge Function `export-organization` gera um arquivo JSON com os dados operacionais de uma única empresa. O acesso exige sessão JWT válida e associação ativa com papel `owner` ou `admin`; a função valida a permissão no banco antes de consultar os dados. A chave `SUPABASE_SERVICE_ROLE_KEY` é usada somente no ambiente da Edge Function e nunca no navegador.
+
+Depois de aplicar as migrações e publicar a função:
+
+```bash
+supabase functions deploy export-organization
+```
+
+A chamada deve ser feita com método POST, token Bearer do usuário autenticado e corpo JSON:
+
+```json
+{ "organization_id": "UUID-DA-EMPRESA" }
+```
+
+A resposta é o arquivo JSON de backup. Guarde-o em local privado e criptografado, pois contém dados pessoais e comerciais. Não compartilhe o arquivo publicamente.
+
+**Limitações desta versão:** exporta até 10.000 registros por tabela e não inclui credenciais, contas de autenticação, convites pendentes, assinaturas ou dados globais da plataforma. Ainda não há restauração automática pelo painel. Para restaurar, use procedimento assistido em ambiente separado, validando relações, IDs e usuários antes de qualquer importação. Não importe o arquivo diretamente em produção.
