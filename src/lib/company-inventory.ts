@@ -71,6 +71,10 @@ export async function createCompanyProduct(input: {
 }) {
   const name = input.name.trim()
   if (!name) throw new Error('Informe o nome do produto.')
+  if (input.imageFile) {
+    if (!['image/jpeg','image/png','image/webp'].includes(input.imageFile.type)) throw new Error('A foto deve estar em JPG, PNG ou WebP.')
+    if (input.imageFile.size > 5 * 1024 * 1024) throw new Error('A foto deve ter no máximo 5 MB.')
+  }
   const costPrice = Number(input.costPrice ?? 0)
   const salePrice = Number(input.salePrice ?? 0)
   const minimumStock = Number(input.minimumStock ?? 0)
