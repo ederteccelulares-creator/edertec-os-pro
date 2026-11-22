@@ -335,8 +335,8 @@ begin
   execute 'select max(order_number) from public.service_orders'
     into max_identity;
   if identity_sequence is not null then
-    if max_identity is null then perform setval(identity_sequence,1,false);
-    else perform setval(identity_sequence,max_identity,true); end if;
+    if max_identity is null then perform setval(identity_sequence::regclass,1,false);
+    else perform setval(identity_sequence::regclass,max_identity,true); end if;
   end if;
 
   identity_sequence := pg_get_serial_sequence('public.sales','sale_number');
