@@ -160,3 +160,9 @@ A prévia de ocupação do destino continua sendo somente leitura. A existência
 A etapa de pré-validação de identidade também aceita o rascunho de associações e confere no servidor se todos os IDs de origem foram cobertos, se cada destino é membro ativo da empresa e se não há associações duplicadas ou IDs de origem desconhecidos. O resultado é informativo e não persiste o mapeamento nem executa a restauração.
 
 A prévia também identifica as filiais do backup, seus códigos e nomes, e contabiliza referências em OS, estoque, movimentações, financeiro, vendas e linhas de serviços. O administrador pode associar cada filial de origem a uma filial ativa do destino; o servidor verifica cobertura completa, existência, situação ativa, IDs desconhecidos e associações duplicadas. Essa validação é somente leitura e não reescreve os IDs nas tabelas relacionadas. O relatório retorna `restore_ready: false` e `restore_blockers`; a importação transacional e a substituição dos IDs relacionados ainda não existem.
+
+
+
+## Projeto técnico de restauração segura
+
+O plano `supabase/docs/backup-restore-implementation-plan.md` documenta a ordem de dependências, os campos que exigem remapeamento de filiais e usuários, colisões de chaves únicas, colunas identity e os requisitos de transação/rollback. É documentação de implementação, não uma rotina de restauração. A função de validação permanece somente leitura e `restore_ready` permanece `false`.
