@@ -31,7 +31,7 @@ Plataforma SaaS de gestão para assistências técnicas de celulares, preparada 
 
 ## Configurar o banco e autenticação
 1. Crie um projeto no [Supabase](https://supabase.com/dashboard).
-2. No SQL Editor do projeto, execute os arquivos em ordem: `supabase/migrations/0001_saas_core.sql`, `supabase/migrations/0002_order_workflow_security.sql` e `supabase/migrations/0003_role_access_atomic_order.sql` e `supabase/migrations/0004_inventory_module.sql` e `supabase/migrations/0005_financial_module.sql` e `supabase/migrations/0006_sales_module.sql` e `supabase/migrations/0007_team_management.sql` e `supabase/migrations/0008_service_catalog.sql` e `supabase/migrations/0009_platform_admin.sql` e `supabase/migrations/0010_team_invitations.sql` e `supabase/migrations/0011_membership_write_hardening.sql` e `supabase/migrations/0012_sales_pricing_and_privacy.sql` e `supabase/migrations/0013_service_order_write_hardening.sql` e `supabase/migrations/0014_tenant_record_immutability.sql` e `supabase/migrations/0015_operational_tenant_key_hardening.sql` e `supabase/migrations/0016_service_history_integrity.sql` e `supabase/migrations/0017_service_order_technician_assignment.sql`.
+2. No SQL Editor do projeto, execute os arquivos em ordem: `supabase/migrations/0001_saas_core.sql`, `supabase/migrations/0002_order_workflow_security.sql` e `supabase/migrations/0003_role_access_atomic_order.sql` e `supabase/migrations/0004_inventory_module.sql` e `supabase/migrations/0005_financial_module.sql` e `supabase/migrations/0006_sales_module.sql` e `supabase/migrations/0007_team_management.sql` e `supabase/migrations/0008_service_catalog.sql` e `supabase/migrations/0009_platform_admin.sql` e `supabase/migrations/0010_team_invitations.sql` e `supabase/migrations/0011_membership_write_hardening.sql` e `supabase/migrations/0012_sales_pricing_and_privacy.sql` e `supabase/migrations/0013_service_order_write_hardening.sql` e `supabase/migrations/0014_tenant_record_immutability.sql` e `supabase/migrations/0015_operational_tenant_key_hardening.sql` e `supabase/migrations/0016_service_history_integrity.sql` e `supabase/migrations/0017_service_order_technician_assignment.sql` e `supabase/migrations/0018_transactional_backup_restore.sql`.
 3. Copie `.env.example` para `.env.local`.
 4. Preencha:
    - `VITE_SUPABASE_URL`: Project URL.
@@ -186,3 +186,18 @@ O workflow também cria duas empresas e três usuários sintéticos (proprietár
 ## Atribuição de técnico nas ordens de serviço
 
 A migração `0017_service_order_technician_assignment.sql` adiciona a atribuição e remoção de técnico responsável diretamente na lista de OS. Proprietários, administradores e gerentes podem selecionar apenas membros ativos com função de técnico na mesma empresa. A alteração é feita por RPC transacional, registra auditoria e bloqueia reatribuição em ordens entregues ou canceladas. Técnicos continuam podendo atualizar o status somente das ordens atribuídas a eles. A interface mostra o controle para perfis autorizados.
+
+
+## Restauração transacional de backup (primeira versão)
+
+A migração `0018_transactional_backup_restore.sql` adiciona uma rotina de restauração em uma única transação PostgreSQL e a Edge Function autenticada `restore-organization-backup`. A função exige proprietário ou administrador ativo, revalida o vínculo e os mapeamentos no banco, trava a organização durante a operação, remapeia referências de filiais e usuários, preserva snapshots e números identity, atualiza sequências e grava auditoria. Uma falha em qualquer inserção desfaz toda a operação. A chave de idempotência impede repetir acidentalmente a mesma restauração.
+
+**Limite deliberado da primeira versão:** só restaura para a mesma organização lógica (mesmo UUID), com todas as tabelas operacionais vazias. As filiais de origem devem ser associadas individualmente a filiais ativas já existentes no destino; os usuários de origem devem ser associados a membros ativos diferentes. Não há mesclagem, criação automática de filiais nem sobrescrita. A tabela `branches` existente no onboarding é reutilizada, não importada. Os registros de auditoria operacionais precisam estar vazios para evitar colisões de identidade.
+
+Publique a função após aplicar as migrações:
+
+```bash
+supabase functions deploy restore-organization-backup
+```
+
+A interface ainda deve apresentar confirmação explícita, resumo do destino e resultado da operação. Até a conclusão dos testes de sucesso, rollback, repetição e isolamento em PostgreSQL descartável e homologação Supabase real, não use a restauração com dados reais.
