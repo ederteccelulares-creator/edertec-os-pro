@@ -35,7 +35,27 @@ export type CompanyServiceOrder = {
   employees?: { id: string; name: string } | null
 }
 
-const statusToDatabase: Record<string, string> = {\n  received: 'received',\n  diagnosing: 'diagnosis',\n  diagnosis: 'diagnosis',\n  waiting_approval: 'waiting_approval',\n  approved: 'approved',\n  waiting_parts: 'waiting_parts',\n  repairing: 'in_repair',\n  in_repair: 'in_repair',\n  ready: 'ready',\n  delivered: 'delivered',\n  cancelled: 'cancelled',\n}\n\nfunction toDatabaseStatus(status: string) {\n  const normalized = statusToDatabase[status]\n  if (!normalized) throw new Error('Status de ordem de serviço inválido.')\n  return normalized\n}\n\nexport type ServiceOrderListFilters = {
+const statusToDatabase: Record<string, string> = {
+  received: 'received',
+  diagnosing: 'diagnosis',
+  diagnosis: 'diagnosis',
+  waiting_approval: 'waiting_approval',
+  approved: 'approved',
+  waiting_parts: 'waiting_parts',
+  repairing: 'in_repair',
+  in_repair: 'in_repair',
+  ready: 'ready',
+  delivered: 'delivered',
+  cancelled: 'cancelled',
+}
+
+function toDatabaseStatus(status: string) {
+  const normalized = statusToDatabase[status]
+  if (!normalized) throw new Error('Status de ordem de serviço inválido.')
+  return normalized
+}
+
+export type ServiceOrderListFilters = {
   companyId: string
   branchId?: string | null
   status?: string | null
