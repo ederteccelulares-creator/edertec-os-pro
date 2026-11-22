@@ -9,7 +9,9 @@ INSERT INTO auth.users (id,email) VALUES
   ('20000000-0000-4000-8000-000000000002','tenant-b@example.invalid');
 
 GRANT USAGE ON SCHEMA public TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
+-- Grant only what this smoke test needs; do not override migration revokes.
+GRANT SELECT ON public.organization_members, public.branches TO authenticated;
+GRANT SELECT, INSERT ON public.customers, public.devices TO authenticated;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 
 SET ROLE authenticated;
