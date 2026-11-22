@@ -71,6 +71,10 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/edertec_test
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/tenant_isolation_rls.sql
+      - name: Run company backup export security tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/edertec_test
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/tests/company_backup_export.sql
       - name: Run transactional backup restore tests
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/edertec_test
