@@ -391,3 +391,15 @@
 .company-purchase-totals b{color:#f2f5fa}
 .company-small-action{display:inline-flex;align-items:center;gap:6px}
 @media(max-width:760px){.company-purchase-line{grid-template-columns:1fr 1fr}.company-purchase-line label:nth-child(1),.company-purchase-line label:nth-child(2){grid-column:1/-1}.company-purchase-totals{justify-content:space-between}}
+
+
+.company-cash-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0 22px}
+.company-cash-stats article{display:grid;grid-template-columns:auto 1fr;align-items:center;column-gap:9px;row-gap:5px;padding:15px;border:1px solid #303b4d;border-radius:10px;background:#0e1520}
+.company-cash-stats svg{grid-row:span 2;color:#d9b064}
+.company-cash-stats small{color:#98a5b8;font-size:11px}
+.company-cash-stats b{font-size:18px}
+.company-cash-history{margin-top:22px}
+.company-cash-description{grid-column:1/-1}
+.cash-in{color:#8ce0b1!important;font-weight:700}
+.cash-out{color:#ffadad!important;font-weight:700}
+@media(max-width:760px){.company-cash-stats{grid-template-columns:1fr}.company-cash-stats article{grid-template-columns:auto 1fr}.company-cash-stats b{font-size:16px}}
