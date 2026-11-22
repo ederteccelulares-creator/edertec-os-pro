@@ -44,21 +44,21 @@ begin
     'id','a8000000-0000-4000-8000-000000000001',
     'company_id','a3000000-0000-4000-8000-000000000001',
     'branch_id','a5000000-0000-4000-8000-000000000001',
-    'name','Cliente restaurado','phone','47999990000','address','{}'::jsonb
+    'name','Cliente restaurado','phone','47999990000','address','{}'::jsonb,'created_at',now(),'updated_at',now()
    )),
    'employees','[]'::jsonb,
    'service_catalog','[]'::jsonb,
    'products',jsonb_build_array(jsonb_build_object(
     'id','a9000000-0000-4000-8000-000000000001',
     'company_id','a3000000-0000-4000-8000-000000000001',
-    'name','Tela de teste','cost_price',50,'sale_price',100,'stock_quantity',4
+    'name','Tela de teste','cost_price',50,'sale_price',100,'stock_quantity',4,'created_at',now(),'updated_at',now()
    )),
    'service_orders',jsonb_build_array(jsonb_build_object(
     'id','aa000000-0000-4000-8000-000000000001',
     'company_id','a3000000-0000-4000-8000-000000000001',
     'branch_id','a5000000-0000-4000-8000-000000000001',
     'customer_id','a8000000-0000-4000-8000-000000000001',
-    'order_number',777,'reported_issue','Tela quebrada','estimated_price',150
+    'order_number',777,'reported_issue','Tela quebrada','estimated_price',150,'final_price',150,'status','received','priority','normal','received_at',now(),'created_at',now(),'updated_at',now()
    )),
    'service_order_items',jsonb_build_array(jsonb_build_object(
     'id','ab000000-0000-4000-8000-000000000001',
@@ -123,7 +123,7 @@ begin
    )),
    'customers',jsonb_build_array(jsonb_build_object(
     'id','ac000000-0000-4000-8000-000000000001',
-    'company_id','a4000000-0000-4000-8000-000000000002','name','Cliente temporário','address','{}'::jsonb
+    'company_id','a4000000-0000-4000-8000-000000000002','name','Cliente temporário','address','{}'::jsonb,'created_at',now(),'updated_at',now()
    )),
    'employees','[]'::jsonb,'service_catalog','[]'::jsonb,'products','[]'::jsonb,
    'service_orders',jsonb_build_array(jsonb_build_object(
