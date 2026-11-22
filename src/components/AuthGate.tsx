@@ -7,6 +7,7 @@ import SuperAdminWorkspace from './SuperAdminWorkspace'
 import CustomerPortal from './CustomerPortal'
 import { isPlatformAdmin } from '../lib/tenant-data'
 import { isSupabaseConfigured, supabase, type Organization, type OrganizationRole } from '../lib/supabase'
+import splashBase64 from '../assets/edertec-os-pro-splash.b64?raw'
 
 type Membership = {
   organization_id: string
@@ -86,9 +87,12 @@ export default function AuthGate() {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession)
       if (!nextSession) {
+        setLoading(false)
         setMemberships([]); setSelectedOrg(null); setPlatformAdmin(false)
       } else {
+        setLoading(true)
         window.setTimeout(async () => {
+          const minimumSplash = new Promise(resolve => window.setTimeout(resolve, 900))
           try {
             const isAdmin = await isPlatformAdmin()
             setPlatformAdmin(isAdmin)
@@ -98,6 +102,9 @@ export default function AuthGate() {
             setPlatformAdmin(false)
             try { await loadMemberships(nextSession.user.id) }
             catch (e) { setError(e instanceof Error ? e.message : 'Erro ao carregar empresas.') }
+          } finally {
+            await minimumSplash
+            setLoading(false)
           }
         }, 0)
       }
@@ -108,7 +115,11 @@ export default function AuthGate() {
   if (portalToken) return <CustomerPortal token={portalToken} />
   if (!isSupabaseConfigured || !supabase) return <SetupRequired />
   const db = supabase
-  if (loading) return <main className="auth-page"><div className="auth-loading"><LoaderCircle className="spin" size={25}/> Verificando acesso seguro...</div></main>
+  if (loading) return <main className="auth-splash" aria-label="Carregando Edertec OS Pro">
+    <img className="auth-splash-image" src={'data:image/jpeg;base64,' + splashBase64.trim()} alt="Edertec OS Pro" />
+    <div className="auth-splash-progress"><span/><span/><span/></div>
+    <p>PREPARANDO SEU AMBIENTE DE TRABALHO</p>
+  </main>
 
   const submitAuth = async (event: FormEvent) => {
     event.preventDefault(); setBusy(true); setError(''); setNotice('')
