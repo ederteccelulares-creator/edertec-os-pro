@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Build application
-        run: npm run build
+        run: npm run build -- --base=/edertec-os-pro/
         env:
           VITE_SUPABASE_URL: https://btouoeftgatyrvuobicr.supabase.co
           VITE_SUPABASE_ANON_KEY: sb_publishable_Ve97MvIsk4cVBwcrL03JCQ_SAMzQ-CN
