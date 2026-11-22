@@ -914,3 +914,15 @@ td b { font-weight:650; }
   .company-top-actions { display:flex!important;justify-content:flex-end!important;width:100%!important; }
   .company-top-actions .company-icon-button { width:46px!important;height:44px!important; }
 }
+
+
+.company-form input[type="search"] { width:100%; }
+.company-search-empty { display:block;color:#ff9acb;font-size:12px;margin-top:-7px; }
+.company-small-action { display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap; }
+@media(max-width:760px) {
+  .company-table-wrap table { min-width:900px; }
+  .company-small-action { min-height:36px;padding:7px 9px;font-size:11px; }
+}
+@media print {
+  .company-app,.company-modal-backdrop { display:none!important; }
+}
