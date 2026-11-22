@@ -85,6 +85,58 @@ Deno.serve(async (req) => {
     if (errors.length >= 30) break;
   }
 
+  const idSets = new Map<string, Set<string>>();
+  for (const table of TABLES) {
+    const rows = Array.isArray(tables[table]) ? tables[table] as Array<Record<string, unknown>> : [];
+    idSets.set(table, new Set(rows.map(row => String(row?.id ?? ""))));
+  }
+
+  const references: Array<[string, string, string, boolean]> = [
+    ["devices", "customer_id", "customers", false],
+    ["service_orders", "branch_id", "branches", false],
+    ["service_orders", "customer_id", "customers", false],
+    ["service_orders", "device_id", "devices", true],
+    ["service_order_events", "service_order_id", "service_orders", false],
+    ["branch_inventory", "branch_id", "branches", false],
+    ["branch_inventory", "item_id", "inventory_items", false],
+    ["stock_movements", "branch_id", "branches", false],
+    ["stock_movements", "item_id", "inventory_items", false],
+    ["financial_entries", "branch_id", "branches", false],
+    ["financial_entries", "category_id", "financial_categories", true],
+    ["sales", "branch_id", "branches", false],
+    ["sales", "customer_id", "customers", true],
+    ["sale_items", "sale_id", "sales", false],
+    ["sale_items", "item_id", "inventory_items", false],
+    ["service_order_lines", "branch_id", "branches", false],
+    ["service_order_lines", "service_order_id", "service_orders", false],
+    ["service_order_lines", "service_id", "service_catalog", true],
+  ];
+
+  for (const [sourceTable, field, targetTable, optional] of references) {
+    const rows = Array.isArray(tables[sourceTable]) ? tables[sourceTable] as Array<Record<string, unknown>> : [];
+    const targetIds = idSets.get(targetTable) ?? new Set<string>();
+    for (let index = 0; index < rows.length; index++) {
+      const value = rows[index]?.[field];
+      if ((value === null || value === undefined || value === "") && optional) continue;
+      if (typeof value !== "string" || !targetIds.has(value)) {
+        errors.push(sourceTable + "[" + index + "]." + field + " não referencia um registro válido em " + targetTable + ".");
+        if (errors.length >= 50) break;
+      }
+    }
+    if (errors.length >= 50) break;
+  }
+
+  const authReferences = [
+    ["service_orders", "technician_id"], ["service_orders", "opened_by"],
+    ["service_order_events", "changed_by"], ["financial_entries", "created_by"],
+    ["sales", "sold_by"], ["service_order_lines", "created_by"],
+    ["stock_movements", "actor_id"], ["audit_logs", "actor_id"],
+  ] as const;
+  const requiresUserMapping = authReferences.some(([table, field]) => {
+    const rows = Array.isArray(tables[table]) ? tables[table] as Array<Record<string, unknown>> : [];
+    return rows.some(row => row?.[field] !== null && row?.[field] !== undefined);
+  });
+
   const unknownTables = Object.keys(tables).filter(name => !TABLES.includes(name as typeof TABLES[number]));
   if (unknownTables.length) errors.push("O arquivo contém tabelas não reconhecidas: " + unknownTables.join(", "));
   const totalRecords = Object.values(counts).reduce((sum, count) => sum + count, 0);
@@ -98,6 +150,7 @@ Deno.serve(async (req) => {
     exported_at: backup.exported_at ?? null,
     total_records: totalRecords,
     counts,
+    requires_user_mapping: requiresUserMapping,
     errors,
   });
 });
