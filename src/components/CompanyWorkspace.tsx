@@ -31,6 +31,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   const [logoPreview,setLogoPreview] = useState(company.logo_url||'')
   const [companyForm,setCompanyForm] = useState({name:companyInfo.name,legalName:company.legal_name||'',taxId:company.tax_id||'',email:company.email||'',phone:company.phone||''})
   const [printFormat,setPrintFormat] = useState<'a4'|'thermal80'>(() => { try { return localStorage.getItem('edertec-os-print-format')==='thermal80'?'thermal80':'a4' } catch { return 'a4' } })
+  const [planInfo,setPlanInfo] = useState<{subscription_status:string|null;trial_ends_at:string|null;ends_at:string|null;plan_name:string|null}|null>(null)
   const [branches,setBranches] = useState<CompanyBranch[]>([])
   const [branchId,setBranchId] = useState('')
   const [customers,setCustomers] = useState<CompanyCustomer[]>([])
@@ -71,6 +72,24 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   },[company.id,branchId])
 
   useEffect(()=>{void load()},[load])
+
+  useEffect(()=>{
+    let alive=true
+    if(!supabase){setPlanInfo(null);return}
+    supabase.rpc('get_company_access_status',{target_company_id:company.id}).then(({data,error})=>{
+      if(!alive)return
+      if(error){setPlanInfo(null);return}
+      const row=Array.isArray(data)?data[0]:data
+      setPlanInfo(row?{subscription_status:row.subscription_status??null,trial_ends_at:row.trial_ends_at??null,ends_at:row.ends_at??null,plan_name:row.plan_name??null}:null)
+    })
+    return ()=>{alive=false}
+  },[company.id])
+
+  const planEndDate=planInfo?.subscription_status==='trial'?planInfo.trial_ends_at:planInfo?.ends_at
+  const planEndLabel=planEndDate?new Date(planEndDate).toLocaleDateString('pt-BR'):'Não informado'
+  const planDaysLeft=planEndDate?Math.max(0,Math.ceil((new Date(planEndDate).getTime()-Date.now())/86400000)):null
+  const planStatusLabel=planInfo?.subscription_status==='trial'?'Período de teste':planInfo?.subscription_status==='active'?'Plano ativo':planInfo?.subscription_status==='cancelled'?'Cancelado':planInfo?.subscription_status==='expired'?'Expirado':'Plano'
+
 
 
   async function saveCompanyDetails(event:FormEvent) {
@@ -262,7 +281,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
     </aside>
     <main className="company-main">
       <div className="company-mobilebar"><button onClick={()=>setMenuOpen(true)} aria-label="Abrir menu"><Menu/></button><div><b>EDERTEC <i>OS PRO</i></b><small>{companyInfo.name}</small></div><span className="company-mobile-avatar">{(email[0]||'U').toUpperCase()}</span></div>
-      <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='backup'?'Backup de dados':tab==='settings'?'Configurações':tab==='team'?'Funcionários e usuários':tab==='customerPortal'?'Compartilhar Área do Cliente':tab==='support'?'Suporte e chamados':tab==='pos'?'PDV / Vendas':'Financeiro'}</h1></div><div className="company-top-actions"><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
+      <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='backup'?'Backup de dados':tab==='settings'?'Configurações':tab==='team'?'Funcionários e usuários':tab==='customerPortal'?'Compartilhar Área do Cliente':tab==='support'?'Suporte e chamados':tab==='pos'?'PDV / Vendas':'Financeiro'}</h1></div><div className="company-top-actions"><div className="company-plan-period"><b>{planInfo?.plan_name||'Plano não identificado'}</b><span>{planStatusLabel} · até {planEndLabel}</span>{planDaysLeft!==null&&<small>{planDaysLeft===0?'Vence hoje':planDaysLeft+' dia(s) restante(s)'}</small>}</div><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
       {tab==='customerPortal'&&<CustomerPortalAdminPanel company={company} customers={customers}/>}
       {tab==='support'&&<CompanySupportPanel companyId={company.id} companyName={company.name}/ >}
       {tab==='team'&&canAdmin&&<CompanyTeamPanel companyId={company.id} actorRole={role}/ >}
