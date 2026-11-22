@@ -31,6 +31,7 @@ export type CompanyServiceOrder = {
   notes: string | null
   created_at: string
   updated_at: string
+  photo_urls?: string[]
   customers?: { id: string; name: string; phone: string | null } | null
   employees?: { id: string; name: string } | null
 }
@@ -101,7 +102,15 @@ export async function listCompanyServiceOrders(
 
   const { data, error } = await query
   if (error) throw error
-  return (data ?? []) as unknown as CompanyServiceOrder[]
+  const orders = (data ?? []) as unknown as CompanyServiceOrder[]
+  return Promise.all(orders.map(async order => {
+    const folder = `${order.company_id}/${order.id}`
+    const { data: files, error: listError } = await db().storage.from('service-order-photos').list(folder, { limit: 30, sortBy: { column: 'created_at', order: 'asc' } })
+    if (listError || !files?.length) return { ...order, photo_urls: [] }
+    const paths = files.filter(file => file.name && !file.name.startsWith('.')).map(file => `${folder}/${file.name}`)
+    const { data: signed } = await db().storage.from('service-order-photos').createSignedUrls(paths, 3600)
+    return { ...order, photo_urls: (signed || []).map(item => item.signedUrl).filter((url): url is string => Boolean(url)) }
+  }))
 }
 
 /**
@@ -143,6 +152,7 @@ export type CreateCompanyServiceOrderInput = {
   estimatedPrice?: number
   promisedAt?: string | null
   notes?: string
+  photos?: File[]
 }
 
 /**
@@ -181,5 +191,25 @@ export async function createCompanyServiceOrder(input: CreateCompanyServiceOrder
     .single()
 
   if (error) throw error
-  return data as CompanyServiceOrder
+  const created = data as CompanyServiceOrder
+  const photos = input.photos || []
+  if (photos.length) {
+    const bucket = db().storage.from('service-order-photos')
+    const uploaded: string[] = []
+    try {
+      for (const file of photos) {
+        if (!['image/jpeg','image/png','image/webp'].includes(file.type)) throw new Error('As fotos devem estar em JPG, PNG ou WebP.')
+        if (file.size > 8 * 1024 * 1024) throw new Error('Cada foto pode ter no máximo 8 MB.')
+        const extension = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg'
+        const path = `${input.companyId}/${created.id}/${crypto.randomUUID()}.${extension}`
+        const { error: uploadError } = await bucket.upload(path, file, { contentType: file.type, cacheControl: '3600' })
+        if (uploadError) throw uploadError
+        uploaded.push(path)
+      }
+    } catch (uploadError) {
+      if (uploaded.length) await bucket.remove(uploaded)
+      throw new Error(`A OS #${created.order_number} foi criada, mas houve falha ao anexar as fotos: ${uploadError instanceof Error ? uploadError.message : 'erro no envio'}`)
+    }
+  }
+  return created
 }
