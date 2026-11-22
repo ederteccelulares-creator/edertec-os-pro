@@ -68,7 +68,7 @@ begin
    )),
    'stock_movements','[]'::jsonb,'payments','[]'::jsonb,'suppliers','[]'::jsonb,
    'purchases','[]'::jsonb,'purchase_items','[]'::jsonb,'cash_sessions','[]'::jsonb,
-   'cash_transactions','[]'::jsonb,'company_financial_entries','[]'::jsonb,'audit_logs','[]'::jsonb
+   'cash_transactions','[]'::jsonb,'company_financial_entries','[]'::jsonb
   )
  );
 
@@ -135,7 +135,7 @@ begin
    'service_order_items','[]'::jsonb,'stock_movements','[]'::jsonb,
    'payments','[]'::jsonb,'suppliers','[]'::jsonb,'purchases','[]'::jsonb,
    'purchase_items','[]'::jsonb,'cash_sessions','[]'::jsonb,
-   'cash_transactions','[]'::jsonb,'company_financial_entries','[]'::jsonb,'audit_logs','[]'::jsonb
+   'cash_transactions','[]'::jsonb,'company_financial_entries','[]'::jsonb
   )
  );
  begin
