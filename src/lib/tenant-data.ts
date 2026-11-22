@@ -331,3 +331,43 @@ export async function updateFinancialEntryStatus(
   if (error) throw error
   return data
 }
+
+
+export type SaleInput = {
+  items: Array<{ itemId: string; quantity: number; unitPrice?: number }>
+  paymentMethod: 'cash' | 'pix' | 'debit_card' | 'credit_card' | 'bank_transfer' | 'boleto' | 'other'
+  paymentStatus: 'paid' | 'pending'
+  customerId?: string
+  discount?: number
+  notes?: string
+}
+
+export async function listSales(context: TenantContext) {
+  const { data, error } = await client().from('sales')
+    .select('id, sale_number, total, payment_method, payment_status, created_at, customers(name), sale_items(id, product_name, quantity, line_total)')
+    .eq('organization_id', context.organizationId)
+    .eq('branch_id', context.branchId)
+    .order('created_at', { ascending: false })
+    .limit(200)
+  if (error) throw error
+  return data ?? []
+}
+
+export async function createSale(context: TenantContext, input: SaleInput) {
+  if (!input.items.length) throw new Error('Adicione pelo menos um produto.')
+  if (input.items.some(item => !Number.isFinite(item.quantity) || item.quantity <= 0)) throw new Error('Confira as quantidades dos produtos.')
+  const discount = input.discount ?? 0
+  if (!Number.isFinite(discount) || discount < 0) throw new Error('O desconto não pode ser negativo.')
+  const { data, error } = await client().rpc('create_sale', {
+    p_organization_id: context.organizationId,
+    p_branch_id: context.branchId,
+    p_items: input.items.map(item => ({ item_id: item.itemId, quantity: item.quantity, ...(item.unitPrice === undefined ? {} : { unit_price: item.unitPrice }) })),
+    p_payment_method: input.paymentMethod,
+    p_payment_status: input.paymentStatus,
+    p_customer_id: input.customerId || null,
+    p_discount: discount,
+    p_notes: input.notes?.trim() || null,
+  })
+  if (error) throw error
+  return data
+}
