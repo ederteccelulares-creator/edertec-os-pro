@@ -303,6 +303,43 @@ export async function assignServiceOrderTechnician(
   return data
 }
 
+export type ServiceOrderNotification = {
+  id: string
+  organization_id: string
+  branch_id: string
+  service_order_id: string
+  recipient_user_id: string
+  notification_type: 'quote_approved' | 'quote_declined'
+  title: string
+  message: string
+  read_at: string | null
+  created_at: string
+}
+
+export async function listServiceOrderNotifications(context: TenantContext): Promise<ServiceOrderNotification[]> {
+  const api = client()
+  const { data: userData, error: userError } = await api.auth.getUser()
+  if (userError) throw userError
+  if (!userData.user) return []
+  const { data, error } = await api.from('service_order_notifications')
+    .select('id, organization_id, branch_id, service_order_id, recipient_user_id, notification_type, title, message, read_at, created_at')
+    .eq('organization_id', context.organizationId)
+    .eq('branch_id', context.branchId)
+    .eq('recipient_user_id', userData.user.id)
+    .order('created_at', { ascending: false })
+    .limit(20)
+  if (error) throw error
+  return (data ?? []) as ServiceOrderNotification[]
+}
+
+export async function markServiceOrderNotificationRead(notificationId: string) {
+  const { data, error } = await client().rpc('mark_service_order_notification_read', {
+    p_notification_id: notificationId,
+  })
+  if (error) throw error
+  return Boolean(data)
+}
+
 export async function createServiceOrderPortalLink(context: TenantContext, orderId: string) {
   const { data, error } = await client().rpc('create_service_order_portal_link', {
     p_organization_id: context.organizationId,
