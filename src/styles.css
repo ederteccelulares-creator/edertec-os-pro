@@ -1026,3 +1026,44 @@ td b { font-weight:650; }
 .tracking-approval-details b{font-size:14px;line-height:1.5;color:#292929;white-space:pre-wrap;overflow-wrap:anywhere}
 .tracking-approval-price{background:#f7f1e5!important;border-color:#dfc58e!important}
 .tracking-approval-price strong{font-size:25px;line-height:1.2;color:#176b42}
+
+
+/* Customer portal sharing and multi-order client area */
+.customer-portal-admin-note{margin:0 0 18px;color:var(--muted,#777);font-size:13px;line-height:1.55}
+.company-portal-customer-list{display:grid;gap:10px}
+.company-portal-customer{display:flex;align-items:center;gap:12px;padding:13px;border:1px solid var(--border,#ddd);border-radius:12px;flex-wrap:wrap}
+.company-portal-customer>span{width:38px;height:38px;display:grid;place-items:center;border-radius:10px;background:rgba(180,80,170,.1);color:#b34a9d}
+.company-portal-customer>div{display:grid;gap:3px;flex:1;min-width:130px}
+.company-portal-customer>div b{font-size:14px}
+.company-portal-customer>div small{font-size:12px;color:var(--muted,#777)}
+.customer-portal .tracking-card{max-width:760px}
+.customer-portal-refresh{margin-left:auto;border:1px solid rgba(255,255,255,.18);background:transparent;color:inherit;border-radius:9px;padding:9px;display:grid;place-items:center}
+.customer-portal-welcome{padding:22px 0 14px}
+.customer-portal-welcome small{font-size:10px;letter-spacing:1.8px;font-weight:800;opacity:.7}
+.customer-portal-welcome h1{font-size:28px;margin:6px 0}
+.customer-portal-welcome p{margin:0;opacity:.75;font-size:14px}
+.customer-portal-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0 24px}
+.customer-portal-summary>div{padding:14px 8px;border-radius:12px;background:rgba(160,90,170,.12);display:grid;text-align:center;gap:4px}
+.customer-portal-summary b{font-size:23px}
+.customer-portal-summary small{font-size:11px;opacity:.8}
+.customer-portal-section-title{font-size:19px;margin:0 0 14px}
+.customer-portal-orders{display:grid;gap:14px}
+.customer-portal-order{padding:16px;border:1px solid rgba(150,150,150,.3);border-radius:14px;background:rgba(120,120,120,.045)}
+.customer-portal-order-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.customer-portal-order-head small,.customer-portal-facts small{font-size:9px;font-weight:800;letter-spacing:1.2px;opacity:.65}
+.customer-portal-order-head h3{margin:3px 0;font-size:22px}
+.customer-portal-device{display:flex;align-items:center;gap:9px;margin:13px 0;padding:10px 0;border-top:1px solid rgba(150,150,150,.2);border-bottom:1px solid rgba(150,150,150,.2)}
+.customer-portal-facts{display:grid;gap:11px}
+.customer-portal-facts>div{display:grid;gap:4px}
+.customer-portal-facts b{font-size:13px;line-height:1.45;overflow-wrap:anywhere}
+.customer-portal-approval{margin-top:15px;padding:13px;border-radius:11px;background:rgba(190,150,65,.13);display:grid;gap:11px}
+.customer-portal-approval>div{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.customer-portal-approval button{border:0;border-radius:8px;min-height:43px;padding:9px;display:flex;justify-content:center;align-items:center;gap:7px;font-weight:700}
+.customer-portal-decision{font-size:12px;padding:10px;border-radius:8px;background:rgba(100,160,110,.13)}
+.customer-portal-warranty{display:flex;gap:10px;align-items:flex-start;margin-top:13px;padding:12px;border-radius:10px}
+.customer-portal-warranty>div{display:grid;gap:4px}
+.customer-portal-warranty small{font-size:11px;line-height:1.45}
+.customer-portal-warranty.active{background:rgba(45,150,90,.13);color:#24834b}
+.customer-portal-warranty.expired{background:rgba(160,80,80,.12);color:#a34c4c}
+.customer-portal-updated{display:flex;align-items:center;gap:6px;margin-top:12px;opacity:.65;font-size:10px}
+@media(max-width:520px){.company-portal-customer{align-items:flex-start}.company-portal-customer .company-small-action{flex:1}.customer-portal-approval>div{grid-template-columns:1fr}.customer-portal-summary>div{padding:11px 5px}.customer-portal-summary b{font-size:20px}}
