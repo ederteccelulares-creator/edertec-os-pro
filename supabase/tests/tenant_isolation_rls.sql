@@ -6,7 +6,8 @@
 
 INSERT INTO auth.users (id,email) VALUES
   ('10000000-0000-4000-8000-000000000001','tenant-a@example.invalid'),
-  ('20000000-0000-4000-8000-000000000002','tenant-b@example.invalid');
+  ('20000000-0000-4000-8000-000000000002','tenant-b@example.invalid'),
+  ('30000000-0000-4000-8000-000000000003','technician-a@example.invalid');
 
 GRANT USAGE ON SCHEMA public TO authenticated;
 -- Grant only what this smoke test needs; do not override migration revokes.
@@ -26,6 +27,13 @@ SELECT public.create_organization('Tenant B','tenant-b') AS org_b \gset
 SELECT set_config('test.org_b', :'org_b', false);
 INSERT INTO public.customers(id,organization_id,name,phone)
 VALUES ('b0000000-0000-4000-8000-000000000002', :'org_b'::uuid, 'Cliente B', '222');
+
+-- Create a real technician membership for Tenant A through the privileged
+-- disposable test harness. This simulates an accepted team invitation.
+RESET ROLE;
+INSERT INTO public.organization_members(organization_id,user_id,role,active)
+VALUES (current_setting('test.org_a')::uuid,'30000000-0000-4000-8000-000000000003','technician',true);
+SET ROLE authenticated;
 
 -- A tenant B user must not see tenant A rows, and vice versa.
 DO $$
@@ -105,6 +113,89 @@ BEGIN
   END;
 END;
 $$;
+
+-- Technician assignment is tenant- and role-scoped.
+SELECT set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false);
+SELECT (public.create_service_order_with_device(
+  current_setting('test.org_a')::uuid,
+  (SELECT id FROM public.branches WHERE organization_id=current_setting('test.org_a')::uuid LIMIT 1),
+  'a0000000-0000-4000-8000-000000000001',
+  'Apple','iPhone de teste',NULL,'Tela danificada',100,NULL,NULL
+)).id AS assigned_order_id \gset
+SELECT set_config('test.assigned_order_id', :'assigned_order_id', false);
+SELECT (public.create_service_order_with_device(
+  current_setting('test.org_a')::uuid,
+  (SELECT id FROM public.branches WHERE organization_id=current_setting('test.org_a')::uuid LIMIT 1),
+  'a0000000-0000-4000-8000-000000000001',
+  'Samsung','Galaxy de teste',NULL,'Não liga',80,NULL,NULL
+)).id AS unassigned_order_id \gset
+SELECT set_config('test.unassigned_order_id', :'unassigned_order_id', false);
+
+SELECT public.assign_service_order_technician(
+  current_setting('test.org_a')::uuid,
+  (SELECT branch_id FROM public.service_orders WHERE id=current_setting('test.assigned_order_id')::uuid),
+  current_setting('test.assigned_order_id')::uuid,
+  '30000000-0000-4000-8000-000000000003'
+);
+
+SELECT set_config('request.jwt.claim.sub','30000000-0000-4000-8000-000000000003',false);
+SELECT public.update_service_order_status(
+  current_setting('test.org_a')::uuid,
+  (SELECT branch_id FROM public.service_orders WHERE id=current_setting('test.assigned_order_id')::uuid),
+  current_setting('test.assigned_order_id')::uuid,
+  'diagnosing',
+  'Técnico iniciou o diagnóstico'
+);
+
+DO $
+BEGIN
+  BEGIN
+    PERFORM public.update_service_order_status(
+      current_setting('test.org_a')::uuid,
+      (SELECT branch_id FROM public.service_orders WHERE id=current_setting('test.unassigned_order_id')::uuid),
+      current_setting('test.unassigned_order_id')::uuid,
+      'diagnosing',
+      'Tentativa em OS não atribuída'
+    );
+    RAISE EXCEPTION 'Test failure: technician updated an unassigned order';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM LIKE 'Test failure:%' THEN RAISE; END IF;
+  END;
+END;
+$;
+
+DO $
+BEGIN
+  BEGIN
+    PERFORM public.assign_service_order_technician(
+      current_setting('test.org_a')::uuid,
+      (SELECT branch_id FROM public.service_orders WHERE id=current_setting('test.assigned_order_id')::uuid),
+      current_setting('test.assigned_order_id')::uuid,
+      NULL
+    );
+    RAISE EXCEPTION 'Test failure: technician assigned an order';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM LIKE 'Test failure:%' THEN RAISE; END IF;
+  END;
+END;
+$;
+
+SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000002',false);
+DO $
+BEGIN
+  BEGIN
+    PERFORM public.assign_service_order_technician(
+      current_setting('test.org_a')::uuid,
+      (SELECT branch_id FROM public.service_orders WHERE id=current_setting('test.assigned_order_id')::uuid),
+      current_setting('test.assigned_order_id')::uuid,
+      NULL
+    );
+    RAISE EXCEPTION 'Test failure: Tenant B assigned an order in Tenant A';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM LIKE 'Test failure:%' THEN RAISE; END IF;
+  END;
+END;
+$;
 
 RESET ROLE;
 \echo 'Tenant isolation RLS smoke tests passed for two synthetic tenants.'
