@@ -465,7 +465,7 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
   }
 
   function notifyCustomerWhatsApp(item: Order) {
-    const rawPhone = (item.customers?.phone || '').replace(/\\D/g, '')
+    const rawPhone = (item.customers?.phone || '').replace(/\D/g, '')
     if (!rawPhone) {
       setError('Este cliente não possui telefone cadastrado para contato.')
       return
@@ -480,7 +480,7 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
       `Status: ${statusLabels[item.status] || item.status}.`,
       `Defeito informado: ${item.reported_issue}.`,
       'Em caso de dúvidas, responda esta mensagem. Obrigado por escolher nossa assistência!'
-    ].join('\\n')
+    ].join('\n')
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer')
   }
 
