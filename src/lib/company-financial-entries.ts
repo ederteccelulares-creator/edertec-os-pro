@@ -15,3 +15,9 @@ export async function settleFinancialEntry(companyId:string,entryId:string,metho
  const {data,error}=await db().rpc('settle_financial_entry',{p_company_id:companyId,p_entry_id:entryId,p_method:method})
  if(error)throw error;return data as string
 }
+
+export async function invoiceServiceOrderNet30(companyId:string,serviceOrderId:string){
+ const {data,error}=await db().rpc("invoice_service_order_net30",{p_company_id:companyId,p_service_order_id:serviceOrderId})
+ if(error)throw error
+ return data as string
+}
