@@ -1245,3 +1245,26 @@ td b { font-weight:650; }
 .support-alert-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .support-alert-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px}
 @media(max-width:560px){.support-alert-actions{width:100%}.support-alert-actions button{flex:1;min-height:42px}}
+
+.platform-admin .platform-stats .platform-stat-action{
+  appearance:none;position:relative;overflow:hidden;min-width:0;min-height:136px;padding:20px 21px;
+  display:grid;grid-template-columns:44px minmax(0,1fr);grid-template-rows:auto 1fr auto;
+  align-items:center;column-gap:14px;row-gap:7px;text-align:left;cursor:pointer;
+  border:1px solid #826a3f;border-radius:16px;
+  background:linear-gradient(145deg,#2a2a2b 0%,#171d28 78%);
+  box-shadow:0 12px 28px #0002;color:#edf1f7;
+}
+.platform-admin .platform-stats .platform-stat-action>svg{
+  grid-row:1/3;width:42px;height:42px;padding:10px;border-radius:12px;
+  color:#f0c66f;background:#4a3920;border:1px solid #80633255;
+}
+.platform-admin .platform-stats .platform-stat-action small{font-size:11px;color:#c4b28e;align-self:end}
+.platform-admin .platform-stats .platform-stat-action b{font-size:30px;line-height:1.1;letter-spacing:-.8px;align-self:start;color:#f6d48c}
+.platform-admin .platform-stats .platform-stat-action>span{grid-column:2;color:#e6c77e;font-size:10px;font-weight:750}
+.platform-admin .platform-stats .platform-stat-action:hover{border-color:#e5b85f;transform:translateY(-2px);box-shadow:0 15px 32px #0004}
+@media(max-width:760px){
+ .platform-admin .platform-stats .platform-stat-action{min-height:112px;padding:14px 12px;grid-template-columns:34px minmax(0,1fr);column-gap:9px;row-gap:5px;border-radius:13px}
+ .platform-admin .platform-stats .platform-stat-action>svg{width:33px;height:33px;padding:8px;border-radius:10px}
+ .platform-admin .platform-stats .platform-stat-action small{font-size:10px;line-height:1.3}
+ .platform-admin .platform-stats .platform-stat-action b{font-size:25px}
+}
