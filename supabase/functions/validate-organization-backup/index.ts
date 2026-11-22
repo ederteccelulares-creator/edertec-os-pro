@@ -230,6 +230,12 @@ Deno.serve(async (req) => {
     .map(result => ({ table: result.table, records: result.count }));
 
   const totalRecords = Object.values(counts).reduce((sum, count) => sum + count, 0);
+  const restoreBlockers = [
+    "A restauração transacional com rollback ainda não foi implementada.",
+    "A reconciliação e eventual remapeamento dos IDs das filiais ainda não foi implementada.",
+    ...(requiresUserMapping && !mappingValid ? ["As associações de usuários ainda não foram validadas com sucesso no servidor."] : []),
+    ...(!destinationEmpty ? ["O destino contém registros operacionais; uma estratégia segura de mesclagem ainda não foi implementada."] : []),
+  ];
   return response({
     valid: errors.length === 0,
     applied: false,
