@@ -6,3 +6,6 @@ verify_jwt = true
 
 [functions.validate-organization-backup]
 verify_jwt = true
+
+[functions.restore-organization-backup]
+verify_jwt = true
