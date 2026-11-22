@@ -1240,3 +1240,8 @@ td b { font-weight:650; }
   .platform-admin td {padding:14px 12px;font-size:11px}
   .platform-admin .platform-footer {line-height:1.6}
 }
+
+/* Support notification controls */
+.support-alert-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.support-alert-actions button{display:inline-flex;align-items:center;justify-content:center;gap:7px}
+@media(max-width:560px){.support-alert-actions{width:100%}.support-alert-actions button{flex:1;min-height:42px}}
