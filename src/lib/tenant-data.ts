@@ -585,6 +585,9 @@ export async function validateOrganizationBackup(organizationId: string, backup:
     total_records: number
     counts: Record<string, number>
     requires_user_mapping: boolean
+    destination_empty: boolean
+    target_counts: Record<string, number>
+    occupied_tables: Array<{table: string; records: number}>
     errors: string[]
   }
 }
