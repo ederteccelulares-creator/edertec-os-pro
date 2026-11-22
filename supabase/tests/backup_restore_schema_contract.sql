@@ -102,6 +102,52 @@ begin
     raise exception 'Backup schema contract failed: service_order_lines.line_total must remain generated';
   end if;
 
+  -- Unique keys used to detect collisions during a future restore.
+  if not exists (
+    select 1
+    from pg_constraint c
+    cross join lateral unnest(c.conkey) with ordinality k(attnum, position)
+    join pg_attribute a on a.attrelid=c.conrelid and a.attnum=k.attnum
+    where c.contype='u' and c.conrelid='public.branches'::regclass
+    group by c.oid
+    having array_agg(a.attname order by k.position)=array['organization_id','code']::name[]
+  ) then
+    raise exception 'Backup schema contract failed: branches must be unique by organization_id and code';
+  end if;
+
+  if not exists (
+    select 1
+    from pg_constraint c
+    cross join lateral unnest(c.conkey) with ordinality k(attnum, position)
+    join pg_attribute a on a.attrelid=c.conrelid and a.attnum=k.attnum
+    where c.contype='u' and c.conrelid='public.financial_categories'::regclass
+    group by c.oid
+    having array_agg(a.attname order by k.position)=array['organization_id','name','entry_type']::name[]
+  ) then
+    raise exception 'Backup schema contract failed: financial category uniqueness is missing';
+  end if;
+
+  if not exists (
+    select 1
+    from pg_constraint c
+    cross join lateral unnest(c.conkey) with ordinality k(attnum, position)
+    join pg_attribute a on a.attrelid=c.conrelid and a.attnum=k.attnum
+    where c.contype='u' and c.conrelid='public.branch_inventory'::regclass
+    group by c.oid
+    having array_agg(a.attname order by k.position)=array['branch_id','item_id']::name[]
+  ) then
+    raise exception 'Backup schema contract failed: branch inventory uniqueness is missing';
+  end if;
+
+  if to_regclass('public.inventory_items_org_sku_unique') is null
+     or not exists (
+       select 1 from pg_index i
+       where i.indexrelid='public.inventory_items_org_sku_unique'::regclass
+         and i.indisunique and i.indpred is not null
+     ) then
+    raise exception 'Backup schema contract failed: partial unique SKU index is missing';
+  end if;
+
   -- Identity columns must be imported with explicit identity handling and
   -- their sequences reconciled after a successful transaction.
   select exists (
