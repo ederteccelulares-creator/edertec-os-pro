@@ -46,7 +46,7 @@ export default function AuthGate() {
   const [fullName, setFullName] = useState('')
   const [companyName, setCompanyName] = useState('')
   const [companySlug, setCompanySlug] = useState('')
-  const portalToken = new URLSearchParams(window.location.search).get('portal') || ''
+  const portalToken = new URLSearchParams(window.location.hash.slice(1)).get('portal') || new URLSearchParams(window.location.search).get('portal') || ''
 
   const loadMemberships = useCallback(async (userId: string) => {
     if (!supabase) return
