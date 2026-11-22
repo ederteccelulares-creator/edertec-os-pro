@@ -21,3 +21,11 @@ export async function invoiceServiceOrderNet30(companyId:string,serviceOrderId:s
  if(error)throw error
  return data as string
 }
+
+export type OverdueReceivable={id:string;description:string;amount:number;due_date:string;source_order_number:number|null;created_at:string}
+export async function listCustomerOverdueReceivables(companyId:string,customerId:string):Promise<OverdueReceivable[]>{
+ const today=new Date().toISOString().slice(0,10)
+ const {data,error}=await db().from("company_financial_entries").select("id,description,amount,due_date,source_order_number,created_at").eq("company_id",companyId).eq("customer_id",customerId).eq("entry_type","receivable").eq("status","open").lt("due_date",today).order("due_date",{ascending:true}).limit(100)
+ if(error)throw error
+ return (data||[]) as OverdueReceivable[]
+}
