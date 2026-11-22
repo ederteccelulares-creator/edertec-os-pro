@@ -20,12 +20,12 @@ export default function CompanyPOSPanel({company}:{company:Company}){
  const [busy,setBusy]=useState(false)
  const [error,setError]=useState('')
  const [notice,setNotice]=useState('')
- const load=useCallback(async()=>{setLoading(true);setError('');try{const [p,b]=await Promise.all([listCompanyProducts({companyId:company.id,limit:500}),listCompanyBranches(company.id)]);setProducts(p);setBranches(b)}catch(e){setError(e instanceof Error?e.message:'Não foi possível carregar o PDV.')}finally{setLoading(false)}},[company.id])
+ const load=useCallback(async()=>{setLoading(true);setError('');try{const [p,b]=await Promise.all([listCompanyProducts({companyId:company.id,limit:500,activeOnly:false}),listCompanyBranches(company.id)]);setProducts(p);setBranches(b)}catch(e){setError(e instanceof Error?e.message:'Não foi possível carregar o PDV.')}finally{setLoading(false)}},[company.id])
  useEffect(()=>{void load()},[load])
  const subtotal=useMemo(()=>cart.reduce((sum,line)=>sum+line.product.sale_price*line.quantity,0),[cart])
  const discountValue=Math.min(Math.max(Number(discount)||0,0),subtotal)
  const total=Math.max(0,subtotal-discountValue)
- const filtered=products.filter(p=>p.is_active&&[p.name,p.sku||''].some(v=>v.toLowerCase().includes(search.toLowerCase())))
+ const filtered=products.filter(p=>p.is_active!==false&&Number(p.stock_quantity)>0&&(!search.trim()||[p.name,p.sku||''].some(v=>v.toLowerCase().includes(search.trim().toLowerCase()))))
  function add(product:CompanyProduct){setError('');setCart(old=>{const found=old.find(x=>x.product.id===product.id);if(found){if(found.quantity>=Number(product.stock_quantity))return old;return old.map(x=>x.product.id===product.id?{...x,quantity:x.quantity+1}:x)}return Number(product.stock_quantity)>0?[...old,{product,quantity:1}]:old})}
  function changeQty(id:string,quantity:number){const product=products.find(p=>p.id===id);if(!product)return;setCart(old=>quantity<=0?old.filter(x=>x.product.id!==id):old.map(x=>x.product.id===id?{...x,quantity:Math.min(quantity,Number(product.stock_quantity))}:x))}
  async function finishSale(){if(!cart.length){setError('Adicione produtos ao carrinho.');return}if(cart.some(x=>x.quantity>Number(x.product.stock_quantity))){setError('Há produtos com estoque insuficiente. Atualize o estoque e tente novamente.');return}if(total<=0){setError('O total da venda precisa ser maior que zero.');return}if(method==='cash'&&Number(received)<total){setError('O valor recebido é menor que o total da venda.');return}
@@ -42,10 +42,10 @@ export default function CompanyPOSPanel({company}:{company:Company}){
  }
  return <section className="company-pos">
   <div className="company-panel company-pos-products">
-   <div className="company-panel-head"><div><b>PDV · Frente de caixa</b><small>Selecione os produtos para adicionar à venda</small></div><button className="company-secondary" onClick={()=>void load()}><RefreshCw size={15}/> Atualizar</button></div>
+   <div className="company-panel-head"><div><b>PDV · Frente de caixa</b><small>{loading?'Carregando produtos...':`${filtered.length} produtos disponíveis · toque em um produto para adicionar`}</small></div><button className="company-secondary" onClick={()=>void load()}><RefreshCw size={15}/> Atualizar</button></div>
    {error&&<div className="company-error-banner">{error}</div>}{notice&&<div className="company-notice-banner">{notice}</div>}
    <div className="company-pos-tools"><label><Search size={16}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar produto ou código"/></label><label className="company-pos-branch">Filial<select value={branchId} onChange={e=>setBranchId(e.target.value)}><option value="">Matriz / não especificada</option>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label></div>
-   {loading?<p className="company-empty">Carregando produtos...</p>:filtered.length===0?<p className="company-empty">Nenhum produto com estoque disponível.</p>:<div className="company-pos-product-grid">{filtered.map(p=><button type="button" className="company-pos-product" key={p.id} disabled={Number(p.stock_quantity)<=0||busy} onClick={()=>add(p)}><span><Barcode size={18}/></span><b>{p.name}</b><strong>{money(p.sale_price)}</strong><small>Estoque: {Number(p.stock_quantity)}</small><em><Plus size={14}/> Adicionar</em></button>)}</div>}
+   {loading?<p className="company-empty">Carregando produtos...</p>:filtered.length===0?<p className="company-empty">Nenhum produto disponível. Confira o cadastro e o estoque ou limpe a busca.</p>:<div className="company-pos-product-grid">{filtered.map(p=><button type="button" className="company-pos-product" key={p.id} disabled={Number(p.stock_quantity)<=0||busy} onClick={()=>add(p)}><span><Barcode size={18}/></span><b>{p.name}</b><strong>{money(p.sale_price)}</strong><small>Estoque: {Number(p.stock_quantity)}</small><em><Plus size={14}/> Adicionar</em></button>)}</div>}
   </div>
   <div className="company-panel company-pos-cart">
    <div className="company-panel-head"><div><b><ShoppingCart size={17}/> Carrinho</b><small>{cart.reduce((n,x)=>n+x.quantity,0)} itens</small></div></div>
