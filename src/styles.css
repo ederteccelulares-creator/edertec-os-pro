@@ -1437,3 +1437,8 @@ td b { font-weight:650; }
 .platform-menu-wrap .platform-tabs button { min-height:46px; border:1px solid #2e3b4e; border-radius:9px; background:#172231; color:#bdc8d7; justify-content:flex-start; padding:0 12px; text-align:left; }
 .platform-menu-wrap .platform-tabs button.active { border-color:#8c7040; background:linear-gradient(145deg,#342b1d,#211d18); color:#f3cf82; }
 @media(max-width:420px) { .platform-menu-wrap .platform-tabs { grid-template-columns:1fr; } }
+
+
+.platform-mp-external { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; margin:14px 0 18px; border:1px solid #39485d; border-radius:12px; background:#111b29; }
+.platform-mp-external .platform-hint { margin:0; flex:1 1 240px; }
+.platform-mp-open { display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:0 15px; border:1px solid #8b7042; border-radius:9px; color:#f0ca7c; background:#2b251c; font-weight:700; text-decoration:none; }
