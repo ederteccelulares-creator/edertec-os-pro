@@ -128,3 +128,39 @@ begin
   end if;
 end;
 $$;
+
+
+-- Customer portal bearer links: anonymous users may read only via the
+-- narrowly scoped token RPC; only authenticated staff may mint links.
+do $$
+begin
+  if not exists (
+    select 1 from pg_class c
+    join pg_namespace n on n.oid=c.relnamespace
+    where n.nspname='public' and c.relname='service_order_portal_tokens'
+      and c.relrowsecurity
+  ) then
+    raise exception 'Customer portal token table must have RLS enabled';
+  end if;
+
+  if not has_function_privilege('anon',
+    'public.get_service_order_portal(text)', 'EXECUTE') then
+    raise exception 'Anonymous role must be able to use the token-gated customer portal';
+  end if;
+
+  if not has_function_privilege('authenticated',
+    'public.create_service_order_portal_link(uuid,uuid,uuid)', 'EXECUTE') then
+    raise exception 'Authenticated staff must be able to mint customer portal links';
+  end if;
+
+  if has_function_privilege('anon',
+    'public.create_service_order_portal_link(uuid,uuid,uuid)', 'EXECUTE') then
+    raise exception 'Anonymous users must not mint customer portal links';
+  end if;
+
+  if has_table_privilege('anon',
+    'public.service_order_portal_tokens', 'SELECT') then
+    raise exception 'Anonymous users must not read portal token records directly';
+  end if;
+end;
+$$;
