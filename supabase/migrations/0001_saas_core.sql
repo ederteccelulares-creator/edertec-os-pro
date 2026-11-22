@@ -186,11 +186,15 @@ declare new_org uuid;
 begin
   if auth.uid() is null then raise exception 'Authentication required'; end if;
   if length(trim(org_name)) < 2 then raise exception 'Organization name is required'; end if;
-  if org_slug !~ '^[a-z0-9][a-z0-9-]{2,39}
-  insert into public.organizations(name,slug,created_by) values(trim(org_name),lower(org_slug),auth.uid()) returning id into new_org;
-  insert into public.organization_members(organization_id,user_id,role) values(new_org,auth.uid(),'owner');
-  insert into public.branches(organization_id,name,code) values(new_org,'Matriz','MATRIZ');
-  insert into public.subscriptions(organization_id,status,trial_ends_at) values(new_org,'trialing',now()+interval '14 days');
+  if org_slug !~ '^[a-z0-9][a-z0-9-]{2,39}$' then raise exception 'Invalid organization slug'; end if;
+  insert into public.organizations(name,slug,created_by)
+    values(trim(org_name),lower(org_slug),auth.uid()) returning id into new_org;
+  insert into public.organization_members(organization_id,user_id,role)
+    values(new_org,auth.uid(),'owner');
+  insert into public.branches(organization_id,name,code)
+    values(new_org,'Matriz','MATRIZ');
+  insert into public.subscriptions(organization_id,status,trial_ends_at)
+    values(new_org,'trialing',now()+interval '14 days');
   return new_org;
 end; $$;
 
@@ -242,64 +246,6 @@ create policy "Members read audit logs" on public.audit_logs for select to authe
 create policy "Members insert audit logs" on public.audit_logs for insert to authenticated with check(public.is_org_member(organization_id) and actor_id=auth.uid());
 
 revoke all on function public.create_organization(text,text) from public;
-grant execute on function public.create_organization(text,text) to authenticated;
-grant execute on function public.is_org_member(uuid) to authenticated;
-grant execute on function public.has_org_role(uuid,public.member_role[]) to authenticated;
- then raise exception 'Invalid organization slug'; end if;
-  insert into public.organizations(name,slug,created_by) values(trim(org_name),lower(org_slug),auth.uid()) returning id into new_org;
-  insert into public.organization_members(organization_id,user_id,role) values(new_org,auth.uid(),'owner');
-  insert into public.branches(organization_id,name,code) values(new_org,'Matriz','MATRIZ');
-  insert into public.subscriptions(organization_id,status,trial_ends_at) values(new_org,'trialing',now()+interval '14 days');
-  return new_org;
-end; $$;
-
-create or replace function public.touch_updated_at()
-returns trigger language plpgsql as $$ begin new.updated_at=now(); return new; end; $$;
-
-create trigger profiles_touch before update on public.profiles for each row execute function public.touch_updated_at();
-create trigger organizations_touch before update on public.organizations for each row execute function public.touch_updated_at();
-create trigger customers_touch before update on public.customers for each row execute function public.touch_updated_at();
-create trigger subscriptions_touch before update on public.subscriptions for each row execute function public.touch_updated_at();
-create trigger service_orders_touch before update on public.service_orders for each row execute function public.touch_updated_at();
-
-create or replace function public.handle_new_user()
-returns trigger language plpgsql security definer set search_path=public
-as $$ begin
-  insert into public.profiles(id,full_name) values(new.id,coalesce(new.raw_user_meta_data->>'full_name',''));
-  return new;
-end; $$;
-create trigger on_auth_user_created after insert on auth.users for each row execute function public.handle_new_user();
-
-alter table public.profiles enable row level security;
-alter table public.organizations enable row level security;
-alter table public.organization_members enable row level security;
-alter table public.branches enable row level security;
-alter table public.customers enable row level security;
-alter table public.devices enable row level security;
-alter table public.service_orders enable row level security;
-alter table public.service_order_events enable row level security;
-alter table public.plans enable row level security;
-alter table public.subscriptions enable row level security;
-alter table public.audit_logs enable row level security;
-
-create policy "Users read own profile" on public.profiles for select to authenticated using(id=auth.uid());
-create policy "Users update own profile" on public.profiles for update to authenticated using(id=auth.uid()) with check(id=auth.uid());
-create policy "Members read organizations" on public.organizations for select to authenticated using(public.is_org_member(id));
-create policy "Owners update organization" on public.organizations for update to authenticated using(public.has_org_role(id,array['owner','admin']::public.member_role[])) with check(public.has_org_role(id,array['owner','admin']::public.member_role[]));
-create policy "Members read memberships" on public.organization_members for select to authenticated using(public.is_org_member(organization_id));
-create policy "Admins manage memberships" on public.organization_members for all to authenticated using(public.has_org_role(organization_id,array['owner','admin']::public.member_role[])) with check(public.has_org_role(organization_id,array['owner','admin']::public.member_role[]));
-create policy "Members read branches" on public.branches for select to authenticated using(public.is_org_member(organization_id));
-create policy "Admins manage branches" on public.branches for all to authenticated using(public.has_org_role(organization_id,array['owner','admin','manager']::public.member_role[])) with check(public.has_org_role(organization_id,array['owner','admin','manager']::public.member_role[]));
-create policy "Members manage customers" on public.customers for all to authenticated using(public.is_org_member(organization_id)) with check(public.is_org_member(organization_id));
-create policy "Members manage devices" on public.devices for all to authenticated using(public.is_org_member(organization_id)) with check(public.is_org_member(organization_id));
-create policy "Members manage orders" on public.service_orders for all to authenticated using(public.is_org_member(organization_id)) with check(public.is_org_member(organization_id));
-create policy "Members read order events" on public.service_order_events for select to authenticated using(public.is_org_member(organization_id));
-create policy "Members add order events" on public.service_order_events for insert to authenticated with check(public.is_org_member(organization_id) and changed_by=auth.uid());
-create policy "Anyone reads active plans" on public.plans for select to authenticated using(active);
-create policy "Members read subscription" on public.subscriptions for select to authenticated using(public.is_org_member(organization_id));
-create policy "Members read audit logs" on public.audit_logs for select to authenticated using(public.is_org_member(organization_id));
-create policy "Members insert audit logs" on public.audit_logs for insert to authenticated with check(public.is_org_member(organization_id) and actor_id=auth.uid());
-
 grant execute on function public.create_organization(text,text) to authenticated;
 grant execute on function public.is_org_member(uuid) to authenticated;
 grant execute on function public.has_org_role(uuid,public.member_role[]) to authenticated;
