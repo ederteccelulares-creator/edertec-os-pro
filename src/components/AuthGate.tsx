@@ -3,6 +3,8 @@ import type { FormEvent } from 'react'
 import { Building2, CheckCircle2, LoaderCircle, LogOut, Mail, ShieldCheck, Smartphone } from 'lucide-react'
 import type { Session } from '@supabase/supabase-js'
 import TenantWorkspace from './TenantWorkspace'
+import SuperAdminWorkspace from './SuperAdminWorkspace'
+import { isPlatformAdmin } from '../lib/tenant-data'
 import { isSupabaseConfigured, supabase, type Organization, type OrganizationRole } from '../lib/supabase'
 
 type Membership = {
@@ -31,6 +33,7 @@ function SetupRequired() {
 export default function AuthGate() {
   const [session, setSession] = useState<Session | null>(null)
   const [memberships, setMemberships] = useState<Membership[]>([])
+  const [platformAdmin, setPlatformAdmin] = useState(false)
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null)
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [loading, setLoading] = useState(true)
@@ -140,7 +143,7 @@ export default function AuthGate() {
     <div className="auth-security"><ShieldCheck size={15}/> Conexão autenticada e separação de dados por assistência</div>
   </section></main>
 
-  if (!selectedOrg && memberships.length > 1) return <main className="auth-page"><section className="auth-card">
+  if (platformAdmin) return <SuperAdminWorkspace email={session.user.email || ''} onSignOut={signOut} />\n\n  if (!selectedOrg && memberships.length > 1) return <main className="auth-page"><section className="auth-card">
     <div className="auth-brand"><span><Building2 size={24}/></span><div><b>EDERTEC <i>OS PRO</i></b><small>SELECIONE SUA EMPRESA</small></div></div><h1>Qual assistência deseja acessar?</h1>
     <div className="org-list">{memberships.map(m=>{const org=Array.isArray(m.organizations)?m.organizations[0]:m.organizations;return org?<button key={m.organization_id} className="org-option" onClick={()=>setSelectedOrg(org)}><Building2 size={20}/><span><b>{org.name}</b><small>{m.role}</small></span>→</button>:null})}</div><button className="auth-switch" onClick={signOut}>Sair da conta</button>
   </section></main>
