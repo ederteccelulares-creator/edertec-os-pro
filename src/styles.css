@@ -692,3 +692,79 @@ td b { font-weight:650; }
 @media(prefers-reduced-motion:reduce) {
   *,*::before,*::after { scroll-behavior:auto!important;transition:none!important;animation-duration:.01ms!important;animation-iteration-count:1!important; }
 }
+
+
+/* Mobile UX v2 — compact app shell, no clipped navigation or overlapping actions */
+@media (max-width: 760px) {
+  .company-app { display:flex; flex-direction:column; min-height:100dvh; }
+  .company-sidebar {
+    display:grid; grid-template-columns:minmax(0,1fr); gap:10px;
+    padding:10px 12px 9px; position:relative;
+  }
+  .company-logo { min-height:48px; padding:0 2px; }
+  .company-logo > span { width:42px; height:42px; flex:0 0 42px; }
+  .company-logo svg { width:22px; height:22px; }
+  .company-logo b { font-size:15px; letter-spacing:.5px; }
+  .company-logo small { font-size:9px; letter-spacing:2px; }
+  .company-current { display:none!important; }
+  .company-sidebar nav {
+    display:grid; grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:6px; overflow:visible; padding:0; margin:0;
+  }
+  .company-sidebar nav button {
+    min-width:0; min-height:58px; padding:7px 3px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:4px; white-space:normal; text-align:center; line-height:1.15;
+    font-size:10px; border-radius:9px;
+  }
+  .company-sidebar nav button svg { width:18px; height:18px; flex:0 0 auto; }
+  .company-sidebar nav button.active { box-shadow:inset 0 -2px var(--ed-gold); }
+  .company-user {
+    min-width:0; display:flex; flex-wrap:nowrap; align-items:center;
+    margin:0; padding:8px 2px 0; border-top:1px solid var(--ed-border); gap:8px;
+  }
+  .company-user b { flex:1; min-width:0; max-width:none; font-size:11px; }
+  .company-user small { display:none; }
+  .company-user button { flex:0 0 auto; margin:0; min-height:34px; padding:6px 10px; font-size:11px; }
+
+  .company-main { flex:1; min-width:0; padding:15px 12px 30px; }
+  .company-top {
+    display:flex; flex-direction:column; align-items:stretch;
+    gap:13px; margin:0 0 14px; padding:0 0 14px;
+    border-bottom:1px solid var(--ed-border);
+  }
+  .company-top > div:first-child { min-width:0; }
+  .company-top small { display:block; margin-bottom:5px; font-size:9px; letter-spacing:1.7px; }
+  .company-top h1 { margin:0; font-size:25px; line-height:1.12; letter-spacing:-.7px; }
+  .company-top-actions {
+    display:grid; grid-template-columns:minmax(0,1fr) 46px;
+    align-items:center; gap:8px; width:100%; min-width:0;
+  }
+  .company-top-actions select {
+    width:100%; min-width:0; height:44px; padding:0 12px;
+    border:1px solid var(--ed-border-strong); border-radius:10px;
+    background:#0d1622; color:var(--ed-text); font-size:14px;
+  }
+  .company-top-actions .company-icon-button { width:46px; height:44px; min-width:46px; }
+  .company-panel { padding:14px 12px; border-radius:13px; }
+  .company-panel-head {
+    display:flex; flex-direction:column; align-items:stretch;
+    gap:12px; padding:0 0 12px; border-bottom:1px solid #283649;
+  }
+  .company-panel-head > div { min-width:0; }
+  .company-panel-head b { font-size:14px; }
+  .company-panel-head small { display:block; margin-top:4px; font-size:11px; }
+  .company-panel-head > button,
+  .company-panel-head .company-primary {
+    width:100%; min-height:44px; justify-content:center; border-radius:9px;
+  }
+  .company-empty { min-height:150px; display:flex; align-items:center; justify-content:center; text-align:center; padding:24px 12px; font-size:14px; }
+  .company-table-wrap { margin-top:12px; border:1px solid var(--ed-border); border-radius:9px; }
+  .company-form { margin-top:12px; border-radius:11px; }
+  .company-error-banner,.company-notice-banner { overflow-wrap:anywhere; margin:10px 0; }
+}
+@media (min-width: 761px) {
+  .company-sidebar nav { overflow:visible; }
+  .company-top { align-items:flex-end; }
+  .company-top-actions { display:flex; align-items:center; gap:10px; }
+}
