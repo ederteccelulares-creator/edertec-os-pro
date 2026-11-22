@@ -1018,3 +1018,11 @@ td b { font-weight:650; }
 .tracking-decision{display:grid;gap:5px;padding:13px;margin:18px 0;border:1px solid #d7dce3;border-radius:10px;color:#242424}
 .tracking-decision small{color:#666}
 @media(max-width:480px){.tracking-approval-actions{grid-template-columns:1fr}.tracking-approval{padding:15px}}
+
+
+.tracking-approval-details{display:grid;gap:12px;margin-top:16px}
+.tracking-approval-details>div{display:grid;gap:6px;padding:13px;background:#fff;border:1px solid #eadfc9;border-radius:10px}
+.tracking-approval-details small{font-size:10px;font-weight:800;letter-spacing:1px;color:#777}
+.tracking-approval-details b{font-size:14px;line-height:1.5;color:#292929;white-space:pre-wrap;overflow-wrap:anywhere}
+.tracking-approval-price{background:#f7f1e5!important;border-color:#dfc58e!important}
+.tracking-approval-price strong{font-size:25px;line-height:1.2;color:#176b42}
