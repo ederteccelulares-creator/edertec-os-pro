@@ -261,3 +261,7 @@
 
 .tenant-whatsapp-button{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .tenant-whatsapp-button svg{flex:none}
+
+
+.tenant-history-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+@media(max-width:640px){.tenant-history-actions{width:100%}.tenant-history-actions button{flex:1;justify-content:center}}
