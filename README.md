@@ -1,52 +1,45 @@
 # Edertec OS Pro
 
-Sistema SaaS de gestão para assistências técnicas de celulares, planejado para atender várias empresas com isolamento de dados por organização.
+Plataforma SaaS de gestão para assistências técnicas de celulares, preparada para múltiplas empresas em um único produto, com isolamento de dados por organização.
 
-## Stack
+## Tecnologia
 - React + TypeScript + Vite
-- Supabase Auth + PostgreSQL + Row Level Security
-- Lucide icons
-- CSS responsivo (desktop e celular)
+- Supabase Auth
+- PostgreSQL com Row Level Security (RLS)
+- Lucide icons e CSS responsivo
 
-## Base SaaS adicionada
-- Organizações independentes (tenants)
-- Membros e papéis: owner, admin, manager, attendant e technician
-- Filiais por organização (cria automaticamente a Matriz)
-- Clientes, aparelhos e ordens de serviço vinculados à organização
-- Histórico de alterações de status das OS
-- Planos e assinaturas com período de teste inicial de 14 dias
-- Registros de auditoria
-- Políticas RLS para impedir leitura e alteração cruzada entre organizações
-- Cliente Supabase tipado e variáveis de ambiente de exemplo
+## Entregas já versionadas
+- Base de dados multiempresa: organizações, membros, papéis, filiais, clientes, aparelhos, ordens de serviço, eventos, planos, assinaturas e auditoria.
+- Políticas RLS iniciais para restringir os registros à organização do usuário autenticado.
+- Criação de empresa por função transacional `create_organization`, que cadastra proprietário, filial Matriz e período de teste inicial.
+- Tela de login e criação de conta com Supabase Auth.
+- Onboarding para cadastrar a assistência e seleção de empresa quando o usuário pertence a mais de uma.
+- Bloqueio do painel local antigo enquanto os módulos operacionais não estiverem conectados ao banco, evitando misturar dados entre empresas.
+- Protótipo anterior de dashboard, OS, clientes e impressão A4 preservado no repositório para migração progressiva.
 
-## Configuração do Supabase
-1. Crie um projeto no Supabase.
-2. No SQL Editor, execute o conteúdo de `supabase/migrations/0001_saas_core.sql`.
+## Configurar o banco e autenticação
+1. Crie um projeto no [Supabase](https://supabase.com/dashboard).
+2. No SQL Editor do projeto, execute o arquivo `supabase/migrations/0001_saas_core.sql`.
 3. Copie `.env.example` para `.env.local`.
-4. Preencha `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` com os dados do projeto.
-5. Instale as dependências e inicie o projeto:
+4. Preencha:
+   - `VITE_SUPABASE_URL`: Project URL.
+   - `VITE_SUPABASE_ANON_KEY`: chave pública anon/publishable do projeto.
+5. Em Authentication > URL Configuration, configure a URL do ambiente publicado e a URL local de desenvolvimento.
+6. Em Authentication > Providers, mantenha Email habilitado. Se a confirmação de e-mail estiver ativa, o usuário deverá confirmar o endereço antes do primeiro login.
+7. Instale e execute:
    ```bash
    npm install
    npm run dev
    ```
 
-**Nunca coloque a chave `service_role` no navegador ou em variáveis `VITE_*`.** O frontend deve usar somente a chave pública anon; operações administrativas e integrações de cobrança devem passar por backend seguro.
+**Segurança:** nunca coloque a chave `service_role` ou segredo de backend em variáveis `VITE_*` ou no navegador. O frontend usa somente a chave pública; operações privilegiadas, cobrança e webhooks deverão rodar em backend seguro.
 
-## Funcionalidades da interface em evolução
-- Dashboard e ordens de serviço em protótipo
-- Cadastro de clientes e histórico de atendimentos
-- Impressão de OS em A4 / salvar PDF
-- Layout adaptado para desktop e celular
+## Estado atual
+A camada inicial de autenticação e criação de organizações foi implementada no frontend, mas depende da criação e configuração do projeto Supabase pelo proprietário. O painel operacional ainda não foi migrado para consultas ao PostgreSQL. Não use dados reais de clientes nem comercialize o acesso até completar a migração dos módulos, testes automatizados e revisão de segurança.
 
-## Próximas entregas
-1. Tela de autenticação e criação de assistência com onboarding.
-2. Conectar clientes, aparelhos e OS ao PostgreSQL (remover persistência local).
-3. Gestão de equipe, convites e permissões.
-4. Cadastro de aparelhos e estoque.
-5. Financeiro, vendas, relatórios e notificações.
-6. Painel Super Admin para empresas, planos e assinaturas.
-7. Integração de cobrança recorrente e webhooks via backend.
-8. Testes automatizados, backups, monitoramento e publicação.
-
-## Estado e segurança
-O painel atual ainda contém módulos em prototipagem com armazenamento local. A camada de banco multiempresa foi preparada, mas a interface ainda não está conectada ao Supabase. Portanto, não disponibilize o sistema para clientes nem armazene dados reais até concluir autenticação, conexão de dados, testes de isolamento e revisão de segurança.
+## Próximas etapas
+1. Conectar clientes, aparelhos e ordens de serviço ao PostgreSQL, incluindo seleção de filial e histórico de status.
+2. Implementar equipes, convites, permissões por papel e Super Admin separado.
+3. Finalizar estoque, serviços, vendas, financeiro e relatórios.
+4. Implementar gestão de planos, cobrança recorrente e webhooks no backend.
+5. Testes de isolamento entre empresas, backup, monitoramento, recuperação e publicação.
