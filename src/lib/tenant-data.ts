@@ -276,3 +276,58 @@ export async function changeInventoryStock(
   if (error) throw error
   return data
 }
+
+
+export type FinancialEntryInput = {
+  entryType: 'income' | 'expense'
+  description: string
+  amount: number
+  paymentMethod: 'cash' | 'pix' | 'debit_card' | 'credit_card' | 'bank_transfer' | 'boleto' | 'other'
+  status: 'pending' | 'paid'
+  dueDate?: string
+  notes?: string
+}
+
+export async function listFinancialEntries(context: TenantContext) {
+  const { data, error } = await client().from('financial_entries')
+    .select('id, entry_type, description, amount, payment_method, status, due_date, paid_at, notes, created_at')
+    .eq('organization_id', context.organizationId)
+    .eq('branch_id', context.branchId)
+    .order('created_at', { ascending: false })
+    .limit(500)
+  if (error) throw error
+  return data ?? []
+}
+
+export async function createFinancialEntry(context: TenantContext, input: FinancialEntryInput) {
+  if (!Number.isFinite(input.amount) || input.amount <= 0) throw new Error('Informe um valor maior que zero.')
+  const { data, error } = await client().rpc('create_financial_entry', {
+    p_organization_id: context.organizationId,
+    p_branch_id: context.branchId,
+    p_entry_type: input.entryType,
+    p_description: required(input.description, 'a descrição'),
+    p_amount: input.amount,
+    p_payment_method: input.paymentMethod,
+    p_status: input.status,
+    p_due_date: input.dueDate || null,
+    p_category_id: null,
+    p_notes: input.notes?.trim() || null,
+  })
+  if (error) throw error
+  return data
+}
+
+export async function updateFinancialEntryStatus(
+  context: TenantContext,
+  entryId: string,
+  status: 'pending' | 'paid' | 'cancelled',
+) {
+  const { data, error } = await client().rpc('set_financial_entry_status', {
+    p_organization_id: context.organizationId,
+    p_branch_id: context.branchId,
+    p_entry_id: entryId,
+    p_status: status,
+  })
+  if (error) throw error
+  return data
+}
