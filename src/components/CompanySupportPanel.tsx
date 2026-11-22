@@ -20,7 +20,7 @@ export default function CompanySupportPanel({companyId,companyName}:{companyId:s
    })
    .on('postgres_changes',{event:'INSERT',schema:'public',table:'support_ticket_messages',filter:'company_id=eq.'+companyId},payload=>{
     const row=payload.new as SupportMessage
-    if(soundOn){void supabase.auth.getUser().then(({data})=>{if(row.author_id!==data.user?.id)playSupportNotification()})}
+    if(soundOn){void client.auth.getUser().then(({data})=>{if(row.author_id!==data.user?.id)playSupportNotification()})}
     if(active?.id===row.ticket_id)void listSupportMessages(row.ticket_id).then(setMessages).catch(()=>{})
     void load()
    })
