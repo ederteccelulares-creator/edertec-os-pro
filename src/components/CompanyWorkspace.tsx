@@ -182,7 +182,15 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   const activeOrders = orders.filter(o=>!['delivered','cancelled'].includes(o.status))
   const pendingOrders = orders.filter(o=>o.status==='waiting_approval')
   const orderRevenue = orders.reduce((sum,o)=>sum+Number(o.final_price||o.estimated_price||0),0)
-  const navigate = (next: typeof tab) => { setTab(next); setMenuOpen(false); setShowOrder(false); setShowCustomer(false) }
+  const canManage = role==='owner'||role==='admin'||role==='manager'
+  const canAdmin = role==='owner'||role==='admin'
+  const navigate = (next: typeof tab) => {
+    const managementTabs = ['pos','customerPortal','inventory','suppliers','purchases','cash','entries']
+    if (managementTabs.includes(next) && !canManage) return
+    if (next==='settings' && !canAdmin) return
+    if (next==='backup' && !canAdmin) return
+    setTab(next); setMenuOpen(false); setShowOrder(false); setShowCustomer(false)
+  }
 
   return <div className="company-app">
     <button className={menuOpen?'company-drawer-scrim visible':'company-drawer-scrim'} onClick={()=>setMenuOpen(false)} aria-label="Fechar menu"/>
@@ -199,16 +207,16 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
       <nav>
         <button className={tab==='dashboard'?'active':''} onClick={()=>navigate('dashboard')}><LayoutDashboard size={18}/> Dashboard</button>
         <button className={tab==='orders'?'active':''} onClick={()=>navigate('orders')}><ClipboardList size={18}/> Ordens de serviço</button>
-        <button className={tab==='pos'?'active':''} onClick={()=>navigate('pos')}><ShoppingCart size={18}/> PDV / Vendas</button>
+        {canManage&&<button className={tab==='pos'?'active':''} onClick={()=>navigate('pos')}><ShoppingCart size={18}/> PDV / Vendas</button>}
         <button className={tab==='customers'?'active':''} onClick={()=>navigate('customers')}><Users size={18}/> Clientes</button>
-        <button className={tab==='customerPortal'?'active':''} onClick={()=>navigate('customerPortal')}><Smartphone size={18}/> Área do Cliente</button>
-        <button className={tab==='inventory'?'active':''} onClick={()=>navigate('inventory')}><Package size={18}/> Estoque</button>
-        <button className={tab==='suppliers'?'active':''} onClick={()=>navigate('suppliers')}><Truck size={18}/> Fornecedores</button>
-        <button className={tab==='purchases'?'active':''} onClick={()=>navigate('purchases')}><ShoppingCart size={18}/> Compras</button>
-        <button className={tab==='cash'?'active':''} onClick={()=>navigate('cash')}><Wallet size={18}/> Fluxo de caixa</button>
-        <button className={tab==='entries'?'active':''} onClick={()=>navigate('entries')}><Wallet size={18}/> Contas a pagar/receber</button>
-        {(role==='owner'||role==='admin')&&<button className={tab==='backup'?'active':''} onClick={()=>navigate('backup')}><Database size={18}/> Backup e segurança</button>}
-        <button className={tab==='settings'?'active':''} onClick={()=>navigate('settings')}><Settings size={18}/> Configurações</button>
+        {canManage&&<button className={tab==='customerPortal'?'active':''} onClick={()=>navigate('customerPortal')}><Smartphone size={18}/> Área do Cliente</button>}
+        {canManage&&<button className={tab==='inventory'?'active':''} onClick={()=>navigate('inventory')}><Package size={18}/> Estoque</button>}
+        {canManage&&<button className={tab==='suppliers'?'active':''} onClick={()=>navigate('suppliers')}><Truck size={18}/> Fornecedores</button>}
+        {canManage&&<button className={tab==='purchases'?'active':''} onClick={()=>navigate('purchases')}><ShoppingCart size={18}/> Compras</button>}
+        {canManage&&<button className={tab==='cash'?'active':''} onClick={()=>navigate('cash')}><Wallet size={18}/> Fluxo de caixa</button>}
+        {canManage&&<button className={tab==='entries'?'active':''} onClick={()=>navigate('entries')}><Wallet size={18}/> Contas a pagar/receber</button>}
+        {canAdmin&&<button className={tab==='backup'?'active':''} onClick={()=>navigate('backup')}><Database size={18}/> Backup e segurança</button>}
+        {canAdmin&&<button className={tab==='settings'?'active':''} onClick={()=>navigate('settings')}><Settings size={18}/> Configurações</button>}
       </nav>
       <div className="company-user"><b>{email}</b><small>Perfil: {role}</small><button onClick={onSignOut}><LogOut size={15}/> Sair</button></div>
     </aside>
