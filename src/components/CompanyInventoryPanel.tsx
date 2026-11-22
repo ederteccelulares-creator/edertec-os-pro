@@ -13,7 +13,7 @@ export default function CompanyInventoryPanel({company}:{company:Company}) {
   const [notice,setNotice] = useState('')
   const [search,setSearch] = useState('')
   const [showForm,setShowForm] = useState(false)
-  const [form,setForm] = useState({sku:'',name:'',description:'',costPrice:'0',salePrice:'0',initialStock:'0',minimumStock:'0'})
+  const [form,setForm] = useState({sku:'',name:'',description:'',costPrice:'0',salePrice:'0',minimumStock:'0'})
 
   const load = useCallback(async()=>{
     setLoading(true);setError('')
@@ -30,9 +30,9 @@ export default function CompanyInventoryPanel({company}:{company:Company}) {
       await createCompanyProduct({
         companyId:company.id,sku:form.sku,name:form.name,description:form.description,
         costPrice:Number(form.costPrice),salePrice:Number(form.salePrice),
-        initialStock:Number(form.initialStock),minimumStock:Number(form.minimumStock),
+        minimumStock:Number(form.minimumStock),
       })
-      setForm({sku:'',name:'',description:'',costPrice:'0',salePrice:'0',initialStock:'0',minimumStock:'0'})
+      setForm({sku:'',name:'',description:'',costPrice:'0',salePrice:'0',minimumStock:'0'})
       setShowForm(false);setNotice('Produto cadastrado com sucesso.');await load()
     } catch(e) {setError(e instanceof Error?e.message:'Falha ao cadastrar produto.')}
     finally {setBusy(false)}
@@ -58,7 +58,6 @@ export default function CompanyInventoryPanel({company}:{company:Company}) {
         <label>SKU / Código<input value={form.sku} onChange={e=>setForm({...form,sku:e.target.value})}/></label>
         <label>Preço de custo (R$)<input required type="number" min="0" step="0.01" value={form.costPrice} onChange={e=>setForm({...form,costPrice:e.target.value})}/></label>
         <label>Preço de venda (R$)<input required type="number" min="0" step="0.01" value={form.salePrice} onChange={e=>setForm({...form,salePrice:e.target.value})}/></label>
-        <label>Estoque inicial<input required type="number" min="0" step="0.01" value={form.initialStock} onChange={e=>setForm({...form,initialStock:e.target.value})}/></label>
         <label>Estoque mínimo<input required type="number" min="0" step="0.01" value={form.minimumStock} onChange={e=>setForm({...form,minimumStock:e.target.value})}/></label>
       </div>
       <label>Descrição<input value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/></label>
