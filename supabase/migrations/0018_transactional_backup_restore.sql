@@ -196,6 +196,8 @@ declare
   result_value jsonb;
   identity_sequence text;
   max_identity bigint;
+  sequence_last bigint;
+  sequence_called boolean;
 begin
   if coalesce(current_setting('request.jwt.claim.role', true), '') <> 'service_role' then
     raise exception 'Restore must be invoked by the trusted service backend';
@@ -277,6 +279,9 @@ begin
   -- Validate the complete one-to-one source branch map to active branches.
   for row_value in select value from jsonb_array_elements(p_backup->'tables'->'branches')
   loop
+    if row_value->>'organization_id' is distinct from p_organization_id::text then
+      raise exception 'Invalid tenant key in branches collection';
+    end if;
     source_id := (row_value->>'id')::uuid;
     if source_id = any(source_branch_ids) then raise exception 'Duplicate source branch ID'; end if;
     source_branch_ids := array_append(source_branch_ids, source_id);
@@ -369,27 +374,33 @@ begin
   -- Reconcile GENERATED ALWAYS identity sequences after preserving source
   -- order numbers, sale numbers and audit log IDs.
   identity_sequence := pg_get_serial_sequence('public.service_orders','order_number');
-  execute 'select max(order_number) from public.service_orders'
-    into max_identity;
+  execute 'select max(order_number) from public.service_orders' into max_identity;
   if identity_sequence is not null then
-    if max_identity is null then perform setval(identity_sequence::regclass,1,false);
-    else perform setval(identity_sequence::regclass,max_identity,true); end if;
+    execute format('select last_value, is_called from %s', identity_sequence::regclass)
+      into sequence_last, sequence_called;
+    perform setval(identity_sequence::regclass,
+      greatest(coalesce(sequence_last,1),coalesce(max_identity,1)),
+      coalesce(sequence_called,false) or max_identity is not null);
   end if;
 
   identity_sequence := pg_get_serial_sequence('public.sales','sale_number');
-  execute 'select max(sale_number) from public.sales'
-    into max_identity using p_organization_id;
+  execute 'select max(sale_number) from public.sales' into max_identity;
   if identity_sequence is not null then
-    if max_identity is null then perform setval(identity_sequence,1,false);
-    else perform setval(identity_sequence,max_identity,true); end if;
+    execute format('select last_value, is_called from %s', identity_sequence::regclass)
+      into sequence_last, sequence_called;
+    perform setval(identity_sequence::regclass,
+      greatest(coalesce(sequence_last,1),coalesce(max_identity,1)),
+      coalesce(sequence_called,false) or max_identity is not null);
   end if;
 
   identity_sequence := pg_get_serial_sequence('public.audit_logs','id');
-  execute 'select max(id) from public.audit_logs'
-    into max_identity using p_organization_id;
+  execute 'select max(id) from public.audit_logs' into max_identity;
   if identity_sequence is not null then
-    if max_identity is null then perform setval(identity_sequence,1,false);
-    else perform setval(identity_sequence,max_identity,true); end if;
+    execute format('select last_value, is_called from %s', identity_sequence::regclass)
+      into sequence_last, sequence_called;
+    perform setval(identity_sequence::regclass,
+      greatest(coalesce(sequence_last,1),coalesce(max_identity,1)),
+      coalesce(sequence_called,false) or max_identity is not null);
   end if;
 
   insert into public.audit_logs(organization_id,actor_id,action,entity,entity_id,metadata)
