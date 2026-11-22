@@ -1,4 +1,5 @@
-import { FormEvent, useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import type { FormEvent } from 'react'
 import { Building2, CheckCircle2, LoaderCircle, LogOut, Mail, ShieldCheck, Smartphone, UserRound } from 'lucide-react'
 import type { Session } from '@supabase/supabase-js'
 import { isSupabaseConfigured, supabase, type Organization, type OrganizationRole } from '../lib/supabase'
@@ -26,7 +27,7 @@ function SetupRequired() {
   </section></main>
 }
 
-export default function AuthGate({ children }: { children: React.ReactNode }) {
+export default function AuthGate() {
   const [session, setSession] = useState<Session | null>(null)
   const [memberships, setMemberships] = useState<Membership[]>([])
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null)
