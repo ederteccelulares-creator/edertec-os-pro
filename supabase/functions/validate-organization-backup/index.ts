@@ -157,6 +157,22 @@ Deno.serve(async (req) => {
 
   const unknownTables = Object.keys(tables).filter(name => !TABLES.includes(name as typeof TABLES[number]));
   if (unknownTables.length) errors.push("O arquivo contém tabelas não reconhecidas: " + unknownTables.join(", "));
+  const targetCounts: Record<string, number> = {};
+  const targetResults = await Promise.all(TABLES.map(async (table) => {
+    const { count, error } = await adminClient.from(table)
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", organizationId);
+    return { table, count: count ?? 0, error };
+  }));
+  for (const result of targetResults) {
+    targetCounts[result.table] = result.count;
+    if (result.error) errors.push("Não foi possível conferir o destino em " + result.table + ".");
+  }
+  const destinationEmpty = targetResults.every(result => !result.error && result.count === 0);
+  const occupiedTables = targetResults
+    .filter(result => result.count > 0)
+    .map(result => ({ table: result.table, records: result.count }));
+
   const totalRecords = Object.values(counts).reduce((sum, count) => sum + count, 0);
   return response({
     valid: errors.length === 0,
@@ -169,6 +185,9 @@ Deno.serve(async (req) => {
     total_records: totalRecords,
     counts,
     requires_user_mapping: requiresUserMapping,
+    destination_empty: destinationEmpty,
+    target_counts: targetCounts,
+    occupied_tables: occupiedTables,
     errors,
   });
 });
