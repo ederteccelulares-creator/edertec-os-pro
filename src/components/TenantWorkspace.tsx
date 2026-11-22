@@ -441,8 +441,10 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
   async function openHistory(item: Order) {
     setHistoryOrder(item); setHistoryLoading(true); setError('')
     try {
-      const rows = await listServiceOrderEvents({ organizationId: organization.id, branchId }, item.id)
+      const context = { organizationId: organization.id, branchId }
+      const rows = await listServiceOrderEvents(context, item.id)
       setHistoryEvents(rows)
+      setOrderIntakeMedia(await listServiceOrderIntakeMedia(context, item.id))
     } catch (e) { setError(e instanceof Error ? e.message : 'Não foi possível carregar o histórico.') }
     finally { setHistoryLoading(false) }
   }
@@ -556,7 +558,7 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
       {historyOrder && <div className="tenant-modal-backdrop" onClick={() => setHistoryOrder(null)}>
         <section className="tenant-history-modal" onClick={event => event.stopPropagation()}>
           <div className="tenant-panel-head"><div><b>Histórico da OS #{historyOrder.order_number}</b><small>{historyOrder.customers?.name || 'Cliente'} · {historyOrder.devices?.brand} {historyOrder.devices?.model}</small></div><button className="tenant-modal-close" onClick={() => setHistoryOrder(null)}>Fechar</button></div>
-          {historyLoading ? <p className="tenant-empty">Carregando histórico...</p> : historyEvents.length === 0 ? <p className="tenant-empty">Nenhuma alteração registrada ainda.</p> : <div className="tenant-timeline">{historyEvents.map(event => <article key={event.id}><span className="tenant-timeline-dot" /><div><b>{statusLabels[event.to_status] || event.to_status}</b><small>{new Date(event.created_at).toLocaleString('pt-BR')}</small>{event.from_status && <p>De: {statusLabels[event.from_status] || event.from_status}</p>}{event.description && <p>{event.description}</p>}</div></article>)}</div>}
+          {orderIntakeMedia.length>0&&<div className="tenant-history-media"><b>Fotos e assinatura do recebimento</b><div>{orderIntakeMedia.map(media=><a key={media.name} href={media.url} target="_blank" rel="noreferrer"><img src={media.url} alt={media.name}/><small>{media.name.startsWith('signature-')?'Assinatura do cliente':'Foto do aparelho'}</small></a>)}</div></div>}{historyLoading ? <p className="tenant-empty">Carregando histórico...</p> : historyEvents.length === 0 ? <p className="tenant-empty">Nenhuma alteração registrada ainda.</p> : <div className="tenant-timeline">{historyEvents.map(event => <article key={event.id}><span className="tenant-timeline-dot" /><div><b>{statusLabels[event.to_status] || event.to_status}</b><small>{new Date(event.created_at).toLocaleString('pt-BR')}</small>{event.from_status && <p>De: {statusLabels[event.from_status] || event.from_status}</p>}{event.description && <p>{event.description}</p>}</div></article>)}</div>}
         </section>
       </div>}
       <p className="tenant-footnote">Dados vinculados à empresa e protegidos pelas políticas de acesso do banco. Faça logout ao usar um dispositivo compartilhado.</p>
