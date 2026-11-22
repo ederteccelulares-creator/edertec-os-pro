@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { Building2, ShieldCheck, CreditCard, Package, RefreshCw, LogOut, Plus } from 'lucide-react'
+import { Building2, ShieldCheck, CreditCard, Package, RefreshCw, LogOut, Plus, LifeBuoy } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import PlatformSupportPanel from './PlatformSupportPanel'
 
 type CompanyRow = { id:string; name:string; tax_id:string|null; status:string; created_at:string }
 type PlanRow = { id:string; code:string; name:string; description:string|null; price:number; billing_interval:string; max_branches:number|null; max_users:number|null; is_active:boolean }
@@ -11,7 +12,7 @@ const money=(value:number)=>Number(value||0).toLocaleString('pt-BR',{style:'curr
 const intervalLabels:Record<string,string>={monthly:'Mensal',yearly:'Anual',six_months:'Semestral',lifetime:'Vitalício'}
 
 export default function PlatformAdminPanel({email,onSignOut}:Props) {
-  const [tab,setTab]=useState<'companies'|'plans'|'subscriptions'>('companies')
+  const [tab,setTab]=useState<'companies'|'plans'|'subscriptions'|'support'>('companies')
   const [companies,setCompanies]=useState<CompanyRow[]>([])
   const [plans,setPlans]=useState<PlanRow[]>([])
   const [subscriptions,setSubscriptions]=useState<SubscriptionRow[]>([])
@@ -106,8 +107,9 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
       <div className="platform-title"><div><small>CONTROLE CENTRAL</small><h1>Super Admin</h1><p>Gerencie empresas, planos e assinaturas da plataforma.</p></div><button className="platform-refresh" onClick={()=>void load()}><RefreshCw size={15}/> Atualizar</button></div>
       {error&&<div className="platform-error">{error}</div>}{notice&&<div className="platform-notice">{notice}</div>}
       <div className="platform-stats"><article><Building2/><small>Empresas cadastradas</small><b>{companies.length}</b></article><article><Package/><small>Planos disponíveis</small><b>{plans.filter(p=>p.is_active).length}</b></article><article><CreditCard/><small>Assinaturas</small><b>{subscriptions.length}</b></article></div>
-      <nav className="platform-tabs"><button className={tab==='companies'?'active':''} onClick={()=>setTab('companies')}>Empresas</button><button className={tab==='plans'?'active':''} onClick={()=>setTab('plans')}>Planos</button><button className={tab==='subscriptions'?'active':''} onClick={()=>setTab('subscriptions')}>Assinaturas</button></nav>
+      <nav className="platform-tabs"><button className={tab==='companies'?'active':''} onClick={()=>setTab('companies')}>Empresas</button><button className={tab==='plans'?'active':''} onClick={()=>setTab('plans')}>Planos</button><button className={tab==='subscriptions'?'active':''} onClick={()=>setTab('subscriptions')}>Assinaturas</button><button className={tab==='support'?'active':''} onClick={()=>setTab('support')}><LifeBuoy size={15}/> Chamados</button></nav>
       {loading?<p className="platform-empty">Carregando dados da plataforma...</p>:<>
+        {tab==='support'&&<PlatformSupportPanel/>}
         {tab==='companies'&&<section className="platform-panel"><div className="platform-panel-title"><h2>Empresas cadastradas</h2><button onClick={()=>setShowCompany(v=>!v)}><Plus size={15}/> Nova empresa</button></div>
           {showCompany&&<form className="platform-form" onSubmit={createCompany}><label className="platform-wide">Nome da empresa<input required minLength={2} value={companyForm.name} onChange={e=>setCompanyForm(v=>({...v,name:e.target.value}))} placeholder="Ex.: Edertec Assistência Técnica"/></label><label>CNPJ ou CPF<input value={companyForm.taxId} onChange={e=>setCompanyForm(v=>({...v,taxId:e.target.value}))} placeholder="Opcional"/></label><label>Telefone<input value={companyForm.phone} onChange={e=>setCompanyForm(v=>({...v,phone:e.target.value}))} placeholder="(00) 00000-0000"/></label><div className="platform-form-actions"><button type="button" onClick={()=>setShowCompany(false)}>Cancelar</button><button type="submit" disabled={busy}>{busy?'Cadastrando...':'Criar empresa'}</button></div></form>}
           <div className="platform-table-wrap"><table><thead><tr><th>EMPRESA</th><th>DOCUMENTO</th><th>CADASTRO</th><th>SITUAÇÃO</th></tr></thead><tbody>{companies.map(c=><tr key={c.id}><td><b>{c.name}</b><small>{c.id}</small></td><td>{c.tax_id||'—'}</td><td>{new Date(c.created_at).toLocaleDateString('pt-BR')}</td><td><select disabled={busy} value={c.status} onChange={e=>void updateCompanyStatus(c,e.target.value)}><option value="active">Ativa</option><option value="suspended">Suspensa</option><option value="cancelled">Cancelada</option></select></td></tr>)}</tbody></table></div></section>}
