@@ -1,5 +1,5 @@
 name: Deploy Edertec OS Pro to GitHub Pages
-# Rebuild and upload the Pages artifact on every deployment attempt.
+# A fresh push creates exactly one Pages artifact per workflow run.
 
 on:
   push:
