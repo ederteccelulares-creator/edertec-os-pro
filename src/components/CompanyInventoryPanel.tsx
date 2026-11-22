@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, type FormEvent, type ChangeEvent } from 'react'
 import { Plus, RefreshCw, Search, Package, AlertTriangle } from 'lucide-react'
 import { createCompanyProduct, listCompanyProducts, listCompanyStockMovements, recordCompanyStockMovement, type CompanyProduct, type CompanyStockMovement } from '../lib/company-inventory'
 import type { Company } from '../lib/company-data'
@@ -17,6 +17,7 @@ export default function CompanyInventoryPanel({company}:{company:Company}) {
   const [movementProduct,setMovementProduct] = useState<CompanyProduct|null>(null)
   const [movement,setMovement] = useState({type:'in' as 'in'|'out'|'adjustment',quantity:'1',unitCost:'0',reason:''})
   const [form,setForm] = useState({sku:'',name:'',description:'',costPrice:'0',salePrice:'0',minimumStock:'0'})
+  const [imageFile,setImageFile] = useState<File|null>(null)
 
   const load = useCallback(async()=>{
     setLoading(true);setError('')
@@ -33,9 +34,9 @@ export default function CompanyInventoryPanel({company}:{company:Company}) {
       await createCompanyProduct({
         companyId:company.id,sku:form.sku,name:form.name,description:form.description,
         costPrice:Number(form.costPrice),salePrice:Number(form.salePrice),
-        minimumStock:Number(form.minimumStock),
+        minimumStock:Number(form.minimumStock),imageFile,
       })
-      setForm({sku:'',name:'',description:'',costPrice:'0',salePrice:'0',minimumStock:'0'})
+      setForm({sku:'',name:'',description:'',costPrice:'0',salePrice:'0',minimumStock:'0'});setImageFile(null)
       setShowForm(false);setNotice('Produto cadastrado com sucesso.');await load()
     } catch(e) {setError(e instanceof Error?e.message:'Falha ao cadastrar produto.')}
     finally {setBusy(false)}
@@ -89,11 +90,12 @@ export default function CompanyInventoryPanel({company}:{company:Company}) {
         <label>Estoque mínimo<input required type="number" min="0" step="0.01" value={form.minimumStock} onChange={e=>setForm({...form,minimumStock:e.target.value})}/></label>
       </div>
       <label>Descrição<input value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/></label>
+      <label>Foto do produto (JPG, PNG ou WebP · até 5 MB)<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e:ChangeEvent<HTMLInputElement>)=>setImageFile(e.target.files?.[0]||null)}/>{imageFile&&<small>{imageFile.name}</small>}</label>
       <div className="company-form-actions"><button type="button" className="company-secondary" onClick={()=>setShowForm(false)}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Salvando...':'Salvar produto'}</button></div>
     </form>}
     {loading?<p className="company-empty">Carregando estoque...</p>:products.length===0?<p className="company-empty"><Package size={22}/><br/>Nenhum produto encontrado.</p>:
       <div className="company-table-wrap"><table><thead><tr><th>PRODUTO</th><th>SKU</th><th>CUSTO</th><th>VENDA</th><th>ESTOQUE</th><th>MÍNIMO</th><th>SITUAÇÃO</th><th>AÇÃO</th></tr></thead><tbody>
-        {products.map(p=><tr key={p.id}><td><b>{p.name}</b><small>{p.description||'—'}</small></td><td>{p.sku||'—'}</td><td>{money(p.cost_price)}</td><td>{money(p.sale_price)}</td><td><b>{Number(p.stock_quantity).toLocaleString('pt-BR')}</b></td><td>{Number(p.min_stock).toLocaleString('pt-BR')}</td><td>{Number(p.stock_quantity)<=Number(p.min_stock)?<span className="company-low-stock"><AlertTriangle size={13}/> Estoque baixo</span>:<span className="company-stock-ok">Normal</span>}</td><td><button className="company-secondary company-small-action" onClick={()=>{setMovementProduct(p);setMovement({type:'in',quantity:'1',unitCost:String(p.cost_price||0),reason:''})}}>Movimentar</button></td></tr>)}
+        {products.map(p=><tr key={p.id}><td><div className="company-product-cell">{p.image_url?<img src={p.image_url} alt={p.name}/>:<span className="company-product-placeholder"><Package size={18}/></span>}<div><b>{p.name}</b><small>{p.description||'—'}</small></div></div></td><td>{p.sku||'—'}</td><td>{money(p.cost_price)}</td><td>{money(p.sale_price)}</td><td><b>{Number(p.stock_quantity).toLocaleString('pt-BR')}</b></td><td>{Number(p.min_stock).toLocaleString('pt-BR')}</td><td>{Number(p.stock_quantity)<=Number(p.min_stock)?<span className="company-low-stock"><AlertTriangle size={13}/> Estoque baixo</span>:<span className="company-stock-ok">Normal</span>}</td><td><button className="company-secondary company-small-action" onClick={()=>{setMovementProduct(p);setMovement({type:'in',quantity:'1',unitCost:String(p.cost_price||0),reason:''})}}>Movimentar</button></td></tr>)}
       </tbody></table></div>}
     <div className="company-inventory-history">
       <div className="company-panel-head"><div><b>Histórico de movimentações</b><small>Últimos {movements.length} registros</small></div></div>
