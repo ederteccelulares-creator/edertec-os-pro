@@ -128,6 +128,9 @@ begin
   ) then
     raise exception 'Restore did not remap historical event actor';
   end if;
+  if nextval(pg_get_serial_sequence('public.service_orders','order_number')) <= 777 then
+    raise exception 'Restore did not advance the service-order identity sequence';
+  end if;
 
   replay_value := public.restore_organization_backup(
     org_a,owner_a,idempotency,payload,
