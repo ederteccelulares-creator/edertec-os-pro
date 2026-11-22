@@ -570,9 +570,9 @@ export async function exportOrganizationBackup(organizationId: string) {
 }
 
 
-export async function validateOrganizationBackup(organizationId: string, backup: Record<string, unknown>) {
+export async function validateOrganizationBackup(organizationId: string, backup: Record<string, unknown>, userMapping?: Record<string, string>) {
   const { data, error } = await client().functions.invoke('validate-organization-backup', {
-    body: { organization_id: organizationId, backup },
+    body: { organization_id: organizationId, backup, ...(userMapping ? { user_mapping: userMapping } : {}) },
   })
   if (error) throw error
   if (data?.error) throw new Error(data.error)
@@ -588,6 +588,9 @@ export async function validateOrganizationBackup(organizationId: string, backup:
     user_mapping_requirements: Array<{table:string;field:string;records:number}>
     source_users: Array<{source_user_id:string;references:Array<{table:string;field:string;records:number}>;same_id_member_exists:boolean}>
     destination_members: Array<{user_id:string;full_name:string;role:string;active:boolean}>
+    mapping_provided: boolean
+    mapping_valid: boolean
+    mapping_errors: string[]
     destination_empty: boolean
     target_counts: Record<string, number>
     occupied_tables: Array<{table: string; records: number}>
