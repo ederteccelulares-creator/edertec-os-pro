@@ -191,7 +191,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
     <main className="company-main">
       <div className="company-mobilebar"><button onClick={()=>setMenuOpen(true)} aria-label="Abrir menu"><Menu/></button><div><b>EDERTEC <i>OS PRO</i></b><small>{companyInfo.name}</small></div><span className="company-mobile-avatar">{(email[0]||'U').toUpperCase()}</span></div>
       <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='backup'?'Backup de dados':tab==='settings'?'Configurações':tab==='pos'?'PDV / Vendas':'Financeiro'}</h1></div><div className="company-top-actions"><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
-      {tab==='dashboard'&&<section className="company-dashboard"><button className="company-primary company-dashboard-pos-shortcut" onClick={()=>navigate('pos')}><ShoppingCart size={18}/> Abrir PDV / Vendas</button>
+      {tab==='dashboard'&&<section className="company-dashboard">
         <p className="company-dashboard-subtitle">Visão geral da assistência técnica</p>
         <div className="company-dashboard-stats">
           <article className="pink"><span><ClipboardList/></span><div><b>OS Ativas</b><strong>{activeOrders.length}</strong><small>ordens em andamento</small></div></article>
