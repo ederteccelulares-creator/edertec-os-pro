@@ -69,16 +69,31 @@ export default function AuthGate() {
       if (!alive) return
       setSession(data.session)
       if (data.session?.user) {
-        try { await loadMemberships(data.session.user.id) }
-        catch (e) { if (alive) setError(e instanceof Error ? e.message : 'Não foi possível carregar suas empresas.') }
+        try {
+          const isAdmin = await isPlatformAdmin()
+          if (alive) setPlatformAdmin(isAdmin)
+          if (!isAdmin) await loadMemberships(data.session.user.id)
+        } catch (e) {
+          if (alive) setError(e instanceof Error ? e.message : 'Não foi possível verificar seu acesso.')
+        }
       }
       if (alive) setLoading(false)
     })
     const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession)
-      if (!nextSession) { setMemberships([]); setSelectedOrg(null) }
-      else {
-        window.setTimeout(() => { loadMemberships(nextSession.user.id).catch(e => setError(e.message || 'Erro ao carregar empresas.')) }, 0)
+      if (!nextSession) {
+        setMemberships([]); setSelectedOrg(null); setPlatformAdmin(false)
+      } else {
+        window.setTimeout(async () => {
+          try {
+            const isAdmin = await isPlatformAdmin()
+            setPlatformAdmin(isAdmin)
+            if (!isAdmin) await loadMemberships(nextSession.user.id)
+            else { setMemberships([]); setSelectedOrg(null) }
+          } catch (e) {
+            setError(e instanceof Error ? e.message : 'Erro ao verificar acesso administrativo.')
+          }
+        }, 0)
       }
     })
     return () => { alive = false; listener.subscription.unsubscribe() }
@@ -143,7 +158,7 @@ export default function AuthGate() {
     <div className="auth-security"><ShieldCheck size={15}/> Conexão autenticada e separação de dados por assistência</div>
   </section></main>
 
-  if (platformAdmin) return <SuperAdminWorkspace email={session.user.email || ''} onSignOut={signOut} />\n\n  if (!selectedOrg && memberships.length > 1) return <main className="auth-page"><section className="auth-card">
+  if (platformAdmin) return <SuperAdminWorkspace email={session.user.email || ''} onSignOut={signOut} />\n\n  if (platformAdmin && session) return <SuperAdminWorkspace email={session.user.email || ''} onSignOut={signOut} />\n\n  if (!selectedOrg && memberships.length > 1) return <main className="auth-page"><section className="auth-card">
     <div className="auth-brand"><span><Building2 size={24}/></span><div><b>EDERTEC <i>OS PRO</i></b><small>SELECIONE SUA EMPRESA</small></div></div><h1>Qual assistência deseja acessar?</h1>
     <div className="org-list">{memberships.map(m=>{const org=Array.isArray(m.organizations)?m.organizations[0]:m.organizations;return org?<button key={m.organization_id} className="org-option" onClick={()=>setSelectedOrg(org)}><Building2 size={20}/><span><b>{org.name}</b><small>{m.role}</small></span>→</button>:null})}</div><button className="auth-switch" onClick={signOut}>Sair da conta</button>
   </section></main>
