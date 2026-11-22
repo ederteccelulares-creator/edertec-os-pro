@@ -81,7 +81,7 @@ export async function listMyCompanies(): Promise<CompanyMembership[]> {
 
   const { data, error } = await api
     .from('company_members')
-    .select('company_id, role, companies(id,name,legal_name,tax_id,email,phone,status)')
+    .select('company_id, role, companies(id,name,legal_name,tax_id,email,phone,status,logo_url)')
     .eq('user_id', auth.user.id)
   if (error) throw error
   return (data ?? []) as unknown as CompanyMembership[]
