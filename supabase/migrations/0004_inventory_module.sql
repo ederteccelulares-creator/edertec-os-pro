@@ -141,3 +141,51 @@ $$;
 
 revoke all on function public.adjust_branch_stock(uuid,uuid,uuid,text,numeric,text) from public;
 grant execute on function public.adjust_branch_stock(uuid,uuid,uuid,text,numeric,text) to authenticated;
+
+
+create or replace function public.create_inventory_item_for_branch(
+  p_organization_id uuid,
+  p_branch_id uuid,
+  p_name text,
+  p_sku text default null,
+  p_category text default 'Geral',
+  p_cost_price numeric default 0,
+  p_sale_price numeric default 0,
+  p_min_stock numeric default 0
+)
+returns public.inventory_items
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare new_item public.inventory_items;
+begin
+  if auth.uid() is null then raise exception 'Authentication required'; end if;
+  if not public.has_org_role(p_organization_id, array['owner','admin','manager']::public.member_role[]) then
+    raise exception 'You do not have permission to create inventory items';
+  end if;
+  if not exists(select 1 from public.branches where id=p_branch_id and organization_id=p_organization_id and active) then
+    raise exception 'Branch not found or inactive';
+  end if;
+  if nullif(trim(coalesce(p_name,'')), '') is null then raise exception 'Product name is required'; end if;
+  if coalesce(p_cost_price,0)<0 or coalesce(p_sale_price,0)<0 or coalesce(p_min_stock,0)<0 then
+    raise exception 'Prices and minimum stock cannot be negative';
+  end if;
+
+  insert into public.inventory_items(organization_id,name,sku,category,cost_price,sale_price,min_stock)
+  values(p_organization_id,trim(p_name),nullif(trim(coalesce(p_sku,'')),''),coalesce(nullif(trim(coalesce(p_category,'')),''),'Geral'),coalesce(p_cost_price,0),coalesce(p_sale_price,0),coalesce(p_min_stock,0))
+  returning * into new_item;
+
+  insert into public.branch_inventory(organization_id,branch_id,item_id,quantity)
+  values(p_organization_id,p_branch_id,new_item.id,0);
+
+  insert into public.audit_logs(organization_id,actor_id,action,entity,entity_id,metadata)
+  values(p_organization_id,auth.uid(),'inventory.item_created','inventory_item',new_item.id::text,
+    jsonb_build_object('branch_id',p_branch_id,'name',new_item.name));
+
+  return new_item;
+end;
+$$;
+
+revoke all on function public.create_inventory_item_for_branch(uuid,uuid,text,text,text,numeric,numeric,numeric) from public;
+grant execute on function public.create_inventory_item_for_branch(uuid,uuid,text,text,text,numeric,numeric,numeric) to authenticated;
