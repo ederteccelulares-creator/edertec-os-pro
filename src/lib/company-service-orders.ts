@@ -197,6 +197,11 @@ export async function createCompanyServiceOrder(input: CreateCompanyServiceOrder
   if (error) throw error
   const created = data as CompanyServiceOrder
   const photos = input.photos || []
+  if (photos.length > 10) throw new Error('Anexe no máximo 10 fotos por ordem de serviço.')
+  for (const file of photos) {
+    if (!['image/jpeg','image/png','image/webp'].includes(file.type)) throw new Error('As fotos devem estar em JPG, PNG ou WebP.')
+    if (file.size > 8 * 1024 * 1024) throw new Error('Cada foto pode ter no máximo 8 MB.')
+  }
   if (photos.length) {
     const bucket = db().storage.from('service-order-photos')
     const uploaded: string[] = []
