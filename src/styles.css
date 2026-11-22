@@ -1364,3 +1364,7 @@ td b { font-weight:650; }
  .company-dashboard-stats small{font-size:10px}
  .company-dashboard-recent{padding:14px}
 }
+
+.company-logo-preview{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px;border:1px solid #303741;border-radius:10px;background:#0e1217}
+.company-logo-preview img{display:block;max-width:180px;max-height:90px;object-fit:contain;background:#fff;border-radius:6px;padding:6px}
+.company-print-settings input[type=file]{padding:9px;min-height:46px}
