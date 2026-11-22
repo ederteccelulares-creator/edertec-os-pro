@@ -1,5 +1,5 @@
 -- Edertec OS Pro - database security regression checks
--- Run in Supabase SQL Editor only after applying migrations 0001 through 0016.
+-- Run in Supabase SQL Editor only after applying migrations 0001 through 0017.
 -- These checks validate critical policies and triggers; they do not replace
 -- end-to-end tests with separate authenticated users and organizations.
 
@@ -83,10 +83,28 @@ begin
     missing := array_append(missing, 'Sale item privacy policy missing');
   end if;
 
+  if not exists (
+    select 1 from pg_proc p
+    join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='public' and p.proname='assign_service_order_technician'
+      and pg_get_function_identity_arguments(p.oid)='p_organization_id uuid, p_branch_id uuid, p_order_id uuid, p_technician_id uuid'
+  ) then
+    missing := array_append(missing, 'Technician assignment RPC missing');
+  else
+    if not has_function_privilege('authenticated',
+      'public.assign_service_order_technician(uuid,uuid,uuid,uuid)', 'EXECUTE') then
+      missing := array_append(missing, 'Authenticated role cannot execute technician assignment RPC');
+    end if;
+    if has_function_privilege('anon',
+      'public.assign_service_order_technician(uuid,uuid,uuid,uuid)', 'EXECUTE') then
+      missing := array_append(missing, 'Anonymous role can execute technician assignment RPC');
+    end if;
+  end if;
+
   if cardinality(missing)>0 then
     raise exception 'Security regression checks failed: %', array_to_string(missing, '; ');
   end if;
 
-  raise notice 'Security regression checks passed for migrations 0001-0016.';
+  raise notice 'Security regression checks passed for migrations 0001-0017.';
 end;
 $$;
