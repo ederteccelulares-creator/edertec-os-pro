@@ -35,7 +35,7 @@ export type CompanyServiceOrder = {
   employees?: { id: string; name: string } | null
 }
 
-export type ServiceOrderListFilters = {
+const statusToDatabase: Record<string, string> = {\n  received: 'received',\n  diagnosing: 'diagnosis',\n  diagnosis: 'diagnosis',\n  waiting_approval: 'waiting_approval',\n  approved: 'approved',\n  waiting_parts: 'waiting_parts',\n  repairing: 'in_repair',\n  in_repair: 'in_repair',\n  ready: 'ready',\n  delivered: 'delivered',\n  cancelled: 'cancelled',\n}\n\nfunction toDatabaseStatus(status: string) {\n  const normalized = statusToDatabase[status]\n  if (!normalized) throw new Error('Status de ordem de serviço inválido.')\n  return normalized\n}\n\nexport type ServiceOrderListFilters = {
   companyId: string
   branchId?: string | null
   status?: string | null
@@ -67,7 +67,7 @@ export async function listCompanyServiceOrders(
     .limit(Math.min(Math.max(filters.limit ?? 100, 1), 500))
 
   if (filters.branchId) query = query.eq('branch_id', filters.branchId)
-  if (filters.status) query = query.eq('status', filters.status)
+  if (filters.status) query = query.eq('status', toDatabaseStatus(filters.status))
 
   const search = filters.search?.trim()
   if (search) {
@@ -91,21 +91,11 @@ export async function listCompanyServiceOrders(
 export async function updateCompanyServiceOrderStatus(
   input: { companyId: string; orderId: string; status: string },
 ) {
-  const allowed = new Set([
-    'received',
-    'diagnosing',
-    'waiting_approval',
-    'waiting_parts',
-    'repairing',
-    'ready',
-    'delivered',
-    'cancelled',
-  ])
-  if (!allowed.has(input.status)) throw new Error('Status de ordem de serviço inválido.')
+  const databaseStatus = toDatabaseStatus(input.status)
 
   const { data, error } = await db()
     .from('service_orders')
-    .update({ status: input.status, updated_at: new Date().toISOString() })
+    .update({ status: databaseStatus, updated_at: new Date().toISOString() })
     .eq('company_id', input.companyId)
     .eq('id', input.orderId)
     .select('id,status,updated_at')
