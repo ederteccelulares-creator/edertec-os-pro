@@ -16,6 +16,7 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
   const [companies,setCompanies]=useState<CompanyRow[]>([])
   const [plans,setPlans]=useState<PlanRow[]>([])
   const [subscriptions,setSubscriptions]=useState<SubscriptionRow[]>([])
+  const [openTickets,setOpenTickets]=useState(0)
   const [loading,setLoading]=useState(true)
   const [busy,setBusy]=useState(false)
   const [error,setError]=useState('')
@@ -33,18 +34,30 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
     if(!supabase)return
     setLoading(true);setError('')
     try{
-      const [c,p,s]=await Promise.all([
+      const [c,p,s,t]=await Promise.all([
         supabase.from('companies').select('id,name,tax_id,status,created_at').order('created_at',{ascending:false}).limit(500),
         supabase.from('subscription_plans').select('id,code,name,description,price,billing_interval,max_branches,max_users,is_active').order('price'),
         supabase.from('company_subscriptions').select('id,company_id,plan_id,status,starts_at,ends_at,trial_ends_at,companies(name),subscription_plans(name)').order('created_at',{ascending:false}).limit(500),
+        supabase.from('support_tickets').select('id',{count:'exact',head:true}).eq('status','open'),
       ])
-      if(c.error)throw c.error;if(p.error)throw p.error;if(s.error)throw s.error
-      setCompanies((c.data||[]) as CompanyRow[]);setPlans((p.data||[]) as PlanRow[]);setSubscriptions((s.data||[]) as SubscriptionRow[])
+      if(c.error)throw c.error;if(p.error)throw p.error;if(s.error)throw s.error;if(t.error)throw t.error
+      setCompanies((c.data||[]) as CompanyRow[]);setPlans((p.data||[]) as PlanRow[]);setSubscriptions((s.data||[]) as SubscriptionRow[]);setOpenTickets(t.count||0)
     }catch(e){setError(e instanceof Error?e.message:'Não foi possível carregar o painel.')}
     finally{setLoading(false)}
   },[])
 
   useEffect(()=>{void load()},[load])
+
+  useEffect(()=>{
+    if(!supabase)return
+    const channel=supabase.channel('platform-dashboard-open-tickets')
+      .on('postgres_changes',{event:'*',schema:'public',table:'support_tickets'},()=>{
+        void supabase.from('support_tickets').select('id',{count:'exact',head:true}).eq('status','open')
+          .then(({count,error})=>{if(!error)setOpenTickets(count||0)})
+      })
+      .subscribe()
+    return()=>{void supabase.removeChannel(channel)}
+  },[])
 
   async function createCompany(event:FormEvent){
     event.preventDefault();if(!supabase)return
@@ -162,7 +175,7 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
     <section className="platform-content">
       <div className="platform-title"><div><small>CONTROLE CENTRAL</small><h1>Super Admin</h1><p>Gerencie empresas, planos e assinaturas da plataforma.</p></div><button className="platform-refresh" onClick={()=>void load()}><RefreshCw size={15}/> Atualizar</button></div>
       {error&&<div className="platform-error">{error}</div>}{notice&&<div className="platform-notice">{notice}</div>}
-      <div className="platform-stats"><article><Building2/><small>Empresas cadastradas</small><b>{companies.length}</b></article><article><Package/><small>Planos disponíveis</small><b>{plans.filter(p=>p.is_active).length}</b></article><article><CreditCard/><small>Assinaturas</small><b>{subscriptions.length}</b></article></div>
+      <div className="platform-stats"><article><Building2/><small>Empresas cadastradas</small><b>{companies.length}</b></article><article><Package/><small>Planos disponíveis</small><b>{plans.filter(p=>p.is_active).length}</b></article><article><CreditCard/><small>Assinaturas</small><b>{subscriptions.length}</b></article><button type="button" className="platform-stat-action" onClick={()=>setTab('support')} aria-label={openTickets+' chamados abertos. Abrir central de suporte'}><LifeBuoy/><small>Chamados abertos</small><b>{openTickets}</b><span>Ver chamados →</span></button></div>
       <nav className="platform-tabs"><button className={tab==='companies'?'active':''} onClick={()=>setTab('companies')}>Empresas</button><button className={tab==='plans'?'active':''} onClick={()=>setTab('plans')}>Planos</button><button className={tab==='subscriptions'?'active':''} onClick={()=>setTab('subscriptions')}>Assinaturas</button><button className={tab==='support'?'active':''} onClick={()=>setTab('support')}><LifeBuoy size={15}/> Chamados</button><button className={tab==='billing'?'active':''} onClick={()=>setTab('billing')}><CreditCard size={15}/> Cobrança</button></nav>
       {loading?<p className="platform-empty">Carregando dados da plataforma...</p>:<>
         {tab==='support'&&<PlatformSupportPanel/>}
