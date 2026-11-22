@@ -39,6 +39,11 @@ begin
     (org_a,'Restore Tenant A','restore-tenant-a',owner_a),
     (org_b,'Restore Tenant B','restore-tenant-b',owner_b);
 
+  insert into public.subscriptions(organization_id,status,trial_ends_at)
+  values
+    (org_a,'trialing',now()+interval '14 days'),
+    (org_b,'trialing',now()+interval '14 days');
+
   insert into public.organization_members(organization_id,user_id,role,active)
   values
     (org_a,owner_a,'owner',true),
