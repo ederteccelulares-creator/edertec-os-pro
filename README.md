@@ -166,3 +166,9 @@ A prévia também identifica as filiais do backup, seus códigos e nomes, e cont
 ## Projeto técnico de restauração segura
 
 O plano `supabase/docs/backup-restore-implementation-plan.md` documenta a ordem de dependências, os campos que exigem remapeamento de filiais e usuários, colisões de chaves únicas, colunas identity e os requisitos de transação/rollback. É documentação de implementação, não uma rotina de restauração. A função de validação permanece somente leitura e `restore_ready` permanece `false`.
+
+
+
+## Contrato do schema para futura restauração
+
+O script `supabase/tests/backup_restore_schema_contract.sql` faz uma verificação somente de leitura das chaves de organização, das relações entre as tabelas exportadas e das colunas identity de OS e vendas. Execute-o em um projeto Supabase descartável depois das migrações 0001 a 0016. Ele não testa nem executa a restauração; serve para detectar divergências entre o schema instalado e o plano documentado em `supabase/docs/backup-restore-implementation-plan.md`.
