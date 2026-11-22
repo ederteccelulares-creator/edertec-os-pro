@@ -257,3 +257,7 @@
   .tenant-print-sheet h2{break-after:avoid}
   .tenant-print-checklist,.tenant-print-media figure{break-inside:avoid}
 }
+
+
+.tenant-whatsapp-button{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.tenant-whatsapp-button svg{flex:none}
