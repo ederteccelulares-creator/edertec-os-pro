@@ -127,6 +127,13 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
     <aside className={menuOpen?'company-sidebar drawer-open':'company-sidebar'}>
       <div className="company-logo"><span><Smartphone/></span><div><b>EDERTEC <i>OS PRO</i></b><small>GESTÃO DE ASSISTÊNCIAS</small></div><button className="company-drawer-close" onClick={()=>setMenuOpen(false)} aria-label="Fechar menu"><X/></button></div>
       <div className="company-current">{company.name}</div>
+      <div className="company-branch-switch">
+        <label htmlFor="company-branch-select">FILIAL / MATRIZ</label>
+        <select id="company-branch-select" value={branchId} onChange={e=>setBranchId(e.target.value)}>
+          <option value="">Todas as filiais</option>
+          {branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}
+        </select>
+      </div>
       <nav>
         <button className={tab==='dashboard'?'active':''} onClick={()=>navigate('dashboard')}><LayoutDashboard size={18}/> Dashboard</button>
         <button className={tab==='orders'?'active':''} onClick={()=>navigate('orders')}><ClipboardList size={18}/> Ordens de serviço</button>
@@ -142,7 +149,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
     </aside>
     <main className="company-main">
       <div className="company-mobilebar"><button onClick={()=>setMenuOpen(true)} aria-label="Abrir menu"><Menu/></button><div><b>EDERTEC <i>OS PRO</i></b><small>{company.name}</small></div><span className="company-mobile-avatar">{(email[0]||'U').toUpperCase()}</span></div>
-      <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='backup'?'Backup de dados':'Financeiro'}</h1></div><div className="company-top-actions"><select value={branchId} onChange={e=>setBranchId(e.target.value)}><option value="">Todas as filiais</option>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
+      <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='backup'?'Backup de dados':'Financeiro'}</h1></div><div className="company-top-actions"><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
       {tab==='dashboard'&&<section className="company-dashboard">
         <p className="company-dashboard-subtitle">Visão geral da assistência técnica</p>
         <div className="company-dashboard-stats">
