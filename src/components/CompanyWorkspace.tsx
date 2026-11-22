@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent, type ChangeEvent } from 'react'
 import { Building2, ClipboardList, Users, Package, Truck, ShoppingCart, Wallet, Plus, RefreshCw, LogOut, Database, Download, LayoutDashboard, Menu, X, Smartphone, Printer, Settings } from 'lucide-react'
 import CompanyInventoryPanel from './CompanyInventoryPanel'
+import CompanyPOSPanel from './CompanyPOSPanel'
 import CompanySuppliersPanel from './CompanySuppliersPanel'
 import CompanyPurchasesPanel from './CompanyPurchasesPanel'
 import CompanyCashPanel from './CompanyCashPanel'
@@ -16,7 +17,7 @@ const statusFlow = ['received','diagnosis','waiting_approval','approved','waitin
 const money = (n:number) => Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 
 export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
-  const [tab,setTab] = useState<'dashboard'|'orders'|'customers'|'inventory'|'suppliers'|'purchases'|'cash'|'entries'|'backup'|'settings'>('dashboard')
+  const [tab,setTab] = useState<'dashboard'|'orders'|'customers'|'inventory'|'suppliers'|'purchases'|'cash'|'entries'|'pos'|'backup'|'settings'>('dashboard')
   const [menuOpen,setMenuOpen] = useState(false)
   const [companyInfo,setCompanyInfo] = useState(company)
   const [companySaving,setCompanySaving] = useState(false)
@@ -175,6 +176,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
       <nav>
         <button className={tab==='dashboard'?'active':''} onClick={()=>navigate('dashboard')}><LayoutDashboard size={18}/> Dashboard</button>
         <button className={tab==='orders'?'active':''} onClick={()=>navigate('orders')}><ClipboardList size={18}/> Ordens de serviço</button>
+        <button className={tab==='pos'?'active':''} onClick={()=>navigate('pos')}><ShoppingCart size={18}/> PDV / Vendas</button>
         <button className={tab==='customers'?'active':''} onClick={()=>navigate('customers')}><Users size={18}/> Clientes</button>
         <button className={tab==='inventory'?'active':''} onClick={()=>navigate('inventory')}><Package size={18}/> Estoque</button>
         <button className={tab==='suppliers'?'active':''} onClick={()=>navigate('suppliers')}><Truck size={18}/> Fornecedores</button>
@@ -188,7 +190,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
     </aside>
     <main className="company-main">
       <div className="company-mobilebar"><button onClick={()=>setMenuOpen(true)} aria-label="Abrir menu"><Menu/></button><div><b>EDERTEC <i>OS PRO</i></b><small>{companyInfo.name}</small></div><span className="company-mobile-avatar">{(email[0]||'U').toUpperCase()}</span></div>
-      <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='backup'?'Backup de dados':tab==='settings'?'Configurações':'Financeiro'}</h1></div><div className="company-top-actions"><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
+      <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='backup'?'Backup de dados':tab==='settings'?'Configurações':tab==='pos'?'PDV / Vendas':'Financeiro'}</h1></div><div className="company-top-actions"><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
       {tab==='dashboard'&&<section className="company-dashboard">
         <p className="company-dashboard-subtitle">Visão geral da assistência técnica</p>
         <div className="company-dashboard-stats">
@@ -218,7 +220,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
       </section>}
       {pendingPrintOrder&&<div className="company-modal-backdrop"><div className="company-form company-payment-modal"><h3>Escolher formato de impressão</h3><p>OS #{pendingPrintOrder.order_number} · {pendingPrintOrder.customers?.name||'Cliente'}</p><div className="company-form-actions"><button type="button" className="company-secondary" onClick={()=>{const order=pendingPrintOrder;setPendingPrintOrder(null);printServiceOrder(order,'a4')}}><Printer size={16}/> Imprimir A4</button><button type="button" className="company-primary" onClick={()=>{const order=pendingPrintOrder;setPendingPrintOrder(null);printServiceOrder(order,'thermal80')}}><Printer size={16}/> Térmica 80 mm</button><button type="button" className="company-secondary" onClick={()=>setPendingPrintOrder(null)}>Cancelar</button></div></div></div>}
       {paymentOrder&&<div className="company-modal-backdrop"><form className="company-form company-payment-modal" onSubmit={submitOrderPayment}><h3>Receber pagamento · OS #{paymentOrder.order_number}</h3><p>{paymentOrder.customers?.name||'Cliente não informado'} · {[paymentOrder.device_brand,paymentOrder.device_model].filter(Boolean).join(' ')}</p><label>Valor recebido (R$)<input required type="number" min="0.01" step="0.01" value={paymentAmount} onChange={e=>setPaymentAmount(e.target.value)}/></label><label>Forma de pagamento<select value={paymentMethod} onChange={e=>setPaymentMethod(e.target.value as PaymentMethod)}><option value="pix">PIX</option><option value="cash">Dinheiro</option><option value="debit_card">Cartão de débito</option><option value="credit_card">Cartão de crédito</option><option value="bank_transfer">Transferência</option><option value="boleto">Boleto</option><option value="other">Outro</option></select></label><label>Observações<input value={paymentNotes} onChange={e=>setPaymentNotes(e.target.value)}/></label><div className="company-form-actions"><button type="button" className="company-secondary" onClick={()=>setPaymentOrder(null)}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Registrando...':'Confirmar recebimento'}</button></div></form></div>}
-      {tab==='inventory'&&<CompanyInventoryPanel company={company}/>}{tab==='suppliers'&&<CompanySuppliersPanel company={company}/>}{tab==='purchases'&&<CompanyPurchasesPanel company={company}/>}{tab==='cash'&&<CompanyCashPanel company={company}/>}{tab==='entries'&&<CompanyFinancialEntriesPanel company={company}/>}
+      {tab==='pos'&&<CompanyPOSPanel company={company}/>}{tab==='inventory'&&<CompanyInventoryPanel company={company}/>}{tab==='suppliers'&&<CompanySuppliersPanel company={company}/>}{tab==='purchases'&&<CompanyPurchasesPanel company={company}/>}{tab==='cash'&&<CompanyCashPanel company={company}/>}{tab==='entries'&&<CompanyFinancialEntriesPanel company={company}/>}
       {tab==='backup'&&(role==='owner'||role==='admin')&&<section className="company-panel">
         <div className="company-panel-head"><div><b>Backup da assistência</b><small>Exportação segura dos dados operacionais desta empresa</small></div><Database size={22}/></div>
         <div className="company-backup-content">
