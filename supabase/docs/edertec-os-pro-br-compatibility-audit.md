@@ -161,3 +161,16 @@ Esta seção registra alterações já aplicadas no banco BR; não é um arquivo
 ### Verificação
 - Adicionado workflow GitHub Actions `.github/workflows/ci.yml` para executar `npm ci` e `npm run build` em push/PR para main.
 - A criação do workflow foi confirmada no GitHub; ainda não foi possível confirmar uma execução concluída.
+
+
+## Movimentações transacionais de estoque — 22/11/2026
+
+- Criada a função `public.record_stock_movement` no projeto BR como `SECURITY INVOKER`, com `search_path` vazio e acesso EXECUTE somente para `authenticated` (verificado: anon=false, authenticated=true).
+- A função valida autenticação, empresa, produto, filial opcional, tipo e quantidade; bloqueia o registro de saída acima do saldo disponível.
+- A linha de movimentação e a atualização do saldo são executadas na mesma transação. Tipos aceitos pelo banco: `in`, `out` e `adjustment`; ajuste define o saldo contado informado.
+- O painel React passou a oferecer entrada, saída e ajuste, além de mostrar as 100 movimentações mais recentes.
+- O saldo continua consolidado por empresa. O campo filial é opcional para rastreabilidade; ainda não existe saldo independente por filial.
+
+### CI
+- O primeiro workflow CI falhou antes do build porque o repositório não tem lockfile npm e o setup-node com cache npm exige um lockfile.
+- Workflow ajustado para não usar cache e executar `npm install`; uma nova execução foi iniciada. O resultado final ainda precisa ser confirmado.
