@@ -211,3 +211,7 @@
 .tenant-device-order-history p{font-size:11px;color:#cbd5e1;margin:7px 0 0;overflow-wrap:anywhere}
 .tenant-order-status{font-size:10px;color:#e7c47d;white-space:nowrap}
 @media(max-width:600px){.tenant-device-order-history article{grid-template-columns:1fr auto;gap:8px}.tenant-device-order-history article>div{grid-column:1/-1}.tenant-device-order-history article strong{justify-self:start}}
+
+
+.tenant-device-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+@media(max-width:600px){.tenant-device-actions{width:100%}.tenant-device-actions button{flex:1}}
