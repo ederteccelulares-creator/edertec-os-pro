@@ -409,3 +409,11 @@
 .company-payment-modal{width:min(100%,520px);max-height:90vh;overflow:auto;border:1px solid #39465a;border-radius:14px;background:#111a27;box-shadow:0 24px 80px rgba(0,0,0,.45)}
 .company-payment-modal h3{margin-top:0}
 .company-payment-modal p{color:#9eacc0;font-size:13px}
+
+
+.company-finance-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}
+.company-finance-summary article{display:flex;flex-direction:column;gap:8px;padding:16px;border:1px solid var(--company-border,#293548);border-radius:12px;background:rgba(255,255,255,.025)}
+.company-finance-summary small{color:var(--company-muted,#9eacc0);font-size:12px}
+.company-finance-summary b{font-size:20px}
+.company-inline-actions{display:flex;align-items:center;gap:8px}
+@media(max-width:640px){.company-finance-summary{grid-template-columns:1fr}.company-finance-summary article{padding:12px}.company-finance-summary b{font-size:18px}}
