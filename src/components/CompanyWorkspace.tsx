@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { Building2, ClipboardList, Users, Package, Truck, ShoppingCart, Wallet, Plus, RefreshCw, LogOut } from 'lucide-react'
+import { Building2, ClipboardList, Users, Package, Truck, ShoppingCart, Wallet, Plus, RefreshCw, LogOut, Database, Download } from 'lucide-react'
 import CompanyInventoryPanel from './CompanyInventoryPanel'
 import CompanySuppliersPanel from './CompanySuppliersPanel'
 import CompanyPurchasesPanel from './CompanyPurchasesPanel'
@@ -8,6 +8,7 @@ import CompanyFinancialEntriesPanel from './CompanyFinancialEntriesPanel'
 import { recordCompanyServiceOrderPayment, type PaymentMethod } from '../lib/company-service-order-payments'
 import { listCompanyBranches, listCompanyCustomers, saveCompanyCustomer, type Company, type CompanyBranch, type CompanyCustomer, type CompanyRole } from '../lib/company-data'
 import { createCompanyServiceOrder, listCompanyServiceOrders, updateCompanyServiceOrderStatus, type CompanyServiceOrder } from '../lib/company-service-orders'
+import { downloadCompanyBackup } from '../lib/company-backups'
 
 type Props = { company: Company; role: CompanyRole; email: string; onSignOut: () => void }
 const statusLabels: Record<string,string> = {received:'Recebido',diagnosis:'Em diagnóstico',waiting_approval:'Aguardando aprovação',approved:'Aprovado',in_repair:'Em conserto',waiting_parts:'Aguardando peça',ready:'Pronto',delivered:'Entregue',cancelled:'Cancelado'}
@@ -15,13 +16,14 @@ const statusFlow = ['received','diagnosis','waiting_approval','approved','waitin
 const money = (n:number) => Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 
 export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
-  const [tab,setTab] = useState<'orders'|'customers'|'inventory'|'suppliers'|'purchases'|'cash'|'entries'>('orders')
+  const [tab,setTab] = useState<'orders'|'customers'|'inventory'|'suppliers'|'purchases'|'cash'|'entries'|'backup'>('orders')
   const [branches,setBranches] = useState<CompanyBranch[]>([])
   const [branchId,setBranchId] = useState('')
   const [customers,setCustomers] = useState<CompanyCustomer[]>([])
   const [orders,setOrders] = useState<CompanyServiceOrder[]>([])
   const [loading,setLoading] = useState(true)
   const [busy,setBusy] = useState(false)
+  const [backupBusy,setBackupBusy] = useState(false)
   const [error,setError] = useState('')
   const [notice,setNotice] = useState('')
   const [showOrder,setShowOrder] = useState(false)
@@ -47,6 +49,16 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   },[company.id,branchId])
 
   useEffect(()=>{void load()},[load])
+
+  async function createBackup() {
+    setBackupBusy(true); setError(''); setNotice('')
+    try {
+      await downloadCompanyBackup(company.id)
+      setNotice('Backup gerado e baixado com sucesso.')
+    } catch(e) {
+      setError(e instanceof Error?e.message:'Não foi possível gerar o backup.')
+    } finally { setBackupBusy(false) }
+  }
 
   async function submitCustomer(event:FormEvent) {
     event.preventDefault(); setBusy(true); setError(''); setNotice('')
@@ -94,7 +106,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
     <aside className="company-sidebar">
       <div className="company-logo"><span><Building2/></span><div><b>EDERTEC <i>OS PRO</i></b><small>GESTÃO DE ASSISTÊNCIAS</small></div></div>
       <div className="company-current">{company.name}</div>
-      <nav><button className={tab==='orders'?'active':''} onClick={()=>setTab('orders')}><ClipboardList size={17}/> Ordens de serviço</button><button className={tab==='customers'?'active':''} onClick={()=>setTab('customers')}><Users size={17}/> Clientes</button><button className={tab==='inventory'?'active':''} onClick={()=>setTab('inventory')}><Package size={17}/> Estoque</button><button className={tab==='suppliers'?'active':''} onClick={()=>setTab('suppliers')}><Truck size={17}/> Fornecedores</button><button className={tab==='purchases'?'active':''} onClick={()=>setTab('purchases')}><ShoppingCart size={17}/> Compras</button><button className={tab==='cash'?'active':''} onClick={()=>setTab('cash')}><Wallet size={17}/> Fluxo de caixa</button><button className={tab==='entries'?'active':''} onClick={()=>setTab('entries')}><Wallet size={17}/> Contas a pagar/receber</button></nav>
+      <nav><button className={tab==='orders'?'active':''} onClick={()=>setTab('orders')}><ClipboardList size={17}/> Ordens de serviço</button><button className={tab==='customers'?'active':''} onClick={()=>setTab('customers')}><Users size={17}/> Clientes</button><button className={tab==='inventory'?'active':''} onClick={()=>setTab('inventory')}><Package size={17}/> Estoque</button><button className={tab==='suppliers'?'active':''} onClick={()=>setTab('suppliers')}><Truck size={17}/> Fornecedores</button><button className={tab==='purchases'?'active':''} onClick={()=>setTab('purchases')}><ShoppingCart size={17}/> Compras</button><button className={tab==='cash'?'active':''} onClick={()=>setTab('cash')}><Wallet size={17}/> Fluxo de caixa</button><button className={tab==='entries'?'active':''} onClick={()=>setTab('entries')}><Wallet size={17}/> Contas a pagar/receber</button>{(role==='owner'||role==='admin')&&<button className={tab==='backup'?'active':''} onClick={()=>setTab('backup')}><Database size={17}/> Backup e segurança</button>}</nav>
       <div className="company-user"><b>{email}</b><small>Perfil: {role}</small><button onClick={onSignOut}><LogOut size={15}/> Sair</button></div>
     </aside>
     <main className="company-main">
@@ -114,6 +126,15 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
       </section>}
       {paymentOrder&&<div className="company-modal-backdrop"><form className="company-form company-payment-modal" onSubmit={submitOrderPayment}><h3>Receber pagamento · OS #{paymentOrder.order_number}</h3><p>{paymentOrder.customers?.name||'Cliente não informado'} · {[paymentOrder.device_brand,paymentOrder.device_model].filter(Boolean).join(' ')}</p><label>Valor recebido (R$)<input required type="number" min="0.01" step="0.01" value={paymentAmount} onChange={e=>setPaymentAmount(e.target.value)}/></label><label>Forma de pagamento<select value={paymentMethod} onChange={e=>setPaymentMethod(e.target.value as PaymentMethod)}><option value="pix">PIX</option><option value="cash">Dinheiro</option><option value="debit_card">Cartão de débito</option><option value="credit_card">Cartão de crédito</option><option value="bank_transfer">Transferência</option><option value="boleto">Boleto</option><option value="other">Outro</option></select></label><label>Observações<input value={paymentNotes} onChange={e=>setPaymentNotes(e.target.value)}/></label><div className="company-form-actions"><button type="button" className="company-secondary" onClick={()=>setPaymentOrder(null)}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Registrando...':'Confirmar recebimento'}</button></div></form></div>}
       {tab==='inventory'&&<CompanyInventoryPanel company={company}/>}{tab==='suppliers'&&<CompanySuppliersPanel company={company}/>}{tab==='purchases'&&<CompanyPurchasesPanel company={company}/>}{tab==='cash'&&<CompanyCashPanel company={company}/>}{tab==='entries'&&<CompanyFinancialEntriesPanel company={company}/>}
+      {tab==='backup'&&(role==='owner'||role==='admin')&&<section className="company-panel">
+        <div className="company-panel-head"><div><b>Backup da assistência</b><small>Exportação segura dos dados operacionais desta empresa</small></div><Database size={22}/></div>
+        <div className="company-backup-content">
+          <p>Gere um arquivo JSON com filiais, clientes, funcionários, serviços, produtos, ordens de serviço, estoque, compras e registros financeiros.</p>
+          <p>O backup pertence exclusivamente a <strong>{company.name}</strong>. Dados de acesso, senhas, usuários de autenticação e assinaturas não são incluídos.</p>
+          <button className="company-primary" disabled={backupBusy} onClick={()=>void createBackup()}><Download size={16}/>{backupBusy?'Gerando backup...':'Baixar backup agora'}</button>
+          <small>Recomendação: guarde uma cópia em local seguro e faça novos backups regularmente.</small>
+        </div>
+      </section>}
       {tab==='customers'&&<section className="company-panel">
         <div className="company-panel-head"><div><b>Cadastro de clientes</b><small>{customers.length} clientes cadastrados</small></div><button className="company-primary" onClick={()=>setShowCustomer(v=>!v)}><Plus size={16}/> Novo cliente</button></div>
         {showCustomer&&<form className="company-form" onSubmit={submitCustomer}><div className="company-form-grid"><label>Nome<input required value={customerForm.name} onChange={e=>setCustomerForm({...customerForm,name:e.target.value})}/></label><label>Telefone<input value={customerForm.phone} onChange={e=>setCustomerForm({...customerForm,phone:e.target.value})}/></label><label>E-mail<input type="email" value={customerForm.email} onChange={e=>setCustomerForm({...customerForm,email:e.target.value})}/></label><label>CPF / CNPJ<input value={customerForm.document} onChange={e=>setCustomerForm({...customerForm,document:e.target.value})}/></label></div><label>Observações<input value={customerForm.notes} onChange={e=>setCustomerForm({...customerForm,notes:e.target.value})}/></label><div className="company-form-actions"><button type="button" className="company-secondary" onClick={()=>setShowCustomer(false)}>Cancelar</button><button className="company-primary" disabled={busy}>Salvar cliente</button></div></form>}
