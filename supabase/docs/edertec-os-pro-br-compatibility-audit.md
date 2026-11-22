@@ -204,3 +204,14 @@ Esta seção registra alterações já aplicadas no banco BR; não é um arquivo
 - EXECUTE das duas RPCs concedido a authenticated e revogado de PUBLIC/anon.
 - A confirmação do recebimento no painel informa que itens vinculados serão adicionados ao estoque.
 - Ainda não existe baixa financeira/contas a pagar vinculada à compra. O módulo atual controla pedido, recebimento e estoque; integração financeira fica para etapa posterior.
+
+
+## Financeiro / fluxo de caixa — 22/11/2026
+
+- Corrigida a policy RLS de `cash_transactions`: removida a condição tautológica `cs.company_id = cs.company_id`; agora exige `cs.company_id = cash_transactions.company_id`. Também valida que eventual `payment_id` pertença à mesma empresa.
+- Verificada a policy no catálogo `pg_policies` após a alteração.
+- Adicionadas chaves compostas de integridade para `cash_sessions`, `cash_transactions` e `payments`, incluindo filial, sessão de caixa, pagamento, OS e cliente vinculados à mesma empresa.
+- Criados `src/lib/company-cash.ts` e `src/components/CompanyCashPanel.tsx`, integrados como seção Financeiro.
+- Painel permite registrar entradas e saídas manuais com categoria, descrição, valor, forma de pagamento e filial; exibe as últimas 300 movimentações e totais calculados sobre esse conjunto.
+- Limitação atual explícita na interface: o fluxo de caixa ainda não integra automaticamente pagamentos de OS nem contas a pagar/receber; o saldo apresentado é o saldo líquido dos lançamentos carregados, não saldo bancário conciliado.
+- Security Advisor após a mudança não apontou novos problemas; permanecem os dois achados já documentados: `platform_admins` com RLS sem policy (INFO, intencional enquanto o acesso Super Admin não estiver desenhado) e `register_company` SECURITY DEFINER executável por authenticated (fluxo de cadastro intencional, com grants restritos).
