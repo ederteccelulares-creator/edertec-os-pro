@@ -31,7 +31,7 @@ Plataforma SaaS de gestão para assistências técnicas de celulares, preparada 
 
 ## Configurar o banco e autenticação
 1. Crie um projeto no [Supabase](https://supabase.com/dashboard).
-2. No SQL Editor do projeto, execute os arquivos em ordem: `supabase/migrations/0001_saas_core.sql`, `supabase/migrations/0002_order_workflow_security.sql` e `supabase/migrations/0003_role_access_atomic_order.sql` e `supabase/migrations/0004_inventory_module.sql` e `supabase/migrations/0005_financial_module.sql` e `supabase/migrations/0006_sales_module.sql` e `supabase/migrations/0007_team_management.sql` e `supabase/migrations/0008_service_catalog.sql` e `supabase/migrations/0009_platform_admin.sql` e `supabase/migrations/0010_team_invitations.sql`.
+2. No SQL Editor do projeto, execute os arquivos em ordem: `supabase/migrations/0001_saas_core.sql`, `supabase/migrations/0002_order_workflow_security.sql` e `supabase/migrations/0003_role_access_atomic_order.sql` e `supabase/migrations/0004_inventory_module.sql` e `supabase/migrations/0005_financial_module.sql` e `supabase/migrations/0006_sales_module.sql` e `supabase/migrations/0007_team_management.sql` e `supabase/migrations/0008_service_catalog.sql` e `supabase/migrations/0009_platform_admin.sql` e `supabase/migrations/0010_team_invitations.sql` e `supabase/migrations/0011_membership_write_hardening.sql`.
 3. Copie `.env.example` para `.env.local`.
 4. Preencha:
    - `VITE_SUPABASE_URL`: Project URL.
@@ -46,8 +46,19 @@ Plataforma SaaS de gestão para assistências técnicas de celulares, preparada 
 
 **Segurança:** nunca coloque a chave `service_role` ou segredo de backend em variáveis `VITE_*` ou no navegador. O frontend usa somente a chave pública; operações privilegiadas, cobrança e webhooks deverão rodar em backend seguro.
 
-## Ativar o primeiro Super Admin\nApós executar a migração `0009_platform_admin.sql`, localize o usuário já cadastrado em Authentication > Users e execute no SQL Editor, substituindo pelo UUID real da conta administrativa:\n\n```sql\ninsert into public.platform_admins (user_id)\nvalues ('UUID-DO-USUARIO-AUTORIZADO');\n```\n\nA tabela não possui políticas de leitura ou gravação para o navegador. A autorização é verificada por funções SQL; não exponha a chave `service_role`.\n\n## Publicar a função de convites
-Depois de aplicar as migrações até `0010_team_invitations.sql`, vincule o projeto Supabase à CLI e publique a Edge Function:
+## Ativar o primeiro Super Admin
+
+Após executar a migração `0009_platform_admin.sql`, localize o usuário já cadastrado em Authentication > Users e execute no SQL Editor, substituindo pelo UUID real da conta administrativa:
+
+```sql
+insert into public.platform_admins (user_id)
+values ('UUID-DO-USUARIO-AUTORIZADO');
+```
+
+A tabela não possui políticas de leitura ou gravação para o navegador. A autorização é verificada por funções SQL; não exponha a chave `service_role`.
+
+## Publicar a função de convites
+Depois de aplicar as migrações até `0011_membership_write_hardening.sql`, vincule o projeto Supabase à CLI e publique a Edge Function:
 
 ```bash
 supabase link --project-ref SEU_PROJECT_REF
@@ -57,7 +68,7 @@ supabase functions deploy invite-team
 A função exige JWT válido, verifica se o solicitante é proprietário ou administrador ativo, impede que administradores convidem outros administradores e verifica o status da assinatura e a cota de usuários. O segredo `SUPABASE_SERVICE_ROLE_KEY` é usado somente no ambiente seguro da Edge Function e nunca no navegador. Configure a URL de redirecionamento do convite em Authentication > URL Configuration no painel Supabase. Opcionalmente, defina `APP_SITE_URL` como secret da função para direcionar o convite à URL publicada.
 
 ## Estado atual
-A camada inicial de autenticação e criação de organizações foi implementada no frontend, mas depende da criação e configuração do projeto Supabase pelo proprietário. Os módulos iniciais de clientes, aparelhos e ordens de serviço já estão conectados ao PostgreSQL no código, mas dependem da execução das migrações e da configuração do Supabase. A gestão inicial de equipe e o painel Super Admin estão implementados no código. O Super Admin pode cadastrar planos e controlar o status e os períodos de assinatura. Os limites de usuários e filiais são verificados no banco com bloqueio transacional; status suspenso, cancelado, vencido ou em atraso bloqueia operações protegidas por função, preservando a possibilidade de consultar o vínculo da empresa. A tela de equipe permite convidar funcionários por e-mail com funções restritas. O convite é processado por uma Supabase Edge Function autenticada, e o vínculo à empresa é criado no banco quando o usuário convidado conclui o cadastro. Convites para contas que já existem no Supabase ainda não são suportados. Integração de cobrança automática, edição completa de cadastros e testes de isolamento ainda precisam ser concluídos. O painel de relatórios apresenta indicadores calculados sobre os registros carregados para a filial selecionada. As migrações 0004 a 0010 precisam ser aplicadas no Supabase antes de usar estoque, financeiro, vendas, gestão de equipe, catálogo de serviços, painel Super Admin e convites de equipe. A migração 0003 também precisa ser aplicada no Supabase real antes de usar a nova abertura transacional de OS. Não comercialize o acesso nem use dados reais até executar as migrações e concluir os testes e a revisão de segurança.
+A camada inicial de autenticação e criação de organizações foi implementada no frontend, mas depende da criação e configuração do projeto Supabase pelo proprietário. Os módulos iniciais de clientes, aparelhos e ordens de serviço já estão conectados ao PostgreSQL no código, mas dependem da execução das migrações e da configuração do Supabase. A gestão inicial de equipe e o painel Super Admin estão implementados no código. O Super Admin pode cadastrar planos e controlar o status e os períodos de assinatura. Os limites de usuários e filiais são verificados no banco com bloqueio transacional; status suspenso, cancelado, vencido ou em atraso bloqueia operações protegidas por função, preservando a possibilidade de consultar o vínculo da empresa. A tela de equipe permite convidar funcionários por e-mail com funções restritas. O convite é processado por uma Supabase Edge Function autenticada, e o vínculo à empresa é criado no banco quando o usuário convidado conclui o cadastro. Convites para contas que já existem no Supabase ainda não são suportados. Integração de cobrança automática, edição completa de cadastros e testes de isolamento ainda precisam ser concluídos. O painel de relatórios apresenta indicadores calculados sobre os registros carregados para a filial selecionada. As migrações 0004 a 0011 precisam ser aplicadas no Supabase antes de usar estoque, financeiro, vendas, gestão de equipe, catálogo de serviços, painel Super Admin e convites de equipe. A migração 0003 também precisa ser aplicada no Supabase real antes de usar a nova abertura transacional de OS. Não comercialize o acesso nem use dados reais até executar as migrações e concluir os testes e a revisão de segurança.
 
 ## Próximas etapas
 1. Finalizar testes e validação de clientes, aparelhos, ordens e histórico no Supabase real.
@@ -65,3 +76,8 @@ A camada inicial de autenticação e criação de organizações foi implementad
 3. Finalizar convites, relatórios e validação de permissões do Super Admin.
 4. Implementar gestão de planos, cobrança recorrente e webhooks no backend.
 5. Testes de isolamento entre empresas, backup, monitoramento, recuperação e publicação.
+
+
+## Endurecimento de segurança de equipe
+
+A migração `0011_membership_write_hardening.sql` remove a gravação direta de vínculos de equipe pelo navegador. Alterações de função e ativação/desativação passam exclusivamente pelas funções SQL auditadas, que aplicam as regras de proprietário e administrador. A função interna de aceite de convite também não pode ser chamada diretamente por usuários autenticados.
