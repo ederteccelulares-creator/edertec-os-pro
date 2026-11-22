@@ -470,3 +470,81 @@ export async function addServiceToOrder(
   if (error) throw error
   return data as string
 }
+
+
+export type PlatformOrganization = {
+  organization_id: string
+  organization_name: string
+  organization_slug: string
+  created_at: string
+  member_count: number
+  branch_count: number
+  subscription_id: string | null
+  subscription_status: 'trialing'|'active'|'past_due'|'suspended'|'cancelled'|'expired' | null
+  plan_id: string | null
+  plan_name: string | null
+  trial_ends_at: string | null
+  current_period_end: string | null
+}
+
+export type PlatformPlan = {
+  id: string
+  code: string
+  name: string
+  description: string | null
+  monthly_price: number
+  yearly_price: number
+  max_users: number | null
+  max_branches: number | null
+  active: boolean
+}
+
+export async function isPlatformAdmin(): Promise<boolean> {
+  const { data, error } = await client().rpc('is_platform_admin')
+  if (error) throw error
+  return Boolean(data)
+}
+
+export async function getPlatformDashboardSummary() {
+  const { data, error } = await client().rpc('platform_dashboard_summary')
+  if (error) throw error
+  return data as {organizations:number;active_subscriptions:number;trialing_subscriptions:number;past_due_subscriptions:number;suspended_subscriptions:number;users:number}
+}
+
+export async function listPlatformOrganizations(): Promise<PlatformOrganization[]> {
+  const { data, error } = await client().rpc('platform_list_organizations')
+  if (error) throw error
+  return (data ?? []) as PlatformOrganization[]
+}
+
+export async function listPlatformPlans(): Promise<PlatformPlan[]> {
+  const { data, error } = await client().rpc('platform_list_plans')
+  if (error) throw error
+  return (data ?? []) as PlatformPlan[]
+}
+
+export async function savePlatformPlan(plan: Omit<PlatformPlan,'id'> & {id?:string}) {
+  const { data, error } = await client().rpc('platform_save_plan', {
+    p_plan_id: plan.id || null,p_code: plan.code,p_name: plan.name,
+    p_description: plan.description,p_monthly_price: plan.monthly_price,
+    p_yearly_price: plan.yearly_price,p_max_users: plan.max_users,
+    p_max_branches: plan.max_branches,p_active: plan.active,
+  })
+  if (error) throw error
+  return data as string
+}
+
+export async function updatePlatformSubscription(input: {
+  organizationId:string
+  status: 'trialing'|'active'|'past_due'|'suspended'|'cancelled'|'expired'
+  planId?:string|null
+  trialEndsAt?:string|null
+  currentPeriodEnd?:string|null
+}) {
+  const { error } = await client().rpc('platform_update_subscription', {
+    p_organization_id:input.organizationId,p_status:input.status,
+    p_plan_id:input.planId||null,p_trial_ends_at:input.trialEndsAt||null,
+    p_current_period_end:input.currentPeriodEnd||null,
+  })
+  if (error) throw error
+}
