@@ -195,3 +195,8 @@
 .tenant-order-filters input:focus,.tenant-order-filters select:focus{border-color:#d5a957}
 .tenant-order-filters small{color:#95a2b4;font-size:10px;white-space:nowrap}
 @media(max-width:680px){.tenant-order-filters{display:grid;grid-template-columns:1fr}.tenant-order-filters input{min-width:0;width:100%}.tenant-order-filters select{width:100%}}
+
+
+/* Existing device selection in service order form */
+.tenant-order-device-selected{margin:8px 0 12px;padding:10px 12px;border:1px solid #3b604e;border-radius:8px;background:#13251e;color:#a8d8b8;font-size:11px;line-height:1.5}
+.tenant-order-device-selected b{color:#d8f1df}
