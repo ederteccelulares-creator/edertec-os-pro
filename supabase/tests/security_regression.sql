@@ -212,3 +212,47 @@ begin
   end if;
 end;
 $$;
+
+
+-- In-app service-order notifications are private to each recipient.
+do $$
+begin
+  if not exists (
+    select 1 from pg_class c
+    join pg_namespace n on n.oid=c.relnamespace
+    where n.nspname='public' and c.relname='service_order_notifications'
+      and c.relrowsecurity
+  ) then
+    raise exception 'Service-order notifications must have RLS enabled';
+  end if;
+
+  if not has_table_privilege('authenticated',
+    'public.service_order_notifications', 'SELECT') then
+    raise exception 'Authenticated staff must be able to read their own notifications';
+  end if;
+
+  if has_table_privilege('anon',
+    'public.service_order_notifications', 'SELECT') then
+    raise exception 'Anonymous users must not read service-order notifications';
+  end if;
+
+  if has_table_privilege('authenticated',
+    'public.service_order_notifications', 'INSERT')
+     or has_table_privilege('authenticated',
+    'public.service_order_notifications', 'UPDATE')
+     or has_table_privilege('authenticated',
+    'public.service_order_notifications', 'DELETE') then
+    raise exception 'Browser users must not write service-order notifications directly';
+  end if;
+
+  if not has_function_privilege('authenticated',
+    'public.mark_service_order_notification_read(uuid)', 'EXECUTE') then
+    raise exception 'Authenticated staff must be able to mark their own notifications read';
+  end if;
+
+  if has_function_privilege('anon',
+    'public.mark_service_order_notification_read(uuid)', 'EXECUTE') then
+    raise exception 'Anonymous users must not mark notifications read';
+  end if;
+end;
+$$;
