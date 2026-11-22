@@ -4,6 +4,7 @@ import { Building2, CheckCircle2, LoaderCircle, LogOut, Mail, ShieldCheck, Smart
 import type { Session } from '@supabase/supabase-js'
 import TenantWorkspace from './TenantWorkspace'
 import SuperAdminWorkspace from './SuperAdminWorkspace'
+import CustomerPortal from './CustomerPortal'
 import { isPlatformAdmin } from '../lib/tenant-data'
 import { isSupabaseConfigured, supabase, type Organization, type OrganizationRole } from '../lib/supabase'
 
@@ -45,6 +46,7 @@ export default function AuthGate() {
   const [fullName, setFullName] = useState('')
   const [companyName, setCompanyName] = useState('')
   const [companySlug, setCompanySlug] = useState('')
+  const portalToken = new URLSearchParams(window.location.search).get('portal') || ''
 
   const loadMemberships = useCallback(async (userId: string) => {
     if (!supabase) return
@@ -103,6 +105,7 @@ export default function AuthGate() {
     return () => { alive = false; listener.subscription.unsubscribe() }
   }, [loadMemberships])
 
+  if (portalToken) return <CustomerPortal token={portalToken} />
   if (!isSupabaseConfigured || !supabase) return <SetupRequired />
   const db = supabase
   if (loading) return <main className="auth-page"><div className="auth-loading"><LoaderCircle className="spin" size={25}/> Verificando acesso seguro...</div></main>
