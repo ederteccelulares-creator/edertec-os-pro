@@ -31,8 +31,7 @@ Plataforma SaaS de gestão para assistências técnicas de celulares, preparada 
 
 ## Configurar o banco e autenticação
 1. Crie um projeto no [Supabase](https://supabase.com/dashboard).
-2. No SQL Editor do projeto, execute os arquivos em ordem: `supabase/migrations/0001_saas_core.sql`, `supabase/migrations/0002_order_workflow_security.sql` e `supabase/migrations/0003_role_access_atomic_order.sql` e `supabase/migrations/0004_inventory_module.sql` e `supabase/migrations/0005_financial_module.sql` e `supabase/migrations/0006_sales_module.sql` e `supabase/migrations/0007_team_management.sql` e `supabase/migrations/0008_service_catalog.sql` e `supabase/migrations/0009_platform_admin.sql` e `supabase/migrations/0010_team_invitations.sql` e `supabase/migrations/0011_membership_write_hardening.sql` e `supabase/migrations/0012_sales_pricing_and_privacy.sql` e `supabase/migrations/0013_service_order_write_hardening.sql` e `supabase/migrations/0014_tenant_record_immutability.sql` e `supabase/migrations/0015_operational_tenant_key_hardening.sql
-16. `0016_service_history_integrity.sql``.
+2. No SQL Editor do projeto, execute os arquivos em ordem: `supabase/migrations/0001_saas_core.sql`, `supabase/migrations/0002_order_workflow_security.sql` e `supabase/migrations/0003_role_access_atomic_order.sql` e `supabase/migrations/0004_inventory_module.sql` e `supabase/migrations/0005_financial_module.sql` e `supabase/migrations/0006_sales_module.sql` e `supabase/migrations/0007_team_management.sql` e `supabase/migrations/0008_service_catalog.sql` e `supabase/migrations/0009_platform_admin.sql` e `supabase/migrations/0010_team_invitations.sql` e `supabase/migrations/0011_membership_write_hardening.sql` e `supabase/migrations/0012_sales_pricing_and_privacy.sql` e `supabase/migrations/0013_service_order_write_hardening.sql` e `supabase/migrations/0014_tenant_record_immutability.sql` e `supabase/migrations/0015_operational_tenant_key_hardening.sql` e `supabase/migrations/0016_service_history_integrity.sql`.
 3. Copie `.env.example` para `.env.local`.
 4. Preencha:
    - `VITE_SUPABASE_URL`: Project URL.
@@ -59,8 +58,7 @@ values ('UUID-DO-USUARIO-AUTORIZADO');
 A tabela não possui políticas de leitura ou gravação para o navegador. A autorização é verificada por funções SQL; não exponha a chave `service_role`.
 
 ## Publicar a função de convites
-Depois de aplicar as migrações até `0015_operational_tenant_key_hardening.sql
-16. `0016_service_history_integrity.sql``, vincule o projeto Supabase à CLI e publique a Edge Function:
+Depois de aplicar as migrações até `0016_service_history_integrity.sql`, vincule o projeto Supabase à CLI e publique a Edge Function:
 
 ```bash
 supabase link --project-ref SEU_PROJECT_REF
@@ -70,7 +68,7 @@ supabase functions deploy invite-team
 A função exige JWT válido, verifica se o solicitante é proprietário ou administrador ativo, impede que administradores convidem outros administradores e verifica o status da assinatura e a cota de usuários. O segredo `SUPABASE_SERVICE_ROLE_KEY` é usado somente no ambiente seguro da Edge Function e nunca no navegador. Configure a URL de redirecionamento do convite em Authentication > URL Configuration no painel Supabase. Opcionalmente, defina `APP_SITE_URL` como secret da função para direcionar o convite à URL publicada.
 
 ## Estado atual
-A camada inicial de autenticação e criação de organizações foi implementada no frontend, mas depende da criação e configuração do projeto Supabase pelo proprietário. Os módulos iniciais de clientes, aparelhos e ordens de serviço já estão conectados ao PostgreSQL no código, mas dependem da execução das migrações e da configuração do Supabase. A gestão inicial de equipe e o painel Super Admin estão implementados no código. O Super Admin pode cadastrar planos e controlar o status e os períodos de assinatura. Os limites de usuários e filiais são verificados no banco com bloqueio transacional; status suspenso, cancelado, vencido ou em atraso bloqueia operações protegidas por função, preservando a possibilidade de consultar o vínculo da empresa. A tela de equipe permite convidar funcionários por e-mail com funções restritas. O convite é processado por uma Supabase Edge Function autenticada, e o vínculo à empresa é criado no banco quando o usuário convidado conclui o cadastro. Convites para contas que já existem no Supabase ainda não são suportados. Integração de cobrança automática, edição completa de cadastros e testes de isolamento ainda precisam ser concluídos. O painel de relatórios apresenta indicadores calculados sobre os registros carregados para a filial selecionada. As migrações 0004 a 0012 precisam ser aplicadas no Supabase antes de usar estoque, financeiro, vendas, gestão de equipe, catálogo de serviços, painel Super Admin e convites de equipe. A migração 0003 também precisa ser aplicada no Supabase real antes de usar a nova abertura transacional de OS. Não comercialize o acesso nem use dados reais até executar as migrações e concluir os testes e a revisão de segurança.
+A camada inicial de autenticação e criação de organizações foi implementada no frontend, mas depende da criação e configuração do projeto Supabase pelo proprietário. Os módulos iniciais de clientes, aparelhos e ordens de serviço já estão conectados ao PostgreSQL no código, mas dependem da execução das migrações e da configuração do Supabase. A gestão inicial de equipe e o painel Super Admin estão implementados no código. O Super Admin pode cadastrar planos e controlar o status e os períodos de assinatura. Os limites de usuários e filiais são verificados no banco com bloqueio transacional; status suspenso, cancelado, vencido ou em atraso bloqueia operações protegidas por função, preservando a possibilidade de consultar o vínculo da empresa. A tela de equipe permite convidar funcionários por e-mail com funções restritas. O convite é processado por uma Supabase Edge Function autenticada, e o vínculo à empresa é criado no banco quando o usuário convidado conclui o cadastro. Convites para contas que já existem no Supabase ainda não são suportados. Integração de cobrança automática, edição completa de cadastros e testes de isolamento ainda precisam ser concluídos. O painel de relatórios apresenta indicadores calculados sobre os registros carregados para a filial selecionada. As migrações 0004 a 0016 precisam ser aplicadas no Supabase antes de usar estoque, financeiro, vendas, gestão de equipe, catálogo de serviços, painel Super Admin e convites de equipe. A migração 0003 também precisa ser aplicada no Supabase real antes de usar a nova abertura transacional de OS. Não comercialize o acesso nem use dados reais até executar as migrações e concluir os testes e a revisão de segurança.
 
 ## Próximas etapas
 1. Finalizar testes e validação de clientes, aparelhos, ordens e histórico no Supabase real.
@@ -108,7 +106,7 @@ A migração `0015_operational_tenant_key_hardening.sql
 
 ## Verificação de segurança do banco
 
-Depois de aplicar todas as migrações `0001` a `0015` em um projeto Supabase de teste, execute `supabase/tests/security_regression.sql` no SQL Editor. O script verifica se as tabelas operacionais mantêm RLS, se a gravação direta de OS foi removida, se os triggers de imutabilidade estão instalados e se as políticas de privacidade de vendas existem. Esse teste estrutural não substitui testes de integração com duas empresas e usuários autenticados com funções diferentes.
+Depois de aplicar todas as migrações `0001` a `0016` em um projeto Supabase de teste, execute `supabase/tests/security_regression.sql` no SQL Editor. O script verifica se as tabelas operacionais mantêm RLS, se a gravação direta de OS foi removida, se os triggers de imutabilidade estão instalados e se as políticas de privacidade de vendas existem. Esse teste estrutural não substitui testes de integração com duas empresas e usuários autenticados com funções diferentes.
 
 
 O roteiro `supabase/tests/tenant_isolation_manual.md` descreve os cenários de homologação com duas empresas e usuários proprietários, atendentes e técnicos. Execute-o em um projeto Supabase separado, com dados fictícios, e guarde as evidências antes de liberar o sistema.
@@ -147,3 +145,9 @@ supabase functions deploy validate-organization-backup
 
 No painel da empresa, use **Backup e restauração → Validar arquivo JSON**. O arquivo deve ter até 10 MB e pertencer à mesma empresa selecionada. Um resultado válido significa apenas que a estrutura e a separação por empresa passaram nas verificações básicas; não comprova integridade de todas as relações nem executa uma restauração. A restauração automática continua desabilitada até a implementação de importação transacional e testes em homologação.
 A validação também confere referências internas entre clientes, aparelhos, OS, filiais, estoque, vendas, serviços e lançamentos financeiros. O relatório sinaliza quando há referências a usuários do Supabase Auth: essas contas não são exportadas e precisarão ser mapeadas para usuários já existentes no destino antes de qualquer restauração. A checagem é estrutural e não substitui constraints/testes de banco.
+
+
+## Integridade do histórico de serviços
+
+A migração `0016_service_history_integrity.sql` impede reatribuir eventos e linhas de serviços a outra ordem, filial, empresa ou usuário responsável. Também protege as chaves do catálogo de serviços. Ela preserva os dados existentes e deve ser aplicada após a migração 0015.
+
