@@ -1417,3 +1417,10 @@ td b { font-weight:650; }
 .company-brasilia-clock span{font-size:11px;color:var(--muted,#9aa4b2);white-space:nowrap}
 .company-brasilia-clock small{font-size:10px;color:#d8b66a}
 @media(max-width:640px){.company-brasilia-clock{padding:5px 6px}.company-brasilia-clock b{font-size:12px}.company-brasilia-clock span{font-size:9px}.company-brasilia-clock small{font-size:8px}}
+
+
+/* Super Admin mobile: keep every tab visible without horizontal swipe */
+@media (max-width: 760px) {
+  .platform-admin .platform-tabs { overflow: visible; flex-wrap: wrap; }
+  .platform-admin .platform-tabs button { flex: 1 1 auto; }
+}
