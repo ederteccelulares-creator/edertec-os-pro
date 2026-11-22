@@ -87,10 +87,17 @@ Deno.serve(async (req) => {
     if (req.method === "POST") {
       let input: { access_token?: string; webhook_secret?: string };
       try { input = await req.json(); } catch { return response({ error: "Invalid JSON." }, 400); }
+      const accessToken = typeof input.access_token === "string" ? input.access_token.trim() : undefined;
+      const webhookSecret = typeof input.webhook_secret === "string" ? input.webhook_secret.trim() : undefined;
+      if (!accessToken && !webhookSecret) return response({ error: "Informe pelo menos uma credencial para salvar." }, 400);
+      if (accessToken !== undefined && accessToken.length < 20) return response({ error: "Access Token inválido." }, 400);
+      if (webhookSecret !== undefined && webhookSecret.length < 12) return response({ error: "Webhook Secret inválido." }, 400);
+      const { data: currentSecrets, error: currentError } = await admin.rpc("get_platform_billing_secrets");
+      if (currentError) return response({ error: "Could not read existing billing settings." }, 500);
       const { data, error } = await admin.rpc("save_platform_billing_secrets", {
         p_user_id: userData.user.id,
-        p_access_token: input.access_token || "",
-        p_webhook_secret: input.webhook_secret || "",
+        p_access_token: accessToken ?? currentSecrets?.access_token ?? "",
+        p_webhook_secret: webhookSecret ?? currentSecrets?.webhook_secret ?? "",
       });
       if (error) return response({ error: error.message || "Could not save billing credentials." }, 400);
       return response(data || { configured: true });
