@@ -146,6 +146,7 @@ export async function updateCompanyProfile(input: {
   taxId?: string
   email?: string
   phone?: string
+  logoUrl?: string | null
 }) {
   const name = input.name.trim()
   if (name.length < 2) throw new Error('Informe o nome da assistência.')
