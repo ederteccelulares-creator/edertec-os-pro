@@ -113,22 +113,31 @@ begin
  end;
 
  -- An invalid FK late in the import must roll back earlier inserts and the ledger.
- invalid_backup:=jsonb_set(backup_value,'{tables,customers}',jsonb_build_array(jsonb_build_object(
-  'id','ac000000-0000-4000-8000-000000000001',
-  'company_id','a4000000-0000-4000-8000-000000000002',
-  'name','Cliente que não pode permanecer'
- )),true);
- invalid_backup:=jsonb_set(invalid_backup,'{company,id}',to_jsonb('a4000000-0000-4000-8000-000000000002'::text),true);
- invalid_backup:=jsonb_set(invalid_backup,'{tables,branches}',jsonb_build_array(jsonb_build_object(
-  'id','a6000000-0000-4000-8000-000000000002',
-  'company_id','a4000000-0000-4000-8000-000000000002','name','Matriz B'
- )),true);
- invalid_backup:=jsonb_set(invalid_backup,'{tables,service_orders}',jsonb_build_array(jsonb_build_object(
-  'id','ad000000-0000-4000-8000-000000000001',
-  'company_id','a4000000-0000-4000-8000-000000000002',
-  'customer_id','ae000000-0000-4000-8000-000000000099',
-  'reported_issue','FK inválida'
- )),true);
+ invalid_backup:=jsonb_build_object(
+  'format','edertec-os-pro-company-backup','version',1,
+  'company',jsonb_build_object('id','a4000000-0000-4000-8000-000000000002'),
+  'tables',jsonb_build_object(
+   'branches',jsonb_build_array(jsonb_build_object(
+    'id','a6000000-0000-4000-8000-000000000002',
+    'company_id','a4000000-0000-4000-8000-000000000002','name','Matriz B'
+   )),
+   'customers',jsonb_build_array(jsonb_build_object(
+    'id','ac000000-0000-4000-8000-000000000001',
+    'company_id','a4000000-0000-4000-8000-000000000002','name','Cliente temporário'
+   )),
+   'employees','[]'::jsonb,'service_catalog','[]'::jsonb,'products','[]'::jsonb,
+   'service_orders',jsonb_build_array(jsonb_build_object(
+    'id','ad000000-0000-4000-8000-000000000001',
+    'company_id','a4000000-0000-4000-8000-000000000002',
+    'customer_id','ae000000-0000-4000-8000-000000000099',
+    'reported_issue','FK inválida'
+   )),
+   'service_order_items','[]'::jsonb,'stock_movements','[]'::jsonb,
+   'payments','[]'::jsonb,'suppliers','[]'::jsonb,'purchases','[]'::jsonb,
+   'purchase_items','[]'::jsonb,'cash_sessions','[]'::jsonb,
+   'cash_transactions','[]'::jsonb,'company_financial_entries','[]'::jsonb,'audit_logs','[]'::jsonb
+  )
+ );
  begin
   perform public.restore_company_backup(
    'a4000000-0000-4000-8000-000000000002',
