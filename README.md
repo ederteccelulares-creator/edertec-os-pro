@@ -1,41 +1,52 @@
 # Edertec OS Pro
 
-Sistema de gestão para assistência técnica de celulares.
+Sistema SaaS de gestão para assistências técnicas de celulares, planejado para atender várias empresas com isolamento de dados por organização.
 
 ## Stack
-- React + TypeScript
-- Vite
+- React + TypeScript + Vite
+- Supabase Auth + PostgreSQL + Row Level Security
 - Lucide icons
 - CSS responsivo (desktop e celular)
 
-## Funcionalidades implementadas
-- Dashboard com indicadores calculados a partir das ordens cadastradas
-- Cadastro de ordens de serviço com número sequencial
-- Dados do cliente, telefone, marca/modelo, defeito, valor estimado e status
-- Lista, busca e filtro por status
-- Alteração do andamento da OS
-- Visualização de detalhes da ordem
-- Cadastro de clientes com telefone, CPF, e-mail e endereço
-- Perfil do cliente com histórico de ordens por telefone
-- Criação automática de cadastro básico quando uma OS é aberta para um novo telefone
-- Dados adicionais de entrada: IMEI/série, acessórios e condição física
-- Modelo de impressão A4 com identificação da OS, dados do cliente/aparelho, defeito, valor e assinaturas
-- Impressão pelo navegador com opção de salvar como PDF
-- Persistência temporária no armazenamento local do navegador
+## Base SaaS adicionada
+- Organizações independentes (tenants)
+- Membros e papéis: owner, admin, manager, attendant e technician
+- Filiais por organização (cria automaticamente a Matriz)
+- Clientes, aparelhos e ordens de serviço vinculados à organização
+- Histórico de alterações de status das OS
+- Planos e assinaturas com período de teste inicial de 14 dias
+- Registros de auditoria
+- Políticas RLS para impedir leitura e alteração cruzada entre organizações
+- Cliente Supabase tipado e variáveis de ambiente de exemplo
 
-## Executar localmente
-```bash
-npm install
-npm run dev
-```
+## Configuração do Supabase
+1. Crie um projeto no Supabase.
+2. No SQL Editor, execute o conteúdo de `supabase/migrations/0001_saas_core.sql`.
+3. Copie `.env.example` para `.env.local`.
+4. Preencha `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` com os dados do projeto.
+5. Instale as dependências e inicie o projeto:
+   ```bash
+   npm install
+   npm run dev
+   ```
 
-## Próximas etapas
-1. Cadastro completo de clientes e aparelhos
-2. Completar o documento A4 com logo oficial, endereço, CNPJ/contatos e termos configuráveis
-3. Autenticação, perfis e permissões
-4. API e banco de dados centralizado para uso em rede
-5. Estoque, serviços, financeiro e relatórios
-6. Backup, trilha de auditoria e publicação
+**Nunca coloque a chave `service_role` no navegador ou em variáveis `VITE_*`.** O frontend deve usar somente a chave pública anon; operações administrativas e integrações de cobrança devem passar por backend seguro.
 
-## Importante sobre os dados
-A persistência atual usa o armazenamento local do navegador e serve apenas para prototipagem. Não é banco multiusuário, não sincroniza computadores e não deve armazenar senhas de desbloqueio ou dados sensíveis. A etapa de produção exigirá API, banco de dados, autenticação e backups seguros.
+## Funcionalidades da interface em evolução
+- Dashboard e ordens de serviço em protótipo
+- Cadastro de clientes e histórico de atendimentos
+- Impressão de OS em A4 / salvar PDF
+- Layout adaptado para desktop e celular
+
+## Próximas entregas
+1. Tela de autenticação e criação de assistência com onboarding.
+2. Conectar clientes, aparelhos e OS ao PostgreSQL (remover persistência local).
+3. Gestão de equipe, convites e permissões.
+4. Cadastro de aparelhos e estoque.
+5. Financeiro, vendas, relatórios e notificações.
+6. Painel Super Admin para empresas, planos e assinaturas.
+7. Integração de cobrança recorrente e webhooks via backend.
+8. Testes automatizados, backups, monitoramento e publicação.
+
+## Estado e segurança
+O painel atual ainda contém módulos em prototipagem com armazenamento local. A camada de banco multiempresa foi preparada, mas a interface ainda não está conectada ao Supabase. Portanto, não disponibilize o sistema para clientes nem armazene dados reais até concluir autenticação, conexão de dados, testes de isolamento e revisão de segurança.
