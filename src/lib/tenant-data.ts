@@ -227,6 +227,50 @@ export async function createServiceOrder(context: TenantContext, input: ServiceO
   return data
 }
 
+
+export async function uploadServiceOrderIntakeMedia(
+  context: TenantContext,
+  orderId: string,
+  photos: File[],
+  signature?: Blob | null,
+) {
+  const storage = client().storage.from('service-order-intake')
+  const prefix = `${context.organizationId}/${context.branchId}/${orderId}`
+  const uploaded: string[] = []
+  const items: Array<{ file: Blob; name: string; type: string }> = photos.map((file, index) => ({
+    file,
+    name: `photo-${Date.now()}-${index}.${file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg'}`,
+    type: file.type,
+  }))
+  if (signature) items.push({ file: signature, name: `signature-${Date.now()}.png`, type: 'image/png' })
+  for (const item of items) {
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(item.type)) {
+      throw new Error('Use imagens JPG, PNG ou WEBP.')
+    }
+    if (item.file.size > 5 * 1024 * 1024) throw new Error('Cada imagem deve ter no máximo 5 MB.')
+    const path = `${prefix}/${item.name}`
+    const { error } = await storage.upload(path, item.file, { contentType: item.type, upsert: false })
+    if (error) throw error
+    uploaded.push(path)
+  }
+  return uploaded
+}
+
+export async function listServiceOrderIntakeMedia(context: TenantContext, orderId: string) {
+  const prefix = `${context.organizationId}/${context.branchId}/${orderId}`
+  const storage = client().storage.from('service-order-intake')
+  const { data, error } = await storage.list(prefix, { limit: 30, sortBy: { column: 'name', order: 'asc' } })
+  if (error) throw error
+  const files = (data ?? []).filter(item => item.name && item.name !== '.emptyFolderPlaceholder')
+  const results = await Promise.all(files.map(async item => {
+    const path = `${prefix}/${item.name}`
+    const { data: signed, error: signedError } = await storage.createSignedUrl(path, 60 * 10)
+    if (signedError) throw signedError
+    return { name: item.name, url: signed.signedUrl }
+  }))
+  return results
+}
+
 export async function updateServiceOrderStatus(
   context: TenantContext,
   orderId: string,
