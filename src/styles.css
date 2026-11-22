@@ -403,3 +403,9 @@
 .cash-in{color:#8ce0b1!important;font-weight:700}
 .cash-out{color:#ffadad!important;font-weight:700}
 @media(max-width:760px){.company-cash-stats{grid-template-columns:1fr}.company-cash-stats article{grid-template-columns:auto 1fr}.company-cash-stats b{font-size:16px}}
+
+
+.company-modal-backdrop{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(3,7,13,.78);backdrop-filter:blur(5px)}
+.company-payment-modal{width:min(100%,520px);max-height:90vh;overflow:auto;border:1px solid #39465a;border-radius:14px;background:#111a27;box-shadow:0 24px 80px rgba(0,0,0,.45)}
+.company-payment-modal h3{margin-top:0}
+.company-payment-modal p{color:#9eacc0;font-size:13px}
