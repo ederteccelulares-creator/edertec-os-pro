@@ -156,6 +156,45 @@ Deno.serve(async (req) => {
   }).filter(item => item.records > 0);
   const requiresUserMapping = userMappingRequirements.length > 0;
 
+  // Build a read-only identity inventory. No user is assigned or modified here.
+  const sourceUserMap = new Map<string, { source_user_id: string; references: Array<{ table: string; field: string; records: number }> }>();
+  for (const [table, field] of authReferences) {
+    const rows = Array.isArray(tables[table]) ? tables[table] as Array<Record<string, unknown>> : [];
+    const perUser = new Map<string, number>();
+    for (const row of rows) {
+      const value = row?.[field];
+      if (typeof value !== "string" || !value.trim()) continue;
+      perUser.set(value, (perUser.get(value) ?? 0) + 1);
+    }
+    for (const [userId, records] of perUser) {
+      const entry = sourceUserMap.get(userId) ?? { source_user_id: userId, references: [] };
+      entry.references.push({ table, field, records });
+      sourceUserMap.set(userId, entry);
+    }
+  }
+  const { data: destinationMembers, error: destinationMembersError } = await adminClient
+    .from("organization_members")
+    .select("user_id,role,active")
+    .eq("organization_id", organizationId);
+  if (destinationMembersError) errors.push("Não foi possível consultar os membros do destino para preparar o mapeamento.");
+  const memberIds = (destinationMembers ?? []).map(member => member.user_id);
+  const { data: destinationProfiles, error: destinationProfilesError } = memberIds.length
+    ? await adminClient.from("profiles").select("id,full_name").in("id", memberIds)
+    : { data: [], error: null };
+  if (destinationProfilesError) errors.push("Não foi possível consultar os nomes dos membros do destino.");
+  const profileNames = new Map((destinationProfiles ?? []).map(profile => [profile.id, profile.full_name]));
+  const destinationMemberList = (destinationMembers ?? []).map(member => ({
+    user_id: member.user_id,
+    full_name: profileNames.get(member.user_id) ?? "",
+    role: member.role,
+    active: member.active,
+  }));
+  const destinationMemberIds = new Set(memberIds);
+  const sourceUsers = [...sourceUserMap.values()].map(user => ({
+    ...user,
+    same_id_member_exists: destinationMemberIds.has(user.source_user_id),
+  }));
+
   const unknownTables = Object.keys(tables).filter(name => !TABLES.includes(name as typeof TABLES[number]));
   if (unknownTables.length) errors.push("O arquivo contém tabelas não reconhecidas: " + unknownTables.join(", "));
   const targetCounts: Record<string, number> = {};
@@ -187,6 +226,8 @@ Deno.serve(async (req) => {
     counts,
     requires_user_mapping: requiresUserMapping,
     user_mapping_requirements: userMappingRequirements,
+    source_users: sourceUsers,
+    destination_members: destinationMemberList,
     destination_empty: destinationEmpty,
     target_counts: targetCounts,
     occupied_tables: occupiedTables,
