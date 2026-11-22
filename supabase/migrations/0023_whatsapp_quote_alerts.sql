@@ -142,3 +142,5 @@ $$;
 revoke all on function public.get_service_order_whatsapp_target(text) from public, anon, authenticated;
 grant execute on function public.get_service_order_whatsapp_target(text) to service_role;
 
+
+grant insert on public.whatsapp_notification_logs to service_role;
