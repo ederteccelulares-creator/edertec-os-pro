@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Building2, CheckCircle2, LoaderCircle, LogOut, Mail, ShieldCheck, Smartphone } from 'lucide-react'
 import type { Session } from '@supabase/supabase-js'
+import TenantWorkspace from './TenantWorkspace'
 import { isSupabaseConfigured, supabase, type Organization, type OrganizationRole } from '../lib/supabase'
 
 type Membership = {
@@ -154,12 +155,5 @@ export default function AuthGate() {
     </form><button className="auth-switch" onClick={signOut}>Sair da conta</button>
   </section></main>
 
-  return <main className="auth-page"><section className="auth-card welcome-card">
-    <div className="auth-brand"><span><Smartphone size={25}/></span><div><b>EDERTEC <i>OS PRO</i></b><small>AMBIENTE DA ASSISTÊNCIA</small></div></div>
-    <div className="auth-icon"><CheckCircle2 size={25}/></div><div className="auth-eyebrow">EMPRESA CONECTADA</div><h1>{selectedOrg.name}</h1>
-    <p className="auth-subtitle">Sua conta e seu ambiente empresarial já estão registrados na estrutura multiempresa.</p>
-    <div className="connected-summary"><span>Identificador</span><b>{selectedOrg.slug}</b><span>Usuário conectado</span><b>{session.user.email}</b><span>Segurança</span><b>Isolamento por organização ativo no banco</b></div>
-    <div className="auth-notice">Próxima etapa técnica: conectar os módulos de clientes, aparelhos e ordens de serviço ao banco em nuvem. Até concluir essa integração, o painel operacional antigo fica bloqueado para evitar mistura de dados entre empresas.</div>
-    <button className="primary auth-submit" onClick={signOut}><LogOut size={17}/> Sair da conta</button>
-  </section></main>
+  return <TenantWorkspace organization={selectedOrg} email={session.user.email || ''} onSignOut={signOut} />
 }
