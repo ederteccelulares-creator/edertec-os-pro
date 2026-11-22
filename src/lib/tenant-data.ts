@@ -568,3 +568,22 @@ export async function exportOrganizationBackup(organizationId: string) {
   if (data?.error) throw new Error(data.error)
   return data as Record<string, unknown>
 }
+
+
+export async function validateOrganizationBackup(organizationId: string, backup: Record<string, unknown>) {
+  const { data, error } = await client().functions.invoke('validate-organization-backup', {
+    body: { organization_id: organizationId, backup },
+  })
+  if (error) throw error
+  if (data?.error) throw new Error(data.error)
+  return data as {
+    valid: boolean
+    applied: false
+    message: string
+    organization: { id: string; name: string }
+    exported_at: string | null
+    total_records: number
+    counts: Record<string, number>
+    errors: string[]
+  }
+}
