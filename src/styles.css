@@ -959,5 +959,5 @@ td b { font-weight:650; }
 .company-pos-checkout label{display:grid;gap:6px;color:#c6b9cb;font-size:11px}
 .company-pos-total,.company-pos-grand{display:flex;justify-content:space-between;align-items:center;color:#b5a9ba;font-size:12px}.company-pos-total b{color:#eee}.company-pos-grand{padding:12px;border-radius:9px;background:#211927;color:#f0c2e3}.company-pos-grand strong{font-size:21px;color:#fff}
 .company-pos-finish{width:100%;min-height:46px;justify-content:center}
-@media(max-width:850px){.company-pos{grid-template-columns:1fr}.company-pos-cart{order:-1}}
+@media(max-width:850px){.company-pos{grid-template-columns:1fr}.company-pos-products{order:0}.company-pos-cart{order:1}}
 @media(max-width:520px){.company-pos-tools{flex-direction:column}.company-pos-branch select{flex:1}.company-pos-product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
