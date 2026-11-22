@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ChangeEvent } from 'react'
 import { Building2, ClipboardList, LogOut, Plus, RefreshCw, Smartphone, Users, Boxes, ArrowDownUp, Wallet, ShoppingCart, Trash2, ShieldCheck, UserCog, BarChart3 } from 'lucide-react'
-import { changeInventoryStock, createInventoryItem, createFinancialEntry, createSale, createServiceOrderWithDevice, listBranches, listCustomers, listFinancialEntries, listInventory, listSales, listServiceOrderEvents, listServiceOrders, saveCustomer, listOrganizationTeam, setOrganizationMemberActive, setOrganizationMemberRole, listServiceCatalog, saveServiceCatalogItem, addServiceToOrder, inviteOrganizationMember, updateFinancialEntryStatus, updateServiceOrderStatus, exportOrganizationBackup } from '../lib/tenant-data'
+import { changeInventoryStock, createInventoryItem, createFinancialEntry, createSale, createServiceOrderWithDevice, listBranches, listCustomers, listFinancialEntries, listInventory, listSales, listServiceOrderEvents, listServiceOrders, saveCustomer, listOrganizationTeam, setOrganizationMemberActive, setOrganizationMemberRole, listServiceCatalog, saveServiceCatalogItem, addServiceToOrder, inviteOrganizationMember, updateFinancialEntryStatus, updateServiceOrderStatus, exportOrganizationBackup, validateOrganizationBackup } from '../lib/tenant-data'
 import type { Organization, Branch } from '../lib/supabase'
 import type { ServiceOrderStatus, TeamMember, ServiceCatalogItem } from '../lib/tenant-data'
 
@@ -56,6 +56,8 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
   const [error, setError] = useState('')
   const [backupBusy, setBackupBusy] = useState(false)
   const [backupNotice, setBackupNotice] = useState('')
+  const [validationBusy, setValidationBusy] = useState(false)
+  const [validationReport, setValidationReport] = useState<{valid:boolean;applied:false;message:string;organization:{id:string;name:string};exported_at:string|null;total_records:number;counts:Record<string,number>;errors:string[]}|null>(null)
   const [showOrder, setShowOrder] = useState(false)
   const [showCustomer, setShowCustomer] = useState(false)
   const [historyOrder, setHistoryOrder] = useState<Order | null>(null)
@@ -65,6 +67,24 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
   const [customer, setCustomer] = useState({ name: '', phone: '', email: '' })
   const [order, setOrder] = useState({ customerId: '', brand: 'Apple', model: '', imei: '', issue: '', amount: '0', accessories: '', condition: '' })
 
+  async function inspectBackupFile(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    setValidationBusy(true)
+    setValidationReport(null)
+    setError('')
+    try {
+      if (file.size > 10 * 1024 * 1024) throw new Error('O arquivo deve ter no máximo 10 MB.')
+      const parsed = JSON.parse(await file.text()) as Record<string, unknown>
+      const report = await validateOrganizationBackup(organization.id, parsed)
+      setValidationReport(report)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível validar o arquivo.')
+    } finally {
+      setValidationBusy(false)
+    }
+  }
   async function downloadBackup() {
     setBackupBusy(true)
     setBackupNotice('')
@@ -286,7 +306,7 @@ export default function TenantWorkspace({ organization, role, email, onSignOut }
       <div className="tenant-heading"><div><small>AMBIENTE EMPRESARIAL</small><h1>{organization.name}</h1><p>Gestão de atendimentos e clientes</p></div><label className="branch-select"><Building2 size={16}/><select value={branchId} onChange={e=>setBranchId(e.target.value)}>{branches.map(branch=><option key={branch.id} value={branch.id}>{branch.name}</option>)}</select></label></div>
       <div className="tenant-stats"><article><span>Ordens nesta filial</span><b>{orders.length}</b></article><article><span>Clientes cadastrados</span><b>{customers.length}</b></article><article><span>Em andamento</span><b>{orders.filter(item=>!['delivered','cancelled'].includes(item.status)).length}</b></article></div>
       <div className="tenant-tabs"><button className={tab==='orders'?'selected':''} onClick={()=>setTab('orders')}><ClipboardList size={17}/> Ordens de serviço</button><button className={tab==='customers'?'selected':''} onClick={()=>setTab('customers')}><Users size={17}/> Clientes</button><button className={tab==='inventory'?'selected':''} onClick={()=>setTab('inventory')}><Boxes size={17}/> Estoque</button>{canManageFinance&&<button className={tab==='finance'?'selected':''} onClick={()=>setTab('finance')}><Wallet size={17}/> Financeiro</button>}<button className={tab==='sales'?'selected':''} onClick={()=>setTab('sales')}><ShoppingCart size={17}/> Vendas</button><button className={tab==='reports'?'selected':''} onClick={()=>setTab('reports')}><BarChart3 size={17}/> Relatórios</button><button className={tab==='services'?'selected':''} onClick={()=>setTab('services')}><ClipboardList size={17}/> Serviços</button>{canViewTeam&&<button className={tab==='team'?'selected':''} onClick={()=>setTab('team')}><ShieldCheck size={17}/> Equipe</button>}<button className="refresh" onClick={()=>loadWorkspace()}><RefreshCw size={16}/> Atualizar</button></div>
-      {error&&<div className="tenant-error">{error}</div>}{backupNotice&&<div className="tenant-success">{backupNotice}</div>}
+      {error&&<div className="tenant-error">{error}</div>}{backupNotice&&<div className="tenant-success">{backupNotice}</div>}{['owner','admin'].includes(role)&&<section className="tenant-panel tenant-backup-panel"><div className="tenant-panel-head"><div><b>Backup e restauração</b><small>Valide um arquivo antes de solicitar restauração assistida</small></div><label className="tenant-history-button">{validationBusy?'Validando...':'Validar arquivo JSON'}<input type="file" accept="application/json,.json" disabled={validationBusy} onChange={inspectBackupFile}/></label></div>{validationReport&&<div className="tenant-backup-report"><b>{validationReport.valid?'Arquivo validado':'Arquivo com problemas'}</b><p>{validationReport.message}</p><p>Empresa: {validationReport.organization.name} · Registros: {validationReport.total_records.toLocaleString('pt-BR')}</p>{validationReport.errors.map((item,index)=><p key={index}>{item}</p>)}<small>Validação não restaura nem altera dados.</small></div>}</section>}
       {tab==='orders'&&<section className="tenant-panel"><div className="tenant-panel-head"><div><b>Ordens de serviço</b><small>Atendimentos registrados na filial selecionada</small></div><button className="tenant-primary" onClick={()=>setShowOrder(v=>!v)}><Plus size={16}/> Nova OS</button></div>
         {showOrder&&<form className="tenant-form" onSubmit={submitOrder}><label>Cliente<select required value={order.customerId} onChange={e=>setOrder({...order,customerId:e.target.value})}><option value="">Selecione um cliente</option>{customers.map(c=><option key={c.id} value={c.id}>{c.name} · {c.phone}</option>)}</select></label><div className="tenant-grid"><label>Marca<select value={order.brand} onChange={e=>setOrder({...order,brand:e.target.value})}>{['Apple','Samsung','Motorola','Xiaomi','Realme','Infinix','Outra'].map(v=><option key={v}>{v}</option>)}</select></label><label>Modelo<input required value={order.model} onChange={e=>setOrder({...order,model:e.target.value})}/></label><label>IMEI / Série<input value={order.imei} onChange={e=>setOrder({...order,imei:e.target.value})}/></label><label>Valor estimado (R$)<input type="number" min="0" step="0.01" value={order.amount} onChange={e=>setOrder({...order,amount:e.target.value})}/></label><label className="wide">Defeito informado<textarea required value={order.issue} onChange={e=>setOrder({...order,issue:e.target.value})}/></label><label>Acessórios<input value={order.accessories} onChange={e=>setOrder({...order,accessories:e.target.value})}/></label><label>Condição física<input value={order.condition} onChange={e=>setOrder({...order,condition:e.target.value})}/></label></div><div className="tenant-form-actions"><button type="button" onClick={()=>setShowOrder(false)}>Cancelar</button><button className="tenant-primary" disabled={busy}>Salvar ordem</button></div></form>}
         {loading?<p className="tenant-empty">Carregando dados...</p>:orders.length===0?<p className="tenant-empty">Nenhuma ordem cadastrada nesta filial.</p>:<div className="tenant-table-wrap"><table><thead><tr><th>Nº</th><th>CLIENTE / APARELHO</th><th>DEFEITO</th><th>VALOR</th><th>STATUS</th><th>HISTÓRICO</th>{canAddServiceToOrder&&<th>SERVIÇO</th>}<th>IMPRIMIR</th></tr></thead><tbody>{orders.map(item=><tr key={item.id}><td>#{item.order_number}</td><td><b>{item.customers?.name || 'Cliente'}</b><small>{item.devices?.brand} {item.devices?.model}</small></td><td>{item.reported_issue}</td><td>{money(item.estimated_amount)}</td><td><select value={item.status} disabled={busy || !canUpdateOrders} title={!canUpdateOrders ? 'Seu perfil pode abrir OS, mas não alterar o status.' : 'Atualizar status'} onChange={e=>changeStatus(item.id,e.target.value)}>{statuses.map(status=><option key={status} value={status}>{statusLabels[status]}</option>)}</select></td><td><button className="tenant-history-button" onClick={()=>openHistory(item)}>Ver histórico</button></td>{canAddServiceToOrder&&<td><div className="tenant-order-service-action"><select value={serviceForOrder[item.id]||''} onChange={e=>setServiceForOrder(current=>({...current,[item.id]:e.target.value}))} disabled={['delivered','cancelled'].includes(item.status)}><option value="">Adicionar serviço</option>{serviceRows.filter(service=>service.active).map(service=><option key={service.id} value={service.id}>{service.name} · {money(Number(service.price))}</option>)}</select><button className="tenant-history-button" disabled={busy||!serviceForOrder[item.id]||['delivered','cancelled'].includes(item.status)} onClick={()=>attachService(item.id)}>Adicionar</button></div></td>}<td><button className="tenant-history-button" onClick={()=>printServiceOrder(item)}>Imprimir A4</button></td></tr>)}</tbody></table></div>}
