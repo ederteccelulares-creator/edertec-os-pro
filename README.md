@@ -106,3 +106,6 @@ A migração `0015_operational_tenant_key_hardening.sql` torna imutáveis os IDs
 ## Verificação de segurança do banco
 
 Depois de aplicar todas as migrações `0001` a `0015` em um projeto Supabase de teste, execute `supabase/tests/security_regression.sql` no SQL Editor. O script verifica se as tabelas operacionais mantêm RLS, se a gravação direta de OS foi removida, se os triggers de imutabilidade estão instalados e se as políticas de privacidade de vendas existem. Esse teste estrutural não substitui testes de integração com duas empresas e usuários autenticados com funções diferentes.
+
+
+O roteiro `supabase/tests/tenant_isolation_manual.md` descreve os cenários de homologação com duas empresas e usuários proprietários, atendentes e técnicos. Execute-o em um projeto Supabase separado, com dados fictícios, e guarde as evidências antes de liberar o sistema.
