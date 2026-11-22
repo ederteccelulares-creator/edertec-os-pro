@@ -162,20 +162,28 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
 
   async function saveBillingSettings(event:FormEvent){
     event.preventDefault();if(!supabase)return
-    if(billingForm.accessToken.trim().length<20||billingForm.webhookSecret.trim().length<12){
-      setError('Informe o Access Token e a assinatura secreta do Webhook.');return
+    const accessToken=billingForm.accessToken.trim()
+    const webhookSecret=billingForm.webhookSecret.trim()
+    if(!accessToken&&!webhookSecret){
+      setError('Preencha pelo menos um campo para salvar.');return
+    }
+    if(accessToken&&accessToken.length<20){
+      setError('O Access Token precisa ter pelo menos 20 caracteres.');return
+    }
+    if(webhookSecret&&webhookSecret.length<12){
+      setError('A chave secreta do Webhook precisa ter pelo menos 12 caracteres.');return
     }
     setBusy(true);setError('');setNotice('')
     try{
       const {data,error}=await supabase.functions.invoke('mercadopago-billing?action=settings',{
-        body:{access_token:billingForm.accessToken.trim(),webhook_secret:billingForm.webhookSecret.trim()}
+        body:{access_token:accessToken||undefined,webhook_secret:webhookSecret||undefined}
       })
       if(error)throw error
       if(data?.error)throw new Error(data.error)
-      setBillingForm({accessToken:'',webhookSecret:''})
-      try{sessionStorage.removeItem(BILLING_DRAFT_KEY)}catch{}
-      setBillingStatus({access_token_configured:true,webhook_secret_configured:true,updated_at:new Date().toISOString()})
-      setNotice('Credenciais do Mercado Pago salvas com segurança.')
+      setBillingForm(current=>({accessToken:accessToken?'':current.accessToken,webhookSecret:webhookSecret?'':current.webhookSecret}))
+      try{sessionStorage.setItem(BILLING_DRAFT_KEY,JSON.stringify({accessToken:accessToken?'':billingForm.accessToken,webhookSecret:webhookSecret?'':billingForm.webhookSecret}))}catch{}
+      setBillingStatus(current=>({...current,access_token_configured:accessToken?true:current?.access_token_configured,webhook_secret_configured:webhookSecret?true:current?.webhook_secret_configured,updated_at:new Date().toISOString()}))
+      setNotice(accessToken&&webhookSecret?'As duas credenciais foram salvas com segurança.':accessToken?'Access Token salvo. Você pode preencher o Webhook Secret depois.':'Webhook Secret salvo. Você pode preencher o Access Token depois.')
     }catch(e){setError(e instanceof Error?e.message:'Falha ao salvar credenciais.')}
     finally{setBusy(false)}
   }
@@ -198,9 +206,9 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
             <article><ShieldCheck/><small>Webhook Secret</small><b>{billingStatus?.webhook_secret_configured?'Configurado':'Pendente'}</b></article>
           </div>}
           <form className="platform-form" onSubmit={saveBillingSettings}>
-            <label className="platform-wide">Mercado Pago Access Token<input type="password" autoComplete="new-password" value={billingForm.accessToken} onChange={e=>setBillingForm(v=>({...v,accessToken:e.target.value}))} placeholder={billingStatus?.access_token_configured?'Token já configurado — digite para substituir':'Access Token de produção (APP_USR-...)'} required minLength={20}/></label>
-            <label className="platform-wide">Segredo de assinatura do Webhook<input type="password" autoComplete="new-password" value={billingForm.webhookSecret} onChange={e=>setBillingForm(v=>({...v,webhookSecret:e.target.value}))} placeholder={billingStatus?.webhook_secret_configured?'Segredo já configurado — digite para substituir':'Chave secreta de assinatura do Webhook'} required minLength={12}/></label>
-            <div className="platform-form-actions"><button type="submit" disabled={busy}>{busy?'Salvando...':'Salvar credenciais com segurança'}</button></div>
+            <label className="platform-wide">Mercado Pago Access Token<input type="password" autoComplete="new-password" value={billingForm.accessToken} onChange={e=>setBillingForm(v=>({...v,accessToken:e.target.value}))} placeholder={billingStatus?.access_token_configured?'Token já configurado — digite para substituir':'Access Token de produção (APP_USR-...)'}/></label>
+            <label className="platform-wide">Segredo de assinatura do Webhook<input type="password" autoComplete="new-password" value={billingForm.webhookSecret} onChange={e=>setBillingForm(v=>({...v,webhookSecret:e.target.value}))} placeholder={billingStatus?.webhook_secret_configured?'Segredo já configurado — digite para substituir':'Chave secreta de assinatura do Webhook'}/></label>
+            <div className="platform-form-actions"><button type="submit" disabled={busy}>{busy?'Salvando...':'Salvar campos preenchidos'}</button></div>
           </form>
           <p className="platform-hint">Última atualização: {billingStatus?.updated_at?new Date(billingStatus.updated_at).toLocaleString('pt-BR'):'Ainda não configurado'}. No painel Mercado Pago, acesse Suas integrações → Webhooks, cadastre a URL abaixo e habilite o evento Pagamentos.</p>
           <div className="platform-form"><label className="platform-wide">URL do Webhook<input readOnly value="https://btouoeftgatyrvuobicr.supabase.co/functions/v1/mercadopago-billing?action=webhook"/></label><div className="platform-form-actions"><button type="button" onClick={()=>{void navigator.clipboard.writeText('https://btouoeftgatyrvuobicr.supabase.co/functions/v1/mercadopago-billing?action=webhook');setNotice('URL do Webhook copiada.')}}>Copiar URL</button></div></div>
