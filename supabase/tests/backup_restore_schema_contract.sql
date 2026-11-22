@@ -1,5 +1,5 @@
 -- Read-only schema contract for a future safe backup restore.
--- Run only in a disposable Supabase test project after migrations 0001-0016.
+-- Run only in a disposable Supabase test project after migrations 0001-0017.
 -- This script does not import, update, or delete application data.
 
 do $$
