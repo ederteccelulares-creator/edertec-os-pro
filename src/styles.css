@@ -899,3 +899,18 @@ td b { font-weight:650; }
   }
   .company-panel-head { position:relative!important; }
 }
+
+
+/* Branch / main switcher lives in the navigation drawer */
+.company-branch-switch { display:grid;gap:7px;padding:12px;margin:2px 0 8px;border:1px solid #3a2b3b;border-radius:12px;background:#101018; }
+.company-branch-switch label { color:#a99bad;font-size:10px;font-weight:800;letter-spacing:1.5px; }
+.company-branch-switch select { width:100%;min-width:0;height:44px;padding:0 11px;border:1px solid #49344a;border-radius:9px;background:#1b1721;color:#f5edf6;font-size:13px; }
+.company-branch-switch select:focus { outline:2px solid #ff20b566;border-color:#ff20b5; }
+.company-top-actions { justify-content:flex-end; }
+.company-top-actions .company-icon-button { flex:0 0 46px; }
+@media(max-width:760px) {
+  .company-branch-switch { margin:0 0 6px;padding:11px; }
+  .company-branch-switch select { height:46px;font-size:14px; }
+  .company-top-actions { display:flex!important;justify-content:flex-end!important;width:100%!important; }
+  .company-top-actions .company-icon-button { width:46px!important;height:44px!important; }
+}
