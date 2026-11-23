@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
   // Settings are available only to authenticated Super Admin accounts.
   if (action === "settings") {
     const authorization = req.headers.get("Authorization") || "";
-    const jwt = authorization.replace(/^Bearer\\s+/i, "");
+    const jwt = authorization.replace(/^Bearer\s+/i, "");
     const anonKey = getApiKey("SUPABASE_ANON_KEY");
     if (!jwt || !anonKey) return response({ error: "Authentication required." }, 401);
     const userClient = createClient(supabaseUrl, anonKey, {
@@ -76,8 +76,15 @@ Deno.serve(async (req) => {
     });
     const { data: userData, error: userError } = await userClient.auth.getUser(jwt);
     if (userError || !userData.user) return response({ error: "Invalid session." }, 401);
-    const { data: isAdmin } = await admin.from("platform_admins").select("user_id").eq("user_id", userData.user.id).maybeSingle();
-    if (!isAdmin) return response({ error: "Super Admin access required." }, 403);
+    const { data: isAdmin, error: adminCheckError } = await userClient.rpc("is_platform_admin");
+    if (adminCheckError) {
+      console.error("platform_admin_check_failed", { code: adminCheckError.code, message: adminCheckError.message });
+      return response({ error: "Could not verify Super Admin access.", code: adminCheckError.code || "ADMIN_CHECK_FAILED" }, 500);
+    }
+    if (isAdmin !== true) {
+      console.error("platform_admin_missing", { userId: userData.user.id });
+      return response({ error: "Super Admin access required." }, 403);
+    }
 
     if (req.method === "GET") {
       const { data, error } = await admin.rpc("get_platform_billing_config_status");
@@ -87,17 +94,10 @@ Deno.serve(async (req) => {
     if (req.method === "POST") {
       let input: { access_token?: string; webhook_secret?: string };
       try { input = await req.json(); } catch { return response({ error: "Invalid JSON." }, 400); }
-      const accessToken = typeof input.access_token === "string" ? input.access_token.trim() : undefined;
-      const webhookSecret = typeof input.webhook_secret === "string" ? input.webhook_secret.trim() : undefined;
-      if (!accessToken && !webhookSecret) return response({ error: "Informe pelo menos uma credencial para salvar." }, 400);
-      if (accessToken !== undefined && accessToken.length < 20) return response({ error: "Access Token inválido." }, 400);
-      if (webhookSecret !== undefined && webhookSecret.length < 12) return response({ error: "Webhook Secret inválido." }, 400);
-      const { data: currentSecrets, error: currentError } = await admin.rpc("get_platform_billing_secrets");
-      if (currentError) return response({ error: "Could not read existing billing settings." }, 500);
       const { data, error } = await admin.rpc("save_platform_billing_secrets", {
         p_user_id: userData.user.id,
-        p_access_token: accessToken ?? currentSecrets?.access_token ?? "",
-        p_webhook_secret: webhookSecret ?? currentSecrets?.webhook_secret ?? "",
+        p_access_token: input.access_token || "",
+        p_webhook_secret: input.webhook_secret || "",
       });
       if (error) return response({ error: error.message || "Could not save billing credentials." }, 400);
       return response(data || { configured: true });
@@ -166,8 +166,14 @@ Deno.serve(async (req) => {
   try { input = await req.json(); } catch { return response({ error: "Invalid JSON." }, 400); }
   if (!input.company_id || !input.plan_id) return response({ error: "Choose a company and plan." }, 400);
 
-  const { data: membership } = await admin.from("company_members")
+  // Read the signed-in user's own active membership through their authenticated session.
+  // The company_members RLS policy intentionally allows this read only for auth.uid().
+  const { data: membership, error: membershipError } = await userClient.from("company_members")
     .select("role").eq("company_id", input.company_id).eq("user_id", userData.user.id).eq("is_active", true).maybeSingle();
+  if (membershipError) {
+    console.error("company_membership_lookup_failed", { code: membershipError.code, message: membershipError.message });
+    return response({ error: "Could not verify company membership.", code: membershipError.code || "MEMBERSHIP_LOOKUP_FAILED" }, 500);
+  }
   if (!membership || !["owner", "admin"].includes(membership.role)) {
     return response({ error: "Only an active company owner or administrator can purchase a plan." }, 403);
   }
