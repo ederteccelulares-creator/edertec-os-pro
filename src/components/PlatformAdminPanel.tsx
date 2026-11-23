@@ -141,8 +141,18 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
   async function updateSubscriptionStatus(sub:SubscriptionRow,status:string){
     if(!supabase)return
     setBusy(true);setError('');setNotice('')
-    try{const {error}=await supabase.from('company_subscriptions').update({status}).eq('id',sub.id);if(error)throw error;setNotice('Assinatura atualizada.');await load()}
-    catch(e){setError(e instanceof Error?e.message:'Falha ao atualizar assinatura.')}
+    try{
+      const {error}=await supabase.rpc('admin_set_company_subscription',{
+        p_company_id:sub.company_id,
+        p_plan_id:sub.plan_id,
+        p_status:status,
+        p_starts_at:sub.starts_at,
+        p_ends_at:sub.ends_at,
+      })
+      if(error)throw error
+      setNotice('Assinatura atualizada.')
+      await load()
+    }catch(e){setError(e instanceof Error?e.message:'Falha ao atualizar assinatura.')}
     finally{setBusy(false)}
   }
 
