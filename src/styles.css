@@ -1881,3 +1881,7 @@ td b { font-weight:650; }
 .pwa-install-copy{display:grid;gap:4px;min-width:0;flex:1}.pwa-install-copy b{font-size:14px}.pwa-install-copy span,.pwa-install-copy small{font-size:11px;line-height:1.4;color:#aeb8c4}.pwa-install-copy small{color:#f0c1c3}
 .pwa-install-action{display:flex;align-items:center;gap:6px;border:0;border-radius:10px;padding:10px 12px;background:#e14a50;color:white;font-weight:700;font-size:12px;white-space:nowrap}.pwa-install-close{align-self:flex-start;border:0;background:transparent;color:#aeb8c4;padding:2px}
 @media(max-width:420px){.pwa-install-card{gap:9px;padding:11px}.pwa-install-icon{width:36px;height:36px;flex-basis:36px}.pwa-install-action{padding:9px;font-size:11px}}
+
+.company-order-search{display:grid;gap:7px;margin:0 0 16px;color:#d8dce2;font-size:12px;font-weight:700}
+.company-order-search input{width:100%;min-height:44px;padding:11px 13px;border:1px solid #39424d;border-radius:10px;background:#101419;color:#f4f5f6;font:inherit;font-weight:400;outline:none}
+.company-order-search input:focus{border-color:#e14a50;box-shadow:0 0 0 3px #e14a5022}
