@@ -1785,3 +1785,16 @@ td b { font-weight:650; }
     font-size:10px;
   }
 }
+
+
+/* Edertec OS Pro - splash screen */
+.splash-screen{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(ellipse at 50% 42%,#202a3a 0%,#10151f 42%,#080b11 100%);color:#f7f8fb;animation:splash-enter .35s ease-out both}
+.splash-glow{position:absolute;width:280px;height:280px;border-radius:50%;background:rgba(214,166,76,.12);filter:blur(65px);pointer-events:none}
+.splash-logo{position:relative;width:82px;height:82px;display:grid;place-items:center;border:1px solid rgba(222,179,91,.65);border-radius:24px;background:linear-gradient(145deg,#252c38,#10151e);color:#e2b65f;box-shadow:0 0 45px rgba(216,170,85,.16),inset 0 1px rgba(255,255,255,.08)}
+.splash-wordmark{position:relative;margin-top:25px;font-size:27px;font-weight:900;letter-spacing:2px}.splash-wordmark span{color:#e2b65f}
+.splash-screen>p{margin:8px 0 34px;color:#aeb7c6;font-size:10px;letter-spacing:3px;font-weight:700}
+.splash-loader{width:190px;height:3px;overflow:hidden;border-radius:8px;background:#303847}.splash-loader span{display:block;width:40%;height:100%;border-radius:8px;background:linear-gradient(90deg,#a97832,#f2d38c);animation:splash-progress 1.65s ease-in-out forwards}
+.splash-screen>small{margin-top:14px;color:#c1c8d3;font-size:11px;letter-spacing:.4px}.splash-screen>em{position:absolute;bottom:35px;color:#758093;font-size:9px;font-style:normal;letter-spacing:2px}
+@keyframes splash-progress{from{transform:translateX(-110%)}to{transform:translateX(250%)}}
+@keyframes splash-enter{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.splash-screen,.splash-loader span{animation:none}}
