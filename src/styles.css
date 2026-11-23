@@ -1798,3 +1798,72 @@ td b { font-weight:650; }
 @keyframes splash-progress{from{transform:translateX(-110%)}to{transform:translateX(250%)}}
 @keyframes splash-enter{from{opacity:0}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.splash-screen,.splash-loader span{animation:none}}
+
+
+
+/* Dashboard header: organized responsive hierarchy */
+@media (max-width: 640px) {
+  .company-top {
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+    gap:14px !important;
+    margin:0 0 18px !important;
+    padding:0 0 16px !important;
+  }
+  .company-top > div:first-child { width:100%; }
+  .company-top > div:first-child > small { display:block; margin:0 0 5px; font-size:9px; letter-spacing:1.8px; }
+  .company-top h1 { margin:0 !important; font-size:27px !important; line-height:1.15; }
+  .company-top-actions {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) 46px !important;
+    grid-template-areas:"clock clock" "plan refresh" !important;
+    align-items:stretch !important;
+    gap:9px !important;
+    width:100% !important;
+  }
+  .company-brasilia-clock {
+    grid-area:clock;
+    display:flex !important;
+    flex-direction:row !important;
+    flex-wrap:wrap;
+    align-items:baseline !important;
+    justify-content:flex-start !important;
+    gap:4px 9px !important;
+    width:100%;
+    padding:8px 11px !important;
+    border-radius:10px;
+  }
+  .company-brasilia-clock b { font-size:18px !important; }
+  .company-brasilia-clock span { font-size:11px !important; }
+  .company-brasilia-clock small { font-size:9px !important; margin:0 !important; }
+  .company-plan-period {
+    grid-area:plan;
+    align-items:flex-start !important;
+    justify-content:center;
+    width:100% !important;
+    max-width:none !important;
+    min-height:58px;
+    padding:9px 11px !important;
+    gap:4px !important;
+    border-radius:10px;
+  }
+  .company-plan-period b { max-width:100% !important; font-size:12px !important; white-space:normal !important; }
+  .company-plan-period span { white-space:normal !important; font-size:10px !important; line-height:1.25; }
+  .company-plan-period small { font-size:9px !important; line-height:1.25; }
+  .company-top-actions .company-icon-button {
+    grid-area:refresh;
+    width:46px !important;
+    height:100% !important;
+    min-height:58px;
+    display:grid;
+    place-items:center;
+    border-radius:10px;
+  }
+}
+@media (min-width: 641px) {
+  .company-top { align-items:center; gap:20px; }
+  .company-top-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:10px; }
+  .company-brasilia-clock { min-width:190px; }
+  .company-plan-period { max-width:280px; }
+}
