@@ -1442,3 +1442,30 @@ td b { font-weight:650; }
 .platform-mp-external { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; margin:14px 0 18px; border:1px solid #39485d; border-radius:12px; background:#111b29; }
 .platform-mp-external .platform-hint { margin:0; flex:1 1 240px; }
 .platform-mp-open { display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:0 15px; border:1px solid #8b7042; border-radius:9px; color:#f0ca7c; background:#2b251c; font-weight:700; text-decoration:none; }
+
+
+/* Mobile dashboard: center the Brasilia clock independently of plan/actions */
+@media(max-width:640px){
+  .company-top-actions{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    grid-template-areas:"clock clock" "plan refresh";
+    align-items:center;
+    width:100%;
+    gap:9px;
+  }
+  .company-brasilia-clock{
+    grid-area:clock;
+    justify-self:center;
+    align-items:center;
+    text-align:center;
+    width:max-content;
+    max-width:100%;
+    padding:7px 14px;
+  }
+  .company-brasilia-clock b{font-size:15px}
+  .company-brasilia-clock span{font-size:11px}
+  .company-brasilia-clock small{font-size:10px}
+  .company-plan-period{grid-area:plan;justify-self:start;max-width:100%}
+  .company-icon-button{grid-area:refresh;justify-self:end}
+}
