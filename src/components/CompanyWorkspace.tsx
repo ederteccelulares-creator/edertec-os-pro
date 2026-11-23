@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent, type ChangeEvent } from 'react'
-import { Building2, ClipboardList, Users, Package, Truck, ShoppingCart, Wallet, Plus, RefreshCw, LogOut, Database, Download, LayoutDashboard, Menu, X, Smartphone, Printer, Settings, LifeBuoy } from 'lucide-react'
+import { Building2, ClipboardList, Users, Package, Truck, ShoppingCart, Wallet, Plus, RefreshCw, LogOut, Database, Download, LayoutDashboard, Menu, X, Smartphone, Printer, Settings, LifeBuoy, CreditCard } from 'lucide-react'
 import CompanyInventoryPanel from './CompanyInventoryPanel'
 import CompanyPOSPanel from './CompanyPOSPanel'
 import CompanySuppliersPanel from './CompanySuppliersPanel'
@@ -22,7 +22,7 @@ const statusFlow = ['received','diagnosis','waiting_approval','approved','waitin
 const money = (n:number) => Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 
 export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
-  const [tab,setTab] = useState<'dashboard'|'orders'|'customers'|'inventory'|'suppliers'|'purchases'|'cash'|'entries'|'pos'|'backup'|'settings'|'customerPortal'|'support'|'team'>('dashboard')
+  const [tab,setTab] = useState<'dashboard'|'orders'|'customers'|'inventory'|'suppliers'|'purchases'|'cash'|'entries'|'pos'|'backup'|'settings'|'customerPortal'|'support'|'team'|'plans'>('dashboard')
   const [menuOpen,setMenuOpen] = useState(false)
   const [companyInfo,setCompanyInfo] = useState(company)
   const [companySaving,setCompanySaving] = useState(false)
@@ -33,6 +33,8 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   const [printFormat,setPrintFormat] = useState<'a4'|'thermal80'>(() => { try { return localStorage.getItem('edertec-os-print-format')==='thermal80'?'thermal80':'a4' } catch { return 'a4' } })
   const [brasiliaNow,setBrasiliaNow] = useState(()=>new Date())
   const [planInfo,setPlanInfo] = useState<{subscription_status:string|null;trial_ends_at:string|null;ends_at:string|null;plan_name:string|null}|null>(null)
+  const [availablePlans,setAvailablePlans] = useState<Array<{id:string;name:string;description:string|null;price:number;billing_interval:string}>>([])
+  const [planCheckoutBusy,setPlanCheckoutBusy] = useState(false)
   const [branches,setBranches] = useState<CompanyBranch[]>([])
   const [branchId,setBranchId] = useState('')
   const [customers,setCustomers] = useState<CompanyCustomer[]>([])
@@ -87,6 +89,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   useEffect(()=>{
     let alive=true
     if(!supabase){setPlanInfo(null);return}
+    supabase.from('subscription_plans').select('id,name,description,price,billing_interval').eq('is_active',true).order('price').then(({data})=>{if(alive)setAvailablePlans((data||[]) as Array<{id:string;name:string;description:string|null;price:number;billing_interval:string}>)})
     supabase.rpc('get_company_access_status',{target_company_id:company.id}).then(({data,error})=>{
       if(!alive)return
       if(error){setPlanInfo(null);return}
@@ -253,6 +256,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   const canManage = role==='owner'||role==='admin'||role==='manager'
   const canAdmin = role==='owner'||role==='admin'
   const navigate = (next: typeof tab) => {
+    if(next==='plans'&&!canAdmin)return
     const managementTabs = ['pos','customerPortal','inventory','suppliers','purchases','cash','entries']
     if (managementTabs.includes(next) && !canManage) return
     if ((next==='settings'||next==='backup'||next==='team') && !canAdmin) return
@@ -286,16 +290,25 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
         {canManage&&<button className={tab==='entries'?'active':''} onClick={()=>navigate('entries')}><Wallet size={18}/> Contas a pagar/receber</button>}
         {canAdmin&&<button className={tab==='team'?'active':''} onClick={()=>navigate('team')}><Users size={18}/> Funcionários e usuários</button>}
         {canAdmin&&<button className={tab==='backup'?'active':''} onClick={()=>navigate('backup')}><Database size={18}/> Backup e segurança</button>}
+        {canAdmin&&<button className={tab==='plans'?'active':''} onClick={()=>navigate('plans')}><CreditCard size={18}/> Planos e assinatura</button>}
         {canAdmin&&<button className={tab==='settings'?'active':''} onClick={()=>navigate('settings')}><Settings size={18}/> Configurações</button>}
       </nav>
       <div className="company-user"><b>{email}</b><small>Perfil: {role}</small><button onClick={onSignOut}><LogOut size={15}/> Sair</button></div>
     </aside>
     <main className="company-main">
       <div className="company-mobilebar"><button onClick={()=>setMenuOpen(true)} aria-label="Abrir menu"><Menu/></button><div><b>EDERTEC <i>OS PRO</i></b><small>{companyInfo.name}</small></div><span className="company-mobile-avatar">{(email[0]||'U').toUpperCase()}</span></div>
-      <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='backup'?'Backup de dados':tab==='settings'?'Configurações':tab==='team'?'Funcionários e usuários':tab==='customerPortal'?'Compartilhar Área do Cliente':tab==='support'?'Suporte e chamados':tab==='pos'?'PDV / Vendas':'Financeiro'}</h1></div><div className="company-top-actions"><div className="company-brasilia-clock"><b>{brasiliaTime}</b><span>{brasiliaDate}</span><small>Horário de Brasília</small></div><div className="company-plan-period"><b>{planInfo?.plan_name||'Plano não identificado'}</b><span>{planStatusLabel} · até {planEndLabel}</span>{planDaysLeft!==null&&<small>{planDaysLeft===0?'Vence hoje':planDaysLeft+' dia(s) restante(s)'}</small>}</div><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
+      <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='backup'?'Backup de dados':tab==='settings'?'Configurações':tab==='team'?'Funcionários e usuários':tab==='customerPortal'?'Compartilhar Área do Cliente':tab==='support'?'Suporte e chamados':tab==='pos'?'PDV / Vendas':tab==='plans'?'Planos e assinatura':'Financeiro'}</h1></div><div className="company-top-actions"><div className="company-brasilia-clock"><b>{brasiliaTime}</b><span>{brasiliaDate}</span><small>Horário de Brasília</small></div><div className="company-plan-period"><b>{planInfo?.plan_name||'Plano não identificado'}</b><span>{planStatusLabel} · até {planEndLabel}</span>{planDaysLeft!==null&&<small>{planDaysLeft===0?'Vence hoje':planDaysLeft+' dia(s) restante(s)'}</small>}</div><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
       {tab==='customerPortal'&&<CustomerPortalAdminPanel company={company} customers={customers}/>}
       {tab==='support'&&<CompanySupportPanel companyId={company.id} companyName={company.name}/ >}
       {tab==='team'&&canAdmin&&<CompanyTeamPanel companyId={company.id} actorRole={role}/ >}
+      {tab==='plans'&&canAdmin&&<section className="company-panel company-subscription-panel">
+        <div className="company-panel-head"><div><b>Meu plano e assinatura</b><small>Consulte seu plano, vencimento e opções de renovação</small></div><button className="company-secondary" onClick={()=>window.location.reload()}><RefreshCw size={15}/> Atualizar</button></div>
+        <div className="company-subscription-current"><div><small>PLANO ATUAL</small><h2>{planInfo?.plan_name||'Nenhum plano contratado'}</h2><p>{planStatusLabel} · {planEndDate?'Válido até '+new Date(planEndDate).toLocaleDateString('pt-BR'):'Vencimento não informado'}</p></div><span>{planInfo?.subscription_status==='active'||planInfo?.subscription_status==='trial'?'Em dia':'Verificar assinatura'}</span></div>
+        <h3>Planos disponíveis</h3>
+        <div className="company-subscription-grid">{availablePlans.map(plan=><article key={plan.id}><small>EDERTEC OS PRO</small><h3>{plan.name}</h3><p>{plan.description||'Acesso ao sistema de gestão para assistência técnica.'}</p><strong>{money(Number(plan.price))}</strong><span>{plan.billing_interval==='yearly'?'por ano':plan.billing_interval==='monthly'?'por mês':plan.billing_interval}</span><button className="company-primary" disabled={planCheckoutBusy||Number(plan.price)<=0} onClick={async()=>{if(!supabase)return;setPlanCheckoutBusy(true);setError('');try{const {data,error}=await supabase.functions.invoke('mercadopago-billing',{body:{company_id:company.id,plan_id:plan.id}});if(error)throw error;if(!data?.checkout_url)throw new Error(data?.error||'Não foi possível abrir o checkout.');window.location.assign(data.checkout_url)}catch(e){setError(e instanceof Error?e.message:'Falha ao iniciar pagamento.');setPlanCheckoutBusy(false)}}}>{planCheckoutBusy?'Abrindo checkout...':'Contratar / Renovar'}</button></article>)}</div>
+        <p className="company-subscription-note">Ao contratar ou renovar, você será direcionado ao checkout seguro do Mercado Pago. O plano será atualizado após a confirmação do pagamento.</p>
+      </section>}
+
       {tab==='dashboard'&&<section className="company-dashboard">
         <p className="company-dashboard-subtitle">Visão geral da assistência técnica</p>
         <div className="company-dashboard-stats">
