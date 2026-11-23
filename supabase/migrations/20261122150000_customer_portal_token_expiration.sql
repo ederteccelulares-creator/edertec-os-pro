@@ -1,7 +1,13 @@
 -- Expire customer portal access links after one year.
 -- Existing links receive a one-year validity window from this migration.
-alter table public.company_customer_portal_tokens
+do $migration$
+begin
+  if to_regclass('public.company_customer_portal_tokens') is not null then
+    alter table public.company_customer_portal_tokens
   add column if not exists expires_at timestamptz not null default (now() + interval '365 days');
+  end if;
+end
+$migration$;
 
 create or replace function public.get_company_customer_portal(p_token text)
 returns jsonb
@@ -73,6 +79,12 @@ begin
 end
 $function$;
 
-create index if not exists company_customer_portal_tokens_active_expiry_idx
+do $migration$
+begin
+  if to_regclass('public.company_customer_portal_tokens') is not null then
+    create index if not exists company_customer_portal_tokens_active_expiry_idx
   on public.company_customer_portal_tokens(company_id,customer_id,expires_at)
   where revoked_at is null;
+  end if;
+end
+$migration$;
