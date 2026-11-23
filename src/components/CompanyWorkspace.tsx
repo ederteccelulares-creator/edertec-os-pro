@@ -179,6 +179,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
       const phone=normalize(customerForm.phone)
       const existing=customers.find(item => (document && normalize(item.document||'')===document) || (phone && normalize(item.phone||'')===phone && item.name.trim().toLowerCase()===customerForm.name.trim().toLowerCase()))
       if(existing) {
+        setOrderForm(current=>({...current,customerId:existing.id}))
         await checkSelectedCustomerDebt(existing.id)
         setCustomerSearch(existing.name)
         setShowOrderCustomerForm(false)
@@ -188,6 +189,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
       }
       const created=await saveCompanyCustomer({companyId:company.id,branchId:branchId||null,...customerForm})
       setCustomers(current=>[created,...current])
+      setOrderForm(current=>({...current,customerId:created.id}))
       await checkSelectedCustomerDebt(created.id)
       setCustomerSearch(created.name)
       setCustomerForm({name:'',phone:'',email:'',document:'',notes:''})
@@ -421,7 +423,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
       {tab==='orders'&&<section className="company-panel">
         <div className="company-panel-head"><div><b>Ordens cadastradas</b><small>{filteredOrders.length} de {orders.length} ordens</small></div><button className="company-primary" onClick={()=>setShowOrder(v=>!v)}><Plus size={16}/> Nova OS</button></div>
         <label className="company-order-search"><span>Procurar ordem de serviço</span><input type="search" placeholder="Número da OS, cliente, telefone, aparelho, IMEI ou defeito..." value={orderListSearch} onChange={e=>setOrderListSearch(e.target.value)}/></label>
-        {showOrder&&<form className="company-form" onSubmit={submitOrder}>
+        {showOrder&&<form className="company-form" onKeyDownCapture={event=>{if(event.key==='Enter'&&(event.target as HTMLElement).tagName!=='TEXTAREA')event.preventDefault()}} onSubmit={submitOrder}>
           <h3>{editingOrder ? 'Editar ordem de serviço #' + editingOrder.order_number : 'Dados do atendimento'}</h3>
           <label>Buscar cliente<input type="search" placeholder="Digite nome, telefone ou CPF/CNPJ..." value={customerSearch} onChange={e=>setCustomerSearch(e.target.value)}/></label>
           <label>Selecionar cliente<select value={orderForm.customerId} onChange={e=>void checkSelectedCustomerDebt(e.target.value)}><option value="">Cliente não selecionado</option>{customers.filter(c=>!customerSearch.trim()||[c.name,c.phone,c.document].some(v=>String(v||"").toLowerCase().includes(customerSearch.trim().toLowerCase()))).map(c=><option key={c.id} value={c.id}>{c.name} · {c.phone||"sem telefone"}</option>)}</select></label>
