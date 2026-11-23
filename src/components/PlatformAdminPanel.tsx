@@ -123,13 +123,22 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
     if((payload.max_branches!==null&&(!Number.isInteger(payload.max_branches)||payload.max_branches<1))||(payload.max_users!==null&&(!Number.isInteger(payload.max_users)||payload.max_users<1))){setError('Os limites devem ser números inteiros maiores que zero.');return}
     setBusy(true);setError('');setNotice('')
     try{
-      const result=editingPlanId
-        ? await supabase.from('subscription_plans').update(payload).eq('id',editingPlanId)
+      const wasEditing=Boolean(editingPlanId)
+      const result=wasEditing
+        ? await supabase.rpc('admin_create_plan_version',{
+            p_plan_id:editingPlanId,
+            p_code:payload.code,
+            p_name:payload.name,
+            p_description:payload.description,
+            p_price:payload.price,
+            p_billing_interval:payload.billing_interval,
+            p_max_branches:payload.max_branches,
+            p_max_users:payload.max_users,
+          })
         : await supabase.from('subscription_plans').insert({...payload,is_active:true})
       if(result.error)throw result.error
-      const wasEditing=Boolean(editingPlanId)
       cancelPlanForm()
-      setNotice(wasEditing?'Plano atualizado. As assinaturas existentes continuam vinculadas ao mesmo plano.':'Plano criado com sucesso.')
+      setNotice(wasEditing?'Nova versão do plano criada. Clientes com assinatura ativa continuam com preço, limites e vencimento anteriores até o fim do período contratado.':'Plano criado com sucesso.')
       await load()
     }catch(e){setError(e instanceof Error?e.message:'Falha ao salvar plano.')}
     finally{setBusy(false)}
