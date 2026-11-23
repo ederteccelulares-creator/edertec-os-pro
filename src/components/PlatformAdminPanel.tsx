@@ -27,7 +27,7 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
   const [showCompany,setShowCompany]=useState(false)
   const [companyForm,setCompanyForm]=useState({name:'',taxId:'',phone:''})
   const [planForm,setPlanForm]=useState({code:'',name:'',description:'',price:'0',billing_interval:'monthly',max_branches:'',max_users:''})
-  const [billingForm,setBillingForm]=useState({accessToken:''})
+  const [billingForm,setBillingForm]=useState({accessToken:'',webhookSecret:''})
   const [billingStatus,setBillingStatus]=useState<{access_token_configured?:boolean;webhook_secret_configured?:boolean;updated_at?:string}|null>(null)
   const [billingLoading,setBillingLoading]=useState(false)
   const [activation,setActivation]=useState({companyId:'',planId:'',status:'active',startsAt:new Date().toISOString().slice(0,10),endsAt:''})
@@ -160,20 +160,20 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
   async function saveBillingSettings(event:FormEvent){
     event.preventDefault();if(!supabase)return
     const accessToken=billingForm.accessToken.trim()
-    if(!accessToken){setError('Informe o Access Token do Mercado Pago.');return}
-    if(accessToken&&accessToken.length<20){
-      setError('O Access Token precisa ter pelo menos 20 caracteres.');return
-    }
+    const webhookSecret=billingForm.webhookSecret.trim()
+    if(!accessToken&&!webhookSecret){setError('Informe o Access Token ou a assinatura secreta do Webhook.');return}
+    if(accessToken&&accessToken.length<20){setError('O Access Token precisa ter pelo menos 20 caracteres.');return}
+    if(webhookSecret&&webhookSecret.length<12){setError('A assinatura secreta do Webhook parece inválida.');return}
     setBusy(true);setError('');setNotice('')
     try{
       const {data,error}=await supabase.functions.invoke('mercadopago-billing?action=settings',{
-        body:{access_token:accessToken}
+        body:{...(accessToken?{access_token:accessToken}:{}),...(webhookSecret?{webhook_secret:webhookSecret}:{})}
       })
       if(error)throw error
       if(data?.error)throw new Error(data.error)
-      setBillingForm({accessToken:''})
-      setBillingStatus(current=>({...current,access_token_configured:true,updated_at:new Date().toISOString()}))
-      setNotice('Access Token salvo com segurança no Supabase Vault.')
+      setBillingForm({accessToken:'',webhookSecret:''})
+      setBillingStatus(current=>({...current,access_token_configured:accessToken?true:current?.access_token_configured,webhook_secret_configured:webhookSecret?true:current?.webhook_secret_configured,updated_at:new Date().toISOString()}))
+      setNotice(accessToken&&webhookSecret?'Access Token e assinatura do Webhook salvos com segurança no Supabase Vault.':accessToken?'Access Token salvo com segurança no Supabase Vault.':'Assinatura do Webhook salva com segurança no Supabase Vault.')
     }catch(e){setError(e instanceof Error?e.message:'Falha ao salvar credenciais.')}
     finally{setBusy(false)}
   }
@@ -190,12 +190,12 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
         {tab==='billing'&&<section className="platform-panel">
           <div className="platform-panel-title"><h2>Integração de pagamentos · Mercado Pago</h2><span className="platform-hint">Credenciais protegidas</span></div>
           <div className="platform-mp-external"><p className="platform-hint">Primeiro, separe esta tela do Edertec OS Pro em uma nova guia. Assim você mantém as configurações abertas enquanto consulta o Mercado Pago.</p><button type="button" className="platform-mp-open" onClick={()=>{window.open(window.location.href,"_blank","noopener,noreferrer")}}>Abrir esta tela do Edertec OS Pro em nova guia ↗</button><p className="platform-hint">Depois, na outra guia, consulte suas credenciais e configure os Webhooks no Mercado Pago.</p><a className="platform-mp-open" href="https://www.mercadopago.com.br/developers/panel" target="_blank" rel="noopener noreferrer" onClick={(event)=>{event.preventDefault();window.open("https://www.mercadopago.com.br/developers/panel","_blank","noopener,noreferrer")}}>Abrir Mercado Pago em nova guia ↗</a></div>
-          <p className="platform-hint">Conecte a conta Mercado Pago que receberá as mensalidades e assinaturas do Edertec OS Pro. Informe somente o Access Token de produção. Ele fica criptografado no Supabase Vault e nunca é exibido novamente.</p>
+          <p className="platform-hint">Conecte a conta Mercado Pago que receberá as mensalidades e assinaturas do Edertec OS Pro. Informe o Access Token de produção e a assinatura secreta do Webhook. As credenciais ficam protegidas no Supabase Vault e nunca são exibidas novamente.</p>
           {billingLoading?<p className="platform-empty">Verificando configuração...</p>:<div className="platform-stats">
-            <article><ShieldCheck/><small>Access Token</small><b>{billingStatus?.access_token_configured?'Configurado':'Pendente'}</b></article>
+            <article><ShieldCheck/><small>Access Token</small><b>{billingStatus?.access_token_configured?'Configurado':'Pendente'}</b></article><article><ShieldCheck/><small>Webhook Secret</small><b>{billingStatus?.webhook_secret_configured?'Configurado':'Pendente'}</b></article>
           </div>}
           <form className="platform-form" onSubmit={saveBillingSettings}>
-            <label className="platform-wide">Mercado Pago Access Token<input type="password" autoComplete="new-password" value={billingForm.accessToken} onChange={e=>setBillingForm(v=>({...v,accessToken:e.target.value}))} placeholder={billingStatus?.access_token_configured?'Token já configurado — digite para substituir':'Access Token de produção (APP_USR-...)'}/></label>
+            <label className="platform-wide">Mercado Pago Access Token<input type="password" autoComplete="new-password" value={billingForm.accessToken} onChange={e=>setBillingForm(v=>({...v,accessToken:e.target.value}))} placeholder={billingStatus?.access_token_configured?'Token já configurado — digite para substituir':'Access Token de produção (APP_USR-...)'}/></label><label className="platform-wide">Assinatura secreta do Webhook<input type="password" autoComplete="new-password" value={billingForm.webhookSecret} onChange={e=>setBillingForm(v=>({...v,webhookSecret:e.target.value}))} placeholder={billingStatus?.webhook_secret_configured?'Assinatura já configurada — digite para substituir':'Cole a assinatura secreta gerada no Mercado Pago'}/></label>
             <div className="platform-form-actions"><button type="submit" disabled={busy}>{busy?'Salvando...':'Salvar campos preenchidos'}</button></div>
           </form>
           <p className="platform-hint">Última atualização: {billingStatus?.updated_at?new Date(billingStatus.updated_at).toLocaleString('pt-BR'):'Ainda não configurado'}. No painel Mercado Pago, acesse Suas integrações → Webhooks, cadastre a URL abaixo e habilite o evento Pagamentos.</p>
