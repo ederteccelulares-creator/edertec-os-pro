@@ -33,7 +33,8 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   const [printFormat,setPrintFormat] = useState<'a4'|'thermal80'>(() => { try { return localStorage.getItem('edertec-os-print-format')==='thermal80'?'thermal80':'a4' } catch { return 'a4' } })
   const [brasiliaNow,setBrasiliaNow] = useState(()=>new Date())
   const [planInfo,setPlanInfo] = useState<{subscription_status:string|null;trial_ends_at:string|null;ends_at:string|null;plan_name:string|null}|null>(null)
-  const [availablePlans,setAvailablePlans] = useState<Array<{id:string;name:string;description:string|null;price:number;billing_interval:string}>>([])
+  const [availablePlans,setAvailablePlans] = useState<Array<{id:string;name:string;description:string|null;price:number;billing_interval:string;max_branches:number|null;max_users:number|null}>>([])
+  const [plansLoading,setPlansLoading] = useState(false)
   const [planCheckoutBusy,setPlanCheckoutBusy] = useState(false)
   const [branches,setBranches] = useState<CompanyBranch[]>([])
   const [branchId,setBranchId] = useState('')
@@ -86,10 +87,25 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   const brasiliaDate=new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',day:'2-digit',month:'2-digit',year:'numeric'}).format(brasiliaNow)
   const brasiliaTime=new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(brasiliaNow)
 
+  const loadSubscriptionPlans = useCallback(async () => {
+    if(!supabase){setAvailablePlans([]);return}
+    setPlansLoading(true)
+    try {
+      const {data,error}=await supabase.from('subscription_plans')
+        .select('id,name,description,price,billing_interval,max_branches,max_users')
+        .eq('is_active',true).order('price',{ascending:true})
+      if(error)throw error
+      setAvailablePlans((data||[]) as Array<{id:string;name:string;description:string|null;price:number;billing_interval:string;max_branches:number|null;max_users:number|null}>)
+    } catch(e) {
+      setAvailablePlans([])
+      setError(e instanceof Error?'Não foi possível carregar os planos do painel administrativo: '+e.message:'Não foi possível carregar os planos do painel administrativo.')
+    } finally { setPlansLoading(false) }
+  },[])
+
   useEffect(()=>{
     let alive=true
     if(!supabase){setPlanInfo(null);return}
-    supabase.from('subscription_plans').select('id,name,description,price,billing_interval').eq('is_active',true).order('price').then(({data})=>{if(alive)setAvailablePlans((data||[]) as Array<{id:string;name:string;description:string|null;price:number;billing_interval:string}>)})
+    void loadSubscriptionPlans()
     supabase.rpc('get_company_access_status',{target_company_id:company.id}).then(({data,error})=>{
       if(!alive)return
       if(error){setPlanInfo(null);return}
@@ -97,7 +113,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
       setPlanInfo(row?{subscription_status:row.subscription_status??null,trial_ends_at:row.trial_ends_at??null,ends_at:row.ends_at??null,plan_name:row.plan_name??null}:null)
     })
     return ()=>{alive=false}
-  },[company.id])
+  },[company.id,loadSubscriptionPlans])
 
   const planEndDate=planInfo?.subscription_status==='trial'?planInfo.trial_ends_at:planInfo?.ends_at
   const planEndLabel=planEndDate?new Date(planEndDate).toLocaleDateString('pt-BR'):'Não informado'
@@ -302,10 +318,10 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
       {tab==='support'&&<CompanySupportPanel companyId={company.id} companyName={company.name}/ >}
       {tab==='team'&&canAdmin&&<CompanyTeamPanel companyId={company.id} actorRole={role}/ >}
       {tab==='plans'&&canAdmin&&<section className="company-panel company-subscription-panel">
-        <div className="company-panel-head"><div><b>Meu plano e assinatura</b><small>Consulte seu plano, vencimento e opções de renovação</small></div><button className="company-secondary" onClick={()=>window.location.reload()}><RefreshCw size={15}/> Atualizar</button></div>
+        <div className="company-panel-head"><div><b>Meu plano e assinatura</b><small>Planos publicados pelo Super Admin para contratação</small></div><button className="company-secondary" onClick={()=>void loadSubscriptionPlans()} disabled={plansLoading}><RefreshCw size={15}/> {plansLoading?'Carregando...':'Atualizar planos'}</button></div>
         <div className="company-subscription-current"><div><small>PLANO ATUAL</small><h2>{planInfo?.plan_name||'Nenhum plano contratado'}</h2><p>{planStatusLabel} · {planEndDate?'Válido até '+new Date(planEndDate).toLocaleDateString('pt-BR'):'Vencimento não informado'}</p></div><span>{planInfo?.subscription_status==='active'||planInfo?.subscription_status==='trial'?'Em dia':'Verificar assinatura'}</span></div>
         <h3>Planos disponíveis</h3>
-        <div className="company-subscription-grid">{availablePlans.map(plan=><article key={plan.id}><small>EDERTEC OS PRO</small><h3>{plan.name}</h3><p>{plan.description||'Acesso ao sistema de gestão para assistência técnica.'}</p><strong>{money(Number(plan.price))}</strong><span>{plan.billing_interval==='yearly'?'por ano':plan.billing_interval==='monthly'?'por mês':plan.billing_interval}</span><button className="company-primary" disabled={planCheckoutBusy||Number(plan.price)<=0} onClick={async()=>{if(!supabase)return;setPlanCheckoutBusy(true);setError('');try{const {data,error}=await supabase.functions.invoke('mercadopago-billing',{body:{company_id:company.id,plan_id:plan.id}});if(error)throw error;if(!data?.checkout_url)throw new Error(data?.error||'Não foi possível abrir o checkout.');window.location.assign(data.checkout_url)}catch(e){setError(e instanceof Error?e.message:'Falha ao iniciar pagamento.');setPlanCheckoutBusy(false)}}}>{planCheckoutBusy?'Abrindo checkout...':'Contratar / Renovar'}</button></article>)}</div>
+        {plansLoading?<p className="company-subscription-note">Carregando planos cadastrados pelo Super Admin...</p>:availablePlans.length===0?<p className="company-subscription-note">Nenhum plano ativo foi publicado para contratação no momento. Verifique o cadastro e o status dos planos no Painel Super Admin.</p>:<div className="company-subscription-grid">{availablePlans.map(plan=><article key={plan.id}><small>EDERTEC OS PRO</small><h3>{plan.name}</h3><p>{plan.description||'Acesso ao sistema de gestão para assistência técnica.'}</p><strong>{money(Number(plan.price))}</strong><span>{plan.billing_interval==='yearly'?'por ano':plan.billing_interval==='monthly'?'por mês':plan.billing_interval==='six_months'?'por 6 meses':plan.billing_interval==='lifetime'?'pagamento único':plan.billing_interval}</span><p>{plan.max_branches===null?'Filiais sem limite':plan.max_branches+' filial(is)'} · {plan.max_users===null?'Usuários sem limite':plan.max_users+' usuário(s)'}</p><button className="company-primary" disabled={planCheckoutBusy||Number(plan.price)<=0} onClick={async()=>{if(!supabase)return;setPlanCheckoutBusy(true);setError('');try{const {data,error}=await supabase.functions.invoke('mercadopago-billing',{body:{company_id:company.id,plan_id:plan.id}});if(error)throw error;if(!data?.checkout_url)throw new Error(data?.error||'Não foi possível abrir o checkout.');window.location.assign(data.checkout_url)}catch(e){setError(e instanceof Error?e.message:'Falha ao iniciar pagamento.');setPlanCheckoutBusy(false)}}}>{planCheckoutBusy?'Abrindo checkout...':'Contratar / Renovar'}</button></article>)}</div>
         <p className="company-subscription-note">Ao contratar ou renovar, você será direcionado ao checkout seguro do Mercado Pago. O plano será atualizado após a confirmação do pagamento.</p>
       </section>}
 
