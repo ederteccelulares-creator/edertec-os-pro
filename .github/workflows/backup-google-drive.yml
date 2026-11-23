@@ -1,0 +1,52 @@
+name: Edertec OS Pro - Backup Google Drive
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 5 * * *" # diariamente às 05:30 UTC (02:30 em Brasília)
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install backup tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client gnupg
+          python -m pip install --upgrade pip
+          pip install requests google-api-python-client google-auth
+
+      - name: Validate required secrets
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+          BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
+        run: |
+          python - <<'PY'
+          import os, json
+          required = ["SUPABASE_DB_URL","SUPABASE_URL","SUPABASE_SERVICE_ROLE_KEY","GOOGLE_SERVICE_ACCOUNT_JSON","GOOGLE_DRIVE_FOLDER_ID","BACKUP_ENCRYPTION_PASSPHRASE"]
+          missing = [key for key in required if not os.environ.get(key)]
+          if missing:
+              raise SystemExit("Secrets ausentes: " + ", ".join(missing))
+          json.loads(os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"])
+          PY
+
+      - name: Create encrypted backup and upload to Drive
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+          BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
+        run: python scripts/backup_to_drive.py
