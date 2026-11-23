@@ -1,8 +1,22 @@
 -- Harden public token RPCs against object shadowing and enforce token/order tenant consistency.
-alter function public.get_company_customer_portal(text) set search_path = '';
-alter function public.get_company_service_order_tracking(text) set search_path = '';
-alter function public.respond_company_customer_portal_approval(text,uuid,text) set search_path = '';
-alter function public.respond_company_service_order_approval(text,text,text) set search_path = '';
+-- Portal RPCs are introduced by separate migrations; harden only those
+-- already present at this point in the migration sequence.
+do $migration$
+begin
+  if to_regprocedure('public.get_company_customer_portal(text)') is not null then
+    execute 'alter function public.get_company_customer_portal(text) set search_path = ''''';
+  end if;
+  if to_regprocedure('public.get_company_service_order_tracking(text)') is not null then
+    execute 'alter function public.get_company_service_order_tracking(text) set search_path = ''''';
+  end if;
+  if to_regprocedure('public.respond_company_customer_portal_approval(text,uuid,text)') is not null then
+    execute 'alter function public.respond_company_customer_portal_approval(text,uuid,text) set search_path = ''''';
+  end if;
+  if to_regprocedure('public.respond_company_service_order_approval(text,text,text)') is not null then
+    execute 'alter function public.respond_company_service_order_approval(text,text,text) set search_path = ''''';
+  end if;
+end
+$migration$;
 
 create or replace function public.get_company_customer_portal(p_token text)
 returns jsonb language plpgsql stable security definer set search_path to ''
