@@ -122,12 +122,16 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
     if(activation.endsAt&&activation.endsAt<activation.startsAt){setError('O vencimento não pode ser anterior ao início.');return}
     setBusy(true);setError('');setNotice('')
     try{
-      const existing=subscriptions.find(s=>s.company_id===activation.companyId)
-      const payload={company_id:activation.companyId,plan_id:activation.planId,status:activation.status,starts_at:new Date(activation.startsAt+'T00:00:00').toISOString(),ends_at:activation.endsAt?new Date(activation.endsAt+'T23:59:59').toISOString():null,trial_ends_at:activation.status==='trial'&&activation.endsAt?new Date(activation.endsAt+'T23:59:59').toISOString():null}
-      const result=existing
-        ? await supabase.from('company_subscriptions').update(payload).eq('id',existing.id)
-        : await supabase.from('company_subscriptions').insert(payload)
-      if(result.error)throw result.error
+      const startsAt=new Date(activation.startsAt+'T00:00:00').toISOString()
+      const endsAt=activation.endsAt?new Date(activation.endsAt+'T23:59:59').toISOString():null
+      const {error}=await supabase.rpc('admin_set_company_subscription',{
+        p_company_id:activation.companyId,
+        p_plan_id:activation.planId,
+        p_status:activation.status,
+        p_starts_at:startsAt,
+        p_ends_at:endsAt,
+      })
+      if(error)throw new Error(error.message||error.details||'Não foi possível salvar a ativação.')
       setNotice(existing?'Plano e período da empresa atualizados.':'Plano ativado para a empresa.')
       await load()
     }catch(e){setError(e instanceof Error?e.message:'Falha ao salvar a ativação.')}
