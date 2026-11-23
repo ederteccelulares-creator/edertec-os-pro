@@ -7,7 +7,7 @@ import CompanyWorkspace from './CompanyWorkspace'
 import PlatformAdminPanel from './PlatformAdminPanel'
 
 export default function CompanyAuthGate() {
-  const isAdminRoute = window.location.pathname.replace(/\\/+$/, '') === '/admin'
+  const isAdminRoute = window.location.pathname.replace(/\/+$/, '') === '/admin'
   const [session, setSession] = useState<Session | null>(null)
   const [memberships, setMemberships] = useState<CompanyMembership[]>([])
   const [platformAdmin, setPlatformAdmin] = useState(false)
