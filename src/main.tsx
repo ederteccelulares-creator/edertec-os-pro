@@ -8,7 +8,7 @@ import './styles.css';
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(error => {
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(error => {
       console.error('Não foi possível registrar o modo instalável:', error);
     });
   });
