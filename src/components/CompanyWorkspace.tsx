@@ -360,7 +360,6 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
             <small>Escolha um plano para manter o acesso ao sistema.</small>
           </>:<>
             <span>{planStatusLabel} · até {planEndLabel}</span>
-            {planDaysLeft!==null&&<b className="company-plan-days-left">{planDaysLeft===0?'Vence hoje':'Faltam '+planDaysLeft+' dia(s) para vencer'}</b>}
           </>}
           {canAdmin&&(planInfo?.subscription_status==='trial'||!planInfo?.subscription_status||planInfo?.subscription_status==='expired')&&<button type="button" onClick={()=>navigate('plans')}>{planInfo?.subscription_status==='trial'?'Ver planos':'Contratar plano'}</button>}
         </div><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
