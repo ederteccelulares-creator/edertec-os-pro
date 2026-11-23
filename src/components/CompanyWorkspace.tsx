@@ -174,7 +174,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   async function submitCustomerFromOrder(event:FormEvent) {
     event.preventDefault(); setBusy(true); setError(''); setNotice('')
     try {
-      const normalize=(value:string)=>value.replace(/\\D/g,'')
+      const normalize=(value:string)=>value.replace(/\D/g,'')
       const document=normalize(customerForm.document)
       const phone=normalize(customerForm.phone)
       const existing=customers.find(item => (document && normalize(item.document||'')===document) || (phone && normalize(item.phone||'')===phone && item.name.trim().toLowerCase()===customerForm.name.trim().toLowerCase()))
