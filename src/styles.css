@@ -1523,3 +1523,22 @@ td b { font-weight:650; }
   .platform-admin .platform-companies-table-wrap td small {white-space:normal;overflow-wrap:anywhere;font-size:9px}
   .platform-admin .platform-companies-table-wrap td select {max-width:100%;font-size:9px;padding:5px 2px}
 }
+
+
+/* Company self-service subscription management */
+.company-subscription-panel{display:grid;gap:18px}
+.company-subscription-current{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px;border:1px solid var(--company-border,#30394a);border-radius:12px;background:linear-gradient(135deg,#172536,#111a27)}
+.company-subscription-current small,.company-subscription-grid article>small{font-size:9px;letter-spacing:1.3px;color:#d8b66a;font-weight:700}
+.company-subscription-current h2{margin:8px 0;font-size:22px}
+.company-subscription-current p{margin:0;color:var(--muted,#9aa4b2);font-size:12px}
+.company-subscription-current>span{padding:7px 10px;border:1px solid #315b49;border-radius:20px;color:#a9e4c9;font-size:10px;white-space:nowrap}
+.company-subscription-panel>h3{margin:4px 0 0;font-size:15px}
+.company-subscription-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.company-subscription-grid article{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:18px;border:1px solid var(--company-border,#30394a);border-radius:12px;background:var(--company-card,#111a27)}
+.company-subscription-grid article h3{margin:0;font-size:17px}
+.company-subscription-grid article p{min-height:38px;margin:0;color:var(--muted,#9aa4b2);font-size:11px;line-height:1.5}
+.company-subscription-grid article strong{font-size:23px}
+.company-subscription-grid article>span{margin-top:-8px;color:var(--muted,#9aa4b2);font-size:10px}
+.company-subscription-grid article button{width:100%;margin-top:5px}
+.company-subscription-note{margin:0;color:var(--muted,#9aa4b2);font-size:11px;line-height:1.5}
+@media(max-width:640px){.company-subscription-current{align-items:flex-start;flex-direction:column;padding:15px}.company-subscription-current h2{font-size:19px}.company-subscription-grid{grid-template-columns:1fr}}
