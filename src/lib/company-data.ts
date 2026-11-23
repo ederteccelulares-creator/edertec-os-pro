@@ -105,7 +105,7 @@ export async function listCompanyCustomers(companyId: string): Promise<CompanyCu
     .select('id,company_id,branch_id,name,phone,email,document,address,notes,created_at,updated_at')
     .eq('company_id', companyId)
     .order('name')
-    .limit(500)
+    .limit(5000)
   if (error) throw error
   return (data ?? []) as CompanyCustomer[]
 }
