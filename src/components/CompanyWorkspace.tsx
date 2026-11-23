@@ -313,7 +313,20 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
     </aside>
     <main className="company-main">
       <div className="company-mobilebar"><button onClick={()=>setMenuOpen(true)} aria-label="Abrir menu"><Menu/></button><div><b>EDERTEC <i>OS PRO</i></b><small>{companyInfo.name}</small></div><span className="company-mobile-avatar">{(email[0]||'U').toUpperCase()}</span></div>
-      <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='backup'?'Backup de dados':tab==='settings'?'Configurações':tab==='team'?'Funcionários e usuários':tab==='customerPortal'?'Compartilhar Área do Cliente':tab==='support'?'Suporte e chamados':tab==='pos'?'PDV / Vendas':tab==='plans'?'Planos e assinatura':'Financeiro'}</h1></div><div className="company-top-actions"><div className="company-brasilia-clock"><b>{brasiliaTime}</b><span>{brasiliaDate}</span><small>Horário de Brasília</small></div><div className="company-plan-period"><b>{planInfo?.plan_name||'Plano não identificado'}</b><span>{planStatusLabel} · até {planEndLabel}</span>{planDaysLeft!==null&&<small>{planDaysLeft===0?'Vence hoje':planDaysLeft+' dia(s) restante(s)'}</small>}</div><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
+      <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='backup'?'Backup de dados':tab==='settings'?'Configurações':tab==='team'?'Funcionários e usuários':tab==='customerPortal'?'Compartilhar Área do Cliente':tab==='support'?'Suporte e chamados':tab==='pos'?'PDV / Vendas':tab==='plans'?'Planos e assinatura':'Financeiro'}</h1></div><div className="company-top-actions"><div className="company-brasilia-clock"><b>{brasiliaTime}</b><span>{brasiliaDate}</span><small>Horário de Brasília</small></div><div className={'company-plan-period '+(planInfo?.subscription_status==='trial'?'is-trial':!planInfo?.subscription_status||planInfo?.subscription_status==='expired'?'is-unsubscribed':'')}>
+          <b>{planInfo?.plan_name||(planInfo?.subscription_status==='trial'?'Período de teste':'Nenhum plano contratado')}</b>
+          {planInfo?.subscription_status==='trial'?<>
+            <span>Você está no período de teste</span>
+            <small>{planDaysLeft===null?'Consulte a data de encerramento':planDaysLeft===0?'Seu teste termina hoje':'Restam '+planDaysLeft+' dia(s) de teste'}</small>
+          </>:!planInfo?.subscription_status||planInfo?.subscription_status==='expired'?<>
+            <span>{planInfo?.subscription_status==='expired'?'Seu período de acesso terminou':'Sua empresa está sem plano contratado'}</span>
+            <small>Escolha um plano para manter o acesso ao sistema.</small>
+          </>:<>
+            <span>{planStatusLabel} · até {planEndLabel}</span>
+            {planDaysLeft!==null&&<small>{planDaysLeft===0?'Vence hoje':planDaysLeft+' dia(s) restante(s)'}</small>}
+          </>}
+          {canAdmin&&(planInfo?.subscription_status==='trial'||!planInfo?.subscription_status||planInfo?.subscription_status==='expired')&&<button type="button" onClick={()=>navigate('plans')}>{planInfo?.subscription_status==='trial'?'Ver planos':'Contratar plano'}</button>}
+        </div><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
       {tab==='customerPortal'&&<CustomerPortalAdminPanel company={company} customers={customers}/>}
       {tab==='support'&&<CompanySupportPanel companyId={company.id} companyName={company.name}/ >}
       {tab==='team'&&canAdmin&&<CompanyTeamPanel companyId={company.id} actorRole={role}/ >}
