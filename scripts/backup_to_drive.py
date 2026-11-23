@@ -77,8 +77,7 @@ for bucket in buckets.json():
 archive = ROOT / f"edertec-os-pro-{stamp}.tar.gz.gpg"
 # Stream archive through GPG so the unencrypted archive is never written to disk.
 tar = subprocess.Popen(["tar", "-czf", "-", "-C", str(ROOT), stamp], stdout=subprocess.PIPE)
-with archive.open("wb") as encrypted:
-    subprocess.run(["gpg", "--batch", "--yes", "--pinentry-mode", "loopback", "--passphrase", passphrase, "--symmetric", "--cipher-algo", "AES256", "--output", str(archive),], stdin=tar.stdout, check=True)
+subprocess.run(["gpg", "--batch", "--yes", "--pinentry-mode", "loopback", "--passphrase", passphrase, "--symmetric", "--cipher-algo", "AES256", "--output", str(archive)], stdin=tar.stdout, check=True)
 tar.stdout.close()
 if tar.wait() != 0:
     raise RuntimeError("Falha ao compactar os dados do backup")
