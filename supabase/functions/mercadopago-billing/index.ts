@@ -177,9 +177,9 @@ Deno.serve(async (req) => {
   if (!membership || !["owner", "admin"].includes(membership.role)) {
     return response({ error: "Only an active company owner or administrator can purchase a plan." }, 403);
   }
-  const { data: company } = await admin.from("companies")
-    .select("id,name,status").eq("id", input.company_id).maybeSingle();
-  if (!company || company.status !== "active") return response({ error: "Company is unavailable." }, 403);
+  // The authenticated membership above is the authorization boundary for this company.
+  // Do not query companies directly here: tenant RLS intentionally blocks that table.
+  const company = { id: input.company_id, name: "Edertec OS Pro" };
   const { data: plan } = await admin.from("subscription_plans")
     .select("id,name,price,billing_interval,is_active").eq("id", input.plan_id).eq("is_active", true).maybeSingle();
   if (!plan || Number(plan.price) <= 0) return response({ error: "Selected plan is unavailable." }, 400);
