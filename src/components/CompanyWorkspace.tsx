@@ -356,7 +356,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
           <b>{planInfo?.plan_name||(planInfo?.subscription_status==='trial'?'Período de teste':'Nenhum plano contratado')}</b>
           {planInfo?.subscription_status==='trial'?<>
             <span>Você está no período de teste</span>
-            <small>{planDaysLeft===null?'Consulte a data de encerramento':planDaysLeft===0?'Seu teste termina hoje':'Restam '+planDaysLeft+' dia(s) de teste'}</small>
+            <small>{planEndLabel!=='Não informado'?'Válido até '+planEndLabel:'Data de vencimento não informada'}</small>
           </>:!planInfo?.subscription_status||planInfo?.subscription_status==='expired'?<>
             <span>{planInfo?.subscription_status==='expired'?'Seu período de acesso terminou':'Sua empresa está sem plano contratado'}</span>
             <small>Escolha um plano para manter o acesso ao sistema.</small>
