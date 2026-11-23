@@ -303,11 +303,12 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
     return [o.order_number,o.customers?.name,o.customers?.phone,o.device_brand,o.device_model,o.device_type,o.serial_number,o.reported_issue,statusLabels[o.status]||o.status]
       .some(value => String(value||'').toLocaleLowerCase('pt-BR').includes(term));
   });
-  const normalizeCustomerSearch=(value:string)=>value.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLocaleLowerCase('pt-BR').trim();
-  const matchingCustomers=customers.filter(c=>{
-    const term=normalizeCustomerSearch(customerSearch);
-    return !term||[c.name,c.phone,c.document].some(value=>normalizeCustomerSearch(String(value||'')).includes(term));
-  });
+  const normalizeCustomerSearch=(value:string)=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').replace(/[^a-z0-9]+/g,' ').trim();
+  const customerSearchTerms=normalizeCustomerSearch(customerSearch).split(/\\s+/).filter(Boolean);
+  const matchingCustomers=customerSearchTerms.length===0?[]:customers.filter(c=>{
+    const searchable=normalizeCustomerSearch([c.name,c.phone,c.document].filter(Boolean).join(' '));
+    return customerSearchTerms.every(term=>searchable.includes(term));
+  }).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
   const activeOrders = orders.filter(o=>!['delivered','cancelled'].includes(o.status))
   const pendingOrders = orders.filter(o=>o.status==='waiting_approval')
   const orderRevenue = orders.reduce((sum,o)=>sum+Number(o.final_price||o.estimated_price||0),0)
@@ -430,9 +431,9 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
         <label className="company-order-search"><span>Procurar ordem de serviço</span><input type="search" placeholder="Número da OS, cliente, telefone, aparelho, IMEI ou defeito..." value={orderListSearch} onChange={e=>setOrderListSearch(e.target.value)}/></label>
         {showOrder&&<form className="company-form" onKeyDownCapture={event=>{if(event.key==='Enter'&&(event.target as HTMLElement).tagName!=='TEXTAREA')event.preventDefault()}} onSubmit={submitOrder}>
           <h3>{editingOrder ? 'Editar ordem de serviço #' + editingOrder.order_number : 'Dados do atendimento'}</h3>
-          <label>Buscar cliente<input type="search" autoComplete="off" placeholder="Digite o nome para localizar os clientes..." value={customerSearch} onChange={e=>{setCustomerSearch(e.target.value);setOrderForm(current=>({...current,customerId:''}))}}/></label>
+          <label>Buscar cliente<input type="search" autoComplete="off" placeholder="Digite parte do nome, telefone ou CPF/CNPJ..." value={customerSearch} onChange={e=>{setCustomerSearch(e.target.value);setOrderForm(current=>({...current,customerId:''}))}}/></label>
           {customerSearch.trim()&&<div className="company-customer-suggestions" role="listbox" aria-label="Clientes encontrados">
-            {matchingCustomers.length>0?matchingCustomers.slice(0,30).map(c=><button type="button" className="company-secondary" key={c.id} role="option" aria-selected={orderForm.customerId===c.id} onClick={()=>{setCustomerSearch(c.name);void checkSelectedCustomerDebt(c.id)}}><b>{c.name}</b><small>{c.phone||'Sem telefone'}{c.document?' · '+c.document:''}</small></button>):<small>Nenhum cliente encontrado. Você pode cadastrá-lo aqui mesmo.</small>}
+            {matchingCustomers.length>0?matchingCustomers.slice(0,50).map(c=><button type="button" className="company-secondary" key={c.id} role="option" aria-selected={orderForm.customerId===c.id} onClick={()=>{setCustomerSearch(c.name);void checkSelectedCustomerDebt(c.id)}}><b>{c.name}</b><small>{c.phone||'Sem telefone'}{c.document?' · '+c.document:''}</small></button>):<small>Nenhum cliente encontrado. Você pode cadastrá-lo aqui mesmo.</small>}
           </div>}
           {orderForm.customerId&&<div className="company-selected-customer"><b>Cliente selecionado:</b> {customers.find(c=>c.id===orderForm.customerId)?.name||'Cliente selecionado'} <button type="button" className="company-text-link" onClick={()=>{setOrderForm(current=>({...current,customerId:''}));setCustomerSearch('')}}>Trocar</button></div>}
           <div className="company-inline-actions"><button type="button" className="company-secondary company-small-action" onClick={()=>{setCustomerForm({name:customerSearch.trim(),phone:'',email:'',document:'',notes:''});setShowOrderCustomerForm(v=>!v)}}><Plus size={14}/> Cadastrar novo cliente</button></div>
