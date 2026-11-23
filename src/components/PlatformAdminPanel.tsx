@@ -24,6 +24,7 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
   const [error,setError]=useState('')
   const [notice,setNotice]=useState('')
   const [showPlan,setShowPlan]=useState(false)
+  const [editingPlanId,setEditingPlanId]=useState<string|null>(null)
   const [showCompany,setShowCompany]=useState(false)
   const [companyForm,setCompanyForm]=useState({name:'',taxId:'',phone:''})
   const [planForm,setPlanForm]=useState({code:'',name:'',description:'',price:'0',billing_interval:'monthly',max_branches:'',max_users:''})
@@ -98,21 +99,39 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
     finally{setBusy(false)}
   }
 
+  function startEditPlan(plan:PlanRow){
+    setEditingPlanId(plan.id)
+    setPlanForm({code:plan.code,name:plan.name,description:plan.description||'',price:String(plan.price),billing_interval:plan.billing_interval,max_branches:plan.max_branches==null?'':String(plan.max_branches),max_users:plan.max_users==null?'':String(plan.max_users)})
+    setShowPlan(true);setError('');setNotice('')
+  }
+
+  function cancelPlanForm(){
+    setShowPlan(false);setEditingPlanId(null)
+    setPlanForm({code:'',name:'',description:'',price:'0',billing_interval:'monthly',max_branches:'',max_users:''})
+  }
+
   async function createPlan(event:FormEvent){
     event.preventDefault();if(!supabase)return
+    const payload={
+      code:planForm.code.trim().toLowerCase().replace(/[^a-z0-9_-]/g,'-'),
+      name:planForm.name.trim(),description:planForm.description.trim()||null,
+      price:Number(planForm.price),billing_interval:planForm.billing_interval,
+      max_branches:planForm.max_branches?Number(planForm.max_branches):null,
+      max_users:planForm.max_users?Number(planForm.max_users):null,
+    }
+    if(!payload.code||!payload.name||!Number.isFinite(payload.price)||payload.price<0){setError('Confira o código, nome e preço do plano.');return}
+    if((payload.max_branches!==null&&(!Number.isInteger(payload.max_branches)||payload.max_branches<1))||(payload.max_users!==null&&(!Number.isInteger(payload.max_users)||payload.max_users<1))){setError('Os limites devem ser números inteiros maiores que zero.');return}
     setBusy(true);setError('');setNotice('')
     try{
-      const {error}=await supabase.from('subscription_plans').insert({
-        code:planForm.code.trim().toLowerCase().replace(/[^a-z0-9_-]/g,'-'),
-        name:planForm.name.trim(),description:planForm.description.trim()||null,
-        price:Number(planForm.price),billing_interval:planForm.billing_interval,
-        max_branches:planForm.max_branches?Number(planForm.max_branches):null,
-        max_users:planForm.max_users?Number(planForm.max_users):null,is_active:true,
-      })
-      if(error)throw error
-      setPlanForm({code:'',name:'',description:'',price:'0',billing_interval:'monthly',max_branches:'',max_users:''})
-      setShowPlan(false);setNotice('Plano criado com sucesso.');await load()
-    }catch(e){setError(e instanceof Error?e.message:'Falha ao criar plano.')}
+      const result=editingPlanId
+        ? await supabase.from('subscription_plans').update(payload).eq('id',editingPlanId)
+        : await supabase.from('subscription_plans').insert({...payload,is_active:true})
+      if(result.error)throw result.error
+      const wasEditing=Boolean(editingPlanId)
+      cancelPlanForm()
+      setNotice(wasEditing?'Plano atualizado. As assinaturas existentes continuam vinculadas ao mesmo plano.':'Plano criado com sucesso.')
+      await load()
+    }catch(e){setError(e instanceof Error?e.message:'Falha ao salvar plano.')}
     finally{setBusy(false)}
   }
 
@@ -219,9 +238,9 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
         {tab==='companies'&&<section className="platform-panel"><div className="platform-panel-title"><h2>Empresas cadastradas</h2><button onClick={()=>setShowCompany(v=>!v)}><Plus size={15}/> Nova empresa</button></div>
           {showCompany&&<form className="platform-form" onSubmit={createCompany}><label className="platform-wide">Nome da empresa<input required minLength={2} value={companyForm.name} onChange={e=>setCompanyForm(v=>({...v,name:e.target.value}))} placeholder="Ex.: Edertec Assistência Técnica"/></label><label>CNPJ ou CPF<input value={companyForm.taxId} onChange={e=>setCompanyForm(v=>({...v,taxId:e.target.value}))} placeholder="Opcional"/></label><label>Telefone<input value={companyForm.phone} onChange={e=>setCompanyForm(v=>({...v,phone:e.target.value}))} placeholder="(00) 00000-0000"/></label><div className="platform-form-actions"><button type="button" onClick={()=>setShowCompany(false)}>Cancelar</button><button type="submit" disabled={busy}>{busy?'Cadastrando...':'Criar empresa'}</button></div></form>}
           <div className="platform-table-wrap platform-companies-table-wrap"><table><thead><tr><th>EMPRESA</th><th>PLANO</th><th>DOCUMENTO</th><th>CADASTRO</th><th>SITUAÇÃO</th></tr></thead><tbody>{companies.map(c=>{const sub=subscriptions.find(item=>item.company_id===c.id);const planName=(sub?.plan_id?plans.find(plan=>plan.id===sub.plan_id)?.name:null)||(Array.isArray(sub?.subscription_plans)?sub.subscription_plans[0]?.name:sub?.subscription_plans?.name);const subStatus:Record<string,string>={trial:"Em teste",active:"Ativo",past_due:"Em atraso",cancelled:"Cancelado",expired:"Expirado"};return <tr key={c.id}><td><b>{c.name}</b><small>{c.id}</small></td><td>{planName?<><b>{planName}</b><small>{subStatus[sub?.status||'']||sub?.status||'Status não informado'}</small></>:<span className="platform-muted">Sem plano atribuído</span>}</td><td>{c.tax_id||'—'}</td><td>{new Date(c.created_at).toLocaleDateString('pt-BR')}</td><td><select disabled={busy} value={c.status} onChange={e=>void updateCompanyStatus(c,e.target.value)}><option value="active">Ativa</option><option value="suspended">Suspensa</option><option value="cancelled">Cancelada</option></select></td></tr>})}</tbody></table></div></section>}
-        {tab==='plans'&&<section className="platform-panel"><div className="platform-panel-title"><h2>Planos e preços</h2><button onClick={()=>setShowPlan(v=>!v)}><Plus size={15}/> Novo plano</button></div>
-          {showPlan&&<form className="platform-form" onSubmit={createPlan}><label>Código<input required value={planForm.code} onChange={e=>setPlanForm({...planForm,code:e.target.value})} placeholder="basico"/></label><label>Nome<input required value={planForm.name} onChange={e=>setPlanForm({...planForm,name:e.target.value})} placeholder="Plano Básico"/></label><label>Preço (R$)<input required type="number" min="0" step="0.01" value={planForm.price} onChange={e=>setPlanForm({...planForm,price:e.target.value})}/></label><label>Periodicidade<select value={planForm.billing_interval} onChange={e=>setPlanForm({...planForm,billing_interval:e.target.value})}><option value="monthly">Mensal</option><option value="six_months">Semestral</option><option value="yearly">Anual</option><option value="lifetime">Vitalício</option></select></label><label>Limite de filiais<input type="number" min="1" value={planForm.max_branches} onChange={e=>setPlanForm({...planForm,max_branches:e.target.value})} placeholder="Sem limite"/></label><label>Limite de usuários<input type="number" min="1" value={planForm.max_users} onChange={e=>setPlanForm({...planForm,max_users:e.target.value})} placeholder="Sem limite"/></label><label className="platform-wide">Descrição<input value={planForm.description} onChange={e=>setPlanForm({...planForm,description:e.target.value})}/></label><div className="platform-form-actions"><button type="button" onClick={()=>setShowPlan(false)}>Cancelar</button><button type="submit" disabled={busy}>{busy?'Salvando...':'Criar plano'}</button></div></form>}
-          <div className="platform-table-wrap"><table><thead><tr><th>PLANO</th><th>VALOR</th><th>PERÍODO</th><th>LIMITES</th><th>STATUS</th></tr></thead><tbody>{plans.map(p=><tr key={p.id}><td><b>{p.name}</b><small>{p.code}</small></td><td>{money(p.price)}</td><td>{intervalLabels[p.billing_interval]||p.billing_interval}</td><td>{p.max_branches??'∞'} filiais · {p.max_users??'∞'} usuários</td><td><button className="platform-toggle" disabled={busy} onClick={()=>void togglePlan(p)}>{p.is_active?'Ativo':'Inativo'}</button></td></tr>)}</tbody></table></div>
+        {tab==='plans'&&<section className="platform-panel"><div className="platform-panel-title"><h2>Planos e preços</h2><button onClick={()=>{if(showPlan)cancelPlanForm();else{setEditingPlanId(null);setShowPlan(true)}}}><Plus size={15}/> Novo plano</button></div>
+          {showPlan&&<form className="platform-form" onSubmit={createPlan}><label>Código<input required value={planForm.code} onChange={e=>setPlanForm({...planForm,code:e.target.value})} placeholder="basico"/></label><label>Nome<input required value={planForm.name} onChange={e=>setPlanForm({...planForm,name:e.target.value})} placeholder="Plano Básico"/></label><label>Preço (R$)<input required type="number" min="0" step="0.01" value={planForm.price} onChange={e=>setPlanForm({...planForm,price:e.target.value})}/></label><label>Periodicidade<select value={planForm.billing_interval} onChange={e=>setPlanForm({...planForm,billing_interval:e.target.value})}><option value="monthly">Mensal</option><option value="six_months">Semestral</option><option value="yearly">Anual</option><option value="lifetime">Vitalício</option></select></label><label>Limite de filiais<input type="number" min="1" value={planForm.max_branches} onChange={e=>setPlanForm({...planForm,max_branches:e.target.value})} placeholder="Sem limite"/></label><label>Limite de usuários<input type="number" min="1" value={planForm.max_users} onChange={e=>setPlanForm({...planForm,max_users:e.target.value})} placeholder="Sem limite"/></label><label className="platform-wide">Descrição<input value={planForm.description} onChange={e=>setPlanForm({...planForm,description:e.target.value})}/></label><div className="platform-form-actions"><button type="button" onClick={cancelPlanForm}>Cancelar</button><button type="submit" disabled={busy}>{busy?'Salvando...':editingPlanId?'Salvar alterações':'Criar plano'}</button></div></form>}
+          <div className="platform-table-wrap"><table><thead><tr><th>PLANO</th><th>VALOR</th><th>PERÍODO</th><th>LIMITES</th><th>STATUS</th><th>AÇÕES</th></tr></thead><tbody>{plans.map(p=><tr key={p.id}><td><b>{p.name}</b><small>{p.code}</small></td><td>{money(p.price)}</td><td>{intervalLabels[p.billing_interval]||p.billing_interval}</td><td>{p.max_branches??'∞'} filiais · {p.max_users??'∞'} usuários</td><td><button className="platform-toggle" disabled={busy} onClick={()=>void togglePlan(p)}>{p.is_active?'Ativo':'Inativo'}</button></td><td><button type="button" className="platform-toggle" disabled={busy} onClick={()=>startEditPlan(p)}>Editar</button></td></tr>)}</tbody></table></div>
         </section>}
         {tab==='subscriptions'&&<section className="platform-panel"><h2>Gerenciar plano e ativação por empresa</h2>
           <form className="platform-form" onSubmit={saveCompanyActivation}>
