@@ -1867,3 +1867,9 @@ td b { font-weight:650; }
   .company-brasilia-clock { min-width:190px; }
   .company-plan-period { max-width:280px; }
 }
+
+
+/* Ajuste fino do botão do menu no cabeçalho mobile */
+.company-mobilebar{box-sizing:border-box;}
+.company-mobilebar>button{flex:0 0 44px;width:44px;height:44px;margin-left:-5px;display:grid;place-items:center;align-self:center;padding:0;}
+.company-mobilebar>button svg{display:block;width:25px;height:25px;}
