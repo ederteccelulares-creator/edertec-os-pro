@@ -4,6 +4,11 @@
 
 \set ON_ERROR_STOP on
 
+-- register_company requires at least one active plan; seed a disposable CI-only plan.
+INSERT INTO public.subscription_plans(code,name,description,price,billing_interval,is_active)
+VALUES ('ci-tenant-smoke','CI Tenant Smoke Plan','Disposable plan for tenant RLS tests',0,'monthly',true)
+ON CONFLICT (code) DO UPDATE SET is_active=true;
+
 INSERT INTO auth.users (id,email) VALUES
   ('10000000-0000-4000-8000-000000000001','tenant-a@example.invalid'),
   ('20000000-0000-4000-8000-000000000002','tenant-b@example.invalid');
