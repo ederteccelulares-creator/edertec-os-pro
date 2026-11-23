@@ -53,6 +53,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   const [customerSearch,setCustomerSearch] = useState('')
   const [orderListSearch,setOrderListSearch] = useState('')
   const [showCustomer,setShowCustomer] = useState(false)
+  const [showOrderCustomerForm,setShowOrderCustomerForm] = useState(false)
   const [paymentOrder,setPaymentOrder] = useState<CompanyServiceOrder|null>(null)
   const [pendingPrintOrder,setPendingPrintOrder] = useState<CompanyServiceOrder|null>(null)
   const [paymentAmount,setPaymentAmount] = useState('0')
@@ -170,6 +171,32 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
     } finally { setBackupBusy(false) }
   }
 
+  async function submitCustomerFromOrder(event:FormEvent) {
+    event.preventDefault(); setBusy(true); setError(''); setNotice('')
+    try {
+      const normalize=(value:string)=>value.replace(/\\D/g,'')
+      const document=normalize(customerForm.document)
+      const phone=normalize(customerForm.phone)
+      const existing=customers.find(item => (document && normalize(item.document||'')===document) || (phone && normalize(item.phone||'')===phone && item.name.trim().toLowerCase()===customerForm.name.trim().toLowerCase()))
+      if(existing) {
+        await checkSelectedCustomerDebt(existing.id)
+        setCustomerSearch(existing.name)
+        setShowOrderCustomerForm(false)
+        setCustomerForm({name:'',phone:'',email:'',document:'',notes:''})
+        setNotice('Este cliente já estava cadastrado. O cadastro existente foi selecionado.')
+        return
+      }
+      const created=await saveCompanyCustomer({companyId:company.id,branchId:branchId||null,...customerForm})
+      setCustomers(current=>[created,...current])
+      await checkSelectedCustomerDebt(created.id)
+      setCustomerSearch(created.name)
+      setCustomerForm({name:'',phone:'',email:'',document:'',notes:''})
+      setShowOrderCustomerForm(false)
+      setNotice('Cliente cadastrado e selecionado na ordem de serviço.')
+    } catch(e) {setError(e instanceof Error?e.message:'Falha ao cadastrar cliente na OS.')}
+    finally {setBusy(false)}
+  }
+
   async function submitCustomer(event:FormEvent) {
     event.preventDefault(); setBusy(true); setError(''); setNotice('')
     try {
@@ -234,7 +261,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
         const created = await createCompanyServiceOrder({companyId:company.id,branchId:branchId||null,customerId:orderForm.customerId||null,deviceType:orderForm.deviceType,deviceBrand:orderForm.brand,deviceModel:orderForm.model,deviceColor:orderForm.color,serialNumber:orderForm.serial,reportedIssue:orderForm.issue,intakeCondition:orderForm.condition,includedAccessories:orderForm.accessories,priority:orderForm.priority,estimatedPrice:Number(orderForm.price||0),promisedAt:orderForm.promisedAt?new Date(orderForm.promisedAt).toISOString():null,photos:orderPhotos})
         setNotice('OS #'+created.order_number+' criada com sucesso.')
       }
-      setShowOrder(false); setEditingOrder(null); setOrderPhotos([])
+      setShowOrder(false); setEditingOrder(null); setOrderPhotos([]); setShowOrderCustomerForm(false)
       setOrderForm({customerId:'',deviceType:'Celular',brand:'',model:'',color:'',serial:'',issue:'',condition:'',accessories:'',priority:'normal',price:'0',finalPrice:'0',diagnosis:'',promisedAt:''})
       await load()
     } catch(e) {setError(e instanceof Error?e.message:'Falha ao salvar ordem de serviço.')}
@@ -399,7 +426,19 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
           <h3>{editingOrder ? 'Editar ordem de serviço #' + editingOrder.order_number : 'Dados do atendimento'}</h3>
           <label>Buscar cliente<input type="search" placeholder="Digite nome, telefone ou CPF/CNPJ..." value={customerSearch} onChange={e=>setCustomerSearch(e.target.value)}/></label>
           <label>Selecionar cliente<select value={orderForm.customerId} onChange={e=>void checkSelectedCustomerDebt(e.target.value)}><option value="">Cliente não selecionado</option>{customers.filter(c=>!customerSearch.trim()||[c.name,c.phone,c.document].some(v=>String(v||"").toLowerCase().includes(customerSearch.trim().toLowerCase()))).map(c=><option key={c.id} value={c.id}>{c.name} · {c.phone||"sem telefone"}</option>)}</select></label>
-          {customerSearch.trim()&&customers.filter(c=>[c.name,c.phone,c.document].some(v=>String(v||"").toLowerCase().includes(customerSearch.trim().toLowerCase()))).length===0&&<small>Nenhum cliente encontrado. Cadastre o cliente na aba Clientes.</small>}
+          {customerSearch.trim()&&customers.filter(c=>[c.name,c.phone,c.document].some(v=>String(v||"").toLowerCase().includes(customerSearch.trim().toLowerCase()))).length===0&&<small>Nenhum cliente encontrado. Você pode cadastrá-lo aqui mesmo.</small>}
+          <div className="company-inline-actions"><button type="button" className="company-secondary company-small-action" onClick={()=>{setCustomerForm({name:customerSearch.trim(),phone:'',email:'',document:'',notes:''});setShowOrderCustomerForm(v=>!v)}}><Plus size={14}/> Cadastrar novo cliente</button></div>
+          {showOrderCustomerForm&&<form className="company-form company-order-customer-form" onSubmit={submitCustomerFromOrder}>
+            <h4>Novo cliente para esta OS</h4>
+            <div className="company-form-grid">
+              <label>Nome completo<input required autoFocus value={customerForm.name} onChange={e=>setCustomerForm({...customerForm,name:e.target.value})} placeholder="Nome do cliente"/></label>
+              <label>Telefone / WhatsApp<input value={customerForm.phone} onChange={e=>setCustomerForm({...customerForm,phone:e.target.value})} placeholder="(00) 00000-0000"/></label>
+              <label>CPF / CNPJ<input value={customerForm.document} onChange={e=>setCustomerForm({...customerForm,document:e.target.value})} placeholder="Documento do cliente"/></label>
+              <label>E-mail<input type="email" value={customerForm.email} onChange={e=>setCustomerForm({...customerForm,email:e.target.value})} placeholder="cliente@email.com"/></label>
+            </div>
+            <label>Observações<input value={customerForm.notes} onChange={e=>setCustomerForm({...customerForm,notes:e.target.value})} placeholder="Informações adicionais (opcional)"/></label>
+            <div className="company-form-actions"><button type="button" className="company-secondary" onClick={()=>setShowOrderCustomerForm(false)}>Cancelar</button><button className="company-primary" disabled={busy}><Plus size={14}/> Salvar e selecionar cliente</button></div>
+          </form>}
           {checkingCustomerDebt&&<div className="company-debt-checking">Consultando contas em atraso do cliente...</div>}
           {customerDebtError&&<div className="company-error-banner">{customerDebtError}</div>}
           {overdueReceivables.length>0&&<div className="company-overdue-alert"><div className="company-overdue-alert-head"><b>⚠ Cliente possui dívida em atraso</b><strong>{money(overdueReceivables.reduce((sum,item)=>sum+Number(item.amount),0))}</strong></div><p>Existem {overdueReceivables.length} conta(s) a receber vencida(s) para este cliente.</p><div className="company-inline-actions"><button type="button" className="company-secondary company-small-action" onClick={()=>setOverdueDetailsOpen(v=>!v)}>{overdueDetailsOpen?'Ocultar detalhes':'Ver detalhes da dívida'}</button><button type="button" className="company-primary company-small-action" onClick={()=>setOverdueReceivables([])}>Prosseguir com a nova OS</button></div>{overdueDetailsOpen&&<div className="company-overdue-details">{overdueReceivables.map(item=><div key={item.id}><b>{item.source_order_number?'OS #'+item.source_order_number:item.description}</b><span>{item.description}</span><strong>{money(item.amount)}</strong><small>Vencimento: {new Date(item.due_date+'T12:00:00').toLocaleDateString('pt-BR')}</small></div>)}</div>}</div>}
