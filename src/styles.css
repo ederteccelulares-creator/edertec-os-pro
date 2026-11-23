@@ -1623,3 +1623,90 @@ td b { font-weight:650; }
     justify-self:end;
   }
 }
+
+
+/* Super Admin: compact professional header with hamburger navigation */
+.platform-admin .platform-head{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  z-index:30;
+}
+.platform-admin .platform-head-actions{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+.platform-admin .platform-head .platform-menu-toggle{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-height:42px;
+  padding:0 14px;
+  border:1px solid #45536a;
+  border-radius:10px;
+  background:linear-gradient(145deg,#202d40,#151f2d);
+  color:#e8c779;
+  font-size:12px;
+  font-weight:750;
+}
+.platform-admin .platform-head .platform-menu-toggle:hover,
+.platform-admin .platform-head .platform-menu-toggle[aria-expanded="true"]{
+  border-color:#c59a4b;
+  background:#29271f;
+}
+.platform-admin .platform-head .platform-tabs{
+  position:absolute;
+  top:calc(100% + 8px);
+  right:clamp(14px,4vw,48px);
+  width:min(310px,calc(100vw - 28px));
+  display:grid;
+  grid-template-columns:1fr;
+  gap:5px;
+  margin:0;
+  padding:10px;
+  border:1px solid #39485d;
+  border-radius:14px;
+  background:linear-gradient(150deg,#1a2738,#101824);
+  box-shadow:0 18px 48px #0009;
+}
+.platform-admin .platform-head .platform-tabs[hidden]{display:none}
+.platform-admin .platform-head .platform-tabs button{
+  justify-content:flex-start;
+  width:100%;
+  min-height:44px;
+  padding:0 13px;
+  border:1px solid transparent;
+  border-radius:9px;
+  text-align:left;
+}
+.platform-admin .platform-content{padding-top:30px}
+@media(max-width:760px){
+  .platform-admin .platform-head{
+    min-height:82px;
+    padding:12px 14px;
+    gap:8px;
+  }
+  .platform-admin .platform-brand{gap:9px}
+  .platform-admin .platform-brand>svg{width:40px;height:40px;flex:0 0 40px}
+  .platform-admin .platform-brand b{font-size:12px;letter-spacing:1px}
+  .platform-admin .platform-brand small{font-size:7px;letter-spacing:1px;max-width:118px}
+  .platform-admin .platform-head-actions{gap:7px}
+  .platform-admin .platform-head .platform-menu-toggle{
+    min-height:40px;
+    padding:0 10px;
+    gap:6px;
+    font-size:11px;
+  }
+  .platform-admin .platform-user>span{display:none}
+  .platform-admin .platform-user button{min-height:40px;padding:0 9px;font-size:10px}
+  .platform-admin .platform-head .platform-tabs{
+    right:12px;
+    width:min(290px,calc(100vw - 24px));
+  }
+  .platform-admin .platform-content{padding-top:24px}
+}
