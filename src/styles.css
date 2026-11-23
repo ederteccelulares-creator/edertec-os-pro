@@ -1710,3 +1710,78 @@ td b { font-weight:650; }
   }
   .platform-admin .platform-content{padding-top:24px}
 }
+
+
+/* Correct Super Admin header typography alignment on narrow screens */
+.platform-admin .platform-head{
+  align-items:center;
+}
+.platform-admin .platform-brand{
+  flex:1 1 auto;
+  min-width:0;
+  align-items:center;
+}
+.platform-admin .platform-brand span{
+  min-width:0;
+  width:auto;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  gap:4px;
+}
+.platform-admin .platform-brand b{
+  display:block;
+  white-space:nowrap;
+  line-height:1.2;
+}
+.platform-admin .platform-brand small{
+  display:block;
+  width:auto;
+  max-width:none;
+  white-space:nowrap;
+  line-height:1.25;
+  letter-spacing:1.15px;
+}
+.platform-admin .platform-head-actions{
+  flex:0 0 auto;
+  align-items:center;
+}
+@media(max-width:760px){
+  .platform-admin .platform-head{
+    min-height:76px;
+    padding:10px 12px;
+    align-items:center;
+  }
+  .platform-admin .platform-brand{
+    gap:9px;
+    flex:1 1 auto;
+  }
+  .platform-admin .platform-brand>svg{
+    align-self:center;
+  }
+  .platform-admin .platform-brand b{
+    font-size:11px;
+    letter-spacing:.8px;
+  }
+  .platform-admin .platform-brand small{
+    max-width:none;
+    font-size:6.5px;
+    letter-spacing:.75px;
+    white-space:nowrap;
+  }
+  .platform-admin .platform-head-actions{
+    gap:6px;
+    flex:0 0 auto;
+  }
+  .platform-admin .platform-head .platform-menu-toggle{
+    min-height:38px;
+    padding:0 8px;
+    font-size:10px;
+  }
+  .platform-admin .platform-user button{
+    min-height:38px;
+    padding:0 8px;
+    font-size:10px;
+  }
+}
