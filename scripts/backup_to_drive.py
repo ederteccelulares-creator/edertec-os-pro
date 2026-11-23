@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Create an encrypted full Supabase backup and upload it to Google Drive."""
-import json, os, pathlib, subprocess, tempfile, time, zipfile
+import json, os, pathlib, subprocess, shutil
 from datetime import datetime, timezone
 import requests
 from google.oauth2 import service_account
@@ -19,6 +19,9 @@ folder_id = os.environ["GOOGLE_DRIVE_FOLDER_ID"]
 passphrase = os.environ["BACKUP_ENCRYPTION_PASSPHRASE"]
 headers = {"Authorization": f"Bearer {service_key}", "apikey": service_key}
 
+# Include the complete application source and Supabase migrations/functions.
+source_dir = work / "source"
+shutil.copytree(".", source_dir, ignore=shutil.ignore_patterns(".git", "node_modules", "dist", "backup-work", ".env", ".env.*"))
 # Full logical PostgreSQL dump (schema, data, functions, policies, grants).
 dump_path = work / "database.dump"
 subprocess.run(["pg_dump", "--format=custom", "--no-owner", "--no-acl", db_url, "-f", str(dump_path)], check=True)
