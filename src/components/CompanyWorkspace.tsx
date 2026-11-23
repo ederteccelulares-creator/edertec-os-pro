@@ -334,7 +334,38 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
         <div className="company-panel-head"><div><b>Meu plano e assinatura</b><small>Planos publicados pelo Super Admin para contratação</small></div><button className="company-secondary" onClick={()=>void loadSubscriptionPlans()} disabled={plansLoading}><RefreshCw size={15}/> {plansLoading?'Carregando...':'Atualizar planos'}</button></div>
         <div className="company-subscription-current"><div><small>PLANO ATUAL</small><h2>{planInfo?.plan_name||'Nenhum plano contratado'}</h2><p>{planStatusLabel} · {planEndDate?'Válido até '+new Date(planEndDate).toLocaleDateString('pt-BR'):'Vencimento não informado'}</p></div><span>{planInfo?.subscription_status==='active'||planInfo?.subscription_status==='trial'?'Em dia':'Verificar assinatura'}</span></div>
         <h3>Planos disponíveis</h3>
-        {plansLoading?<p className="company-subscription-note">Carregando planos cadastrados pelo Super Admin...</p>:availablePlans.length===0?<p className="company-subscription-note">Nenhum plano ativo foi publicado para contratação no momento. Verifique o cadastro e o status dos planos no Painel Super Admin.</p>:<div className="company-subscription-grid">{availablePlans.map(plan=><article key={plan.id}><small>EDERTEC OS PRO</small><h3>{plan.name}</h3><p>{plan.description||'Acesso ao sistema de gestão para assistência técnica.'}</p><strong>{money(Number(plan.price))}</strong><span>{plan.billing_interval==='yearly'?'por ano':plan.billing_interval==='monthly'?'por mês':plan.billing_interval==='six_months'?'por 6 meses':plan.billing_interval==='lifetime'?'pagamento único':plan.billing_interval}</span><p>{plan.max_branches===null?'Filiais sem limite':plan.max_branches+' filial(is)'} · {plan.max_users===null?'Usuários sem limite':plan.max_users+' usuário(s)'}</p><button className="company-primary" disabled={planCheckoutBusy||Number(plan.price)<=0} onClick={async()=>{if(!supabase)return;setPlanCheckoutBusy(true);setError('');try{const {data,error}=await supabase.functions.invoke('mercadopago-billing',{body:{company_id:company.id,plan_id:plan.id}});if(error)throw error;if(!data?.checkout_url)throw new Error(data?.error||'Não foi possível abrir o checkout.');window.location.assign(data.checkout_url)}catch(e){setError(e instanceof Error?e.message:'Falha ao iniciar pagamento.');setPlanCheckoutBusy(false)}}}>{planCheckoutBusy?'Abrindo checkout...':'Contratar / Renovar'}</button></article>)}</div>
+         {plansLoading ? (
+           <p className="company-subscription-note">Carregando planos cadastrados pelo Super Admin...</p>
+         ) : availablePlans.length === 0 ? (
+           <p className="company-subscription-note">Nenhum plano ativo foi publicado para contratação no momento. Verifique o cadastro e o status dos planos no Painel Super Admin.</p>
+         ) : (
+           <div className="company-subscription-grid">
+             {availablePlans.map((plan) => (
+               <article key={plan.id}>
+                 <small>EDERTEC OS PRO</small>
+                 <h3>{plan.name}</h3>
+                 <p>{plan.description || 'Acesso ao sistema de gestão para assistência técnica.'}</p>
+                 <strong>{money(Number(plan.price))}</strong>
+                 <span>{plan.billing_interval === 'yearly' ? 'por ano' : plan.billing_interval === 'monthly' ? 'por mês' : plan.billing_interval === 'six_months' ? 'por 6 meses' : plan.billing_interval === 'lifetime' ? 'pagamento único' : plan.billing_interval}</span>
+                 <p>{plan.max_branches === null ? 'Filiais sem limite' : plan.max_branches + ' filial(is)'} · {plan.max_users === null ? 'Usuários sem limite' : plan.max_users + ' usuário(s)'}</p>
+                 <button className="company-primary" disabled={planCheckoutBusy || Number(plan.price) <= 0} onClick={async () => {
+                   if (!supabase) return;
+                   setPlanCheckoutBusy(true);
+                   setError('');
+                   try {
+                     const { data, error } = await supabase.functions.invoke('mercadopago-billing', { body: { company_id: company.id, plan_id: plan.id } });
+                     if (error) throw error;
+                     if (!data?.checkout_url) throw new Error(data?.error || 'Não foi possível abrir o checkout.');
+                     window.location.assign(data.checkout_url);
+                   } catch (e) {
+                     setError(e instanceof Error ? e.message : 'Falha ao iniciar pagamento.');
+                     setPlanCheckoutBusy(false);
+                   }
+                 }}>{planCheckoutBusy ? 'Abrindo checkout...' : 'Contratar / Renovar'}</button>
+               </article>
+             ))}
+           </div>
+         )}
         <p className="company-subscription-note">Ao contratar ou renovar, você será direcionado ao checkout seguro do Mercado Pago. O plano será atualizado após a confirmação do pagamento.</p>
       </section>}
 
