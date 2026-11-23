@@ -303,6 +303,11 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
     return [o.order_number,o.customers?.name,o.customers?.phone,o.device_brand,o.device_model,o.device_type,o.serial_number,o.reported_issue,statusLabels[o.status]||o.status]
       .some(value => String(value||'').toLocaleLowerCase('pt-BR').includes(term));
   });
+  const normalizeCustomerSearch=(value:string)=>value.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLocaleLowerCase('pt-BR').trim();
+  const matchingCustomers=customers.filter(c=>{
+    const term=normalizeCustomerSearch(customerSearch);
+    return !term||[c.name,c.phone,c.document].some(value=>normalizeCustomerSearch(String(value||'')).includes(term));
+  });
   const activeOrders = orders.filter(o=>!['delivered','cancelled'].includes(o.status))
   const pendingOrders = orders.filter(o=>o.status==='waiting_approval')
   const orderRevenue = orders.reduce((sum,o)=>sum+Number(o.final_price||o.estimated_price||0),0)
@@ -425,9 +430,11 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
         <label className="company-order-search"><span>Procurar ordem de serviço</span><input type="search" placeholder="Número da OS, cliente, telefone, aparelho, IMEI ou defeito..." value={orderListSearch} onChange={e=>setOrderListSearch(e.target.value)}/></label>
         {showOrder&&<form className="company-form" onKeyDownCapture={event=>{if(event.key==='Enter'&&(event.target as HTMLElement).tagName!=='TEXTAREA')event.preventDefault()}} onSubmit={submitOrder}>
           <h3>{editingOrder ? 'Editar ordem de serviço #' + editingOrder.order_number : 'Dados do atendimento'}</h3>
-          <label>Buscar cliente<input type="search" placeholder="Digite nome, telefone ou CPF/CNPJ..." value={customerSearch} onChange={e=>setCustomerSearch(e.target.value)}/></label>
-          <label>Selecionar cliente<select value={orderForm.customerId} onChange={e=>void checkSelectedCustomerDebt(e.target.value)}><option value="">Cliente não selecionado</option>{customers.filter(c=>!customerSearch.trim()||[c.name,c.phone,c.document].some(v=>String(v||"").toLowerCase().includes(customerSearch.trim().toLowerCase()))).map(c=><option key={c.id} value={c.id}>{c.name} · {c.phone||"sem telefone"}</option>)}</select></label>
-          {customerSearch.trim()&&customers.filter(c=>[c.name,c.phone,c.document].some(v=>String(v||"").toLowerCase().includes(customerSearch.trim().toLowerCase()))).length===0&&<small>Nenhum cliente encontrado. Você pode cadastrá-lo aqui mesmo.</small>}
+          <label>Buscar cliente<input type="search" autoComplete="off" placeholder="Digite o nome para localizar os clientes..." value={customerSearch} onChange={e=>{setCustomerSearch(e.target.value);setOrderForm(current=>({...current,customerId:''}))}}/></label>
+          {customerSearch.trim()&&<div className="company-customer-suggestions" role="listbox" aria-label="Clientes encontrados">
+            {matchingCustomers.length>0?matchingCustomers.slice(0,30).map(c=><button type="button" className="company-secondary" key={c.id} role="option" aria-selected={orderForm.customerId===c.id} onClick={()=>{setCustomerSearch(c.name);void checkSelectedCustomerDebt(c.id)}}><b>{c.name}</b><small>{c.phone||'Sem telefone'}{c.document?' · '+c.document:''}</small></button>):<small>Nenhum cliente encontrado. Você pode cadastrá-lo aqui mesmo.</small>}
+          </div>}
+          <label>Selecionar cliente<select value={orderForm.customerId} onChange={e=>{const selected=customers.find(c=>c.id===e.target.value);if(selected)setCustomerSearch(selected.name);void checkSelectedCustomerDebt(e.target.value)}}><option value="">Cliente não selecionado</option>{matchingCustomers.map(c=><option key={c.id} value={c.id}>{c.name} · {c.phone||"sem telefone"}</option>)}</select></label>
           <div className="company-inline-actions"><button type="button" className="company-secondary company-small-action" onClick={()=>{setCustomerForm({name:customerSearch.trim(),phone:'',email:'',document:'',notes:''});setShowOrderCustomerForm(v=>!v)}}><Plus size={14}/> Cadastrar novo cliente</button></div>
           {showOrderCustomerForm&&<div className="company-form company-order-customer-form" onKeyDown={event=>{if(event.key==='Enter'&&(event.target as HTMLElement).tagName!=='TEXTAREA')event.preventDefault()}}>
             <h4>Novo cliente para esta OS</h4>
