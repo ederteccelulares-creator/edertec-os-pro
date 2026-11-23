@@ -132,7 +132,7 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
         p_ends_at:endsAt,
       })
       if(error)throw new Error(error.message||error.details||'Não foi possível salvar a ativação.')
-      setNotice(existing?'Plano e período da empresa atualizados.':'Plano ativado para a empresa.')
+      setNotice('Plano e período da empresa salvos com sucesso.')
       await load()
     }catch(e){setError(e instanceof Error?e.message:'Falha ao salvar a ativação.')}
     finally{setBusy(false)}
