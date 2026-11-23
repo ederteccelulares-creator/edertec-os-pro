@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { Building2, ShieldCheck, CreditCard, Package, RefreshCw, LogOut, Plus, LifeBuoy, Menu, X } from 'lucide-react'
+import { Building2, ShieldCheck, CreditCard, Package, RefreshCw, LogOut, Plus, LifeBuoy, Menu } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import PlatformSupportPanel from './PlatformSupportPanel'
 
