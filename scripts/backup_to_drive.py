@@ -34,39 +34,44 @@ for bucket in buckets.json():
     bucket_dir = storage_dir / bucket_name
     bucket_dir.mkdir()
     manifest["buckets"].append({"name": bucket_name, "public": bucket.get("public", False), "objects": []})
-    offset = 0
-    while True:
-        listing = requests.post(
-            f"{supabase_url}/storage/v1/object/list/{bucket_name}",
-            headers={**headers, "Content-Type": "application/json"},
-            json={"prefix": "", "limit": 100, "offset": offset, "sortBy": {"column": "name", "order": "asc"}},
-            timeout=60,
-        )
-        listing.raise_for_status()
-        items = listing.json()
-        if not items:
-            break
-        for item in items:
-            name = item.get("name")
-            if not name:
-                continue
-            # Storage list returns folders as well; only download actual objects.
-            object_path = f"{bucket_name}/{name}"
-            response = requests.get(f"{supabase_url}/storage/v1/object/{object_path}", headers=headers, timeout=180)
-            if response.status_code == 404:
-                continue
-            response.raise_for_status()
-            target = bucket_dir / name
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(response.content)
-            manifest["buckets"][-1]["objects"].append({"name": name, "size": len(response.content)})
-        offset += len(items)
-        if len(items) < 100:
-            break
+    pending_prefixes = [""]
+    while pending_prefixes:
+        prefix = pending_prefixes.pop()
+        offset = 0
+        while True:
+            listing = requests.post(
+                f"{supabase_url}/storage/v1/object/list/{bucket_name}",
+                headers={**headers, "Content-Type": "application/json"},
+                json={"prefix": prefix, "limit": 100, "offset": offset, "sortBy": {"column": "name", "order": "asc"}},
+                timeout=60,
+            )
+            listing.raise_for_status()
+            items = listing.json()
+            if not items:
+                break
+            for item in items:
+                name = item.get("name")
+                if not name:
+                    continue
+                relative_name = f"{prefix}{name}"
+                if item.get("id") is None and item.get("metadata") is None:
+                    pending_prefixes.append(relative_name.rstrip("/") + "/")
+                    continue
+                response = requests.get(
+                    f"{supabase_url}/storage/v1/object/{bucket_name}/{relative_name}",
+                    headers=headers, timeout=180,
+                )
+                response.raise_for_status()
+                target = bucket_dir / relative_name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(response.content)
+                manifest["buckets"][-1]["objects"].append({"name": relative_name, "size": len(response.content)})
+            offset += len(items)
+            if len(items) < 100:
+                break
 
 (work / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2))
 archive = ROOT / f"edertec-os-pro-{stamp}.tar.gz.gpg"
-subprocess.run(["tar", "-czf", "-", "-C", str(ROOT), stamp], stdout=subprocess.PIPE, check=True)
 # Stream archive through GPG so the unencrypted archive is never written to disk.
 tar = subprocess.Popen(["tar", "-czf", "-", "-C", str(ROOT), stamp], stdout=subprocess.PIPE)
 with archive.open("wb") as encrypted:
