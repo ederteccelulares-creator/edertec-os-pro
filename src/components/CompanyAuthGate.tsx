@@ -7,6 +7,7 @@ import CompanyWorkspace from './CompanyWorkspace'
 import PlatformAdminPanel from './PlatformAdminPanel'
 
 export default function CompanyAuthGate() {
+  const isAdminRoute = window.location.pathname.replace(/\\/+$/, '') === '/admin'
   const [session, setSession] = useState<Session | null>(null)
   const [memberships, setMemberships] = useState<CompanyMembership[]>([])
   const [platformAdmin, setPlatformAdmin] = useState(false)
@@ -169,6 +170,14 @@ export default function CompanyAuthGate() {
   </section></main>
 
   if (platformAdmin) return <PlatformAdminPanel email={session.user.email||''} onSignOut={signOut}/>
+
+  if (isAdminRoute) return <main className="company-auth"><section className="company-auth-card">
+    <div className="company-auth-brand"><ShieldCheck size={25}/><div><b>EDERTEC <i>OS PRO</i></b><small>ÁREA ADMINISTRATIVA</small></div></div>
+    <h1>Acesso restrito</h1>
+    <p>Esta área é exclusiva da conta Super Admin da plataforma. Sua conta não possui essa autorização.</p>
+    <button className="company-primary" onClick={()=>window.location.assign('/')}>Voltar ao sistema</button>
+    <button className="company-link" onClick={signOut}>Sair da conta</button>
+  </section></main>
 
 
   if (selected) {
