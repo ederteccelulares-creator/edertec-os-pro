@@ -1885,3 +1885,21 @@ td b { font-weight:650; }
 .company-order-search{display:grid;gap:7px;margin:0 0 16px;color:#d8dce2;font-size:12px;font-weight:700}
 .company-order-search input{width:100%;min-height:44px;padding:11px 13px;border:1px solid #39424d;border-radius:10px;background:#101419;color:#f4f5f6;font:inherit;font-weight:400;outline:none}
 .company-order-search input:focus{border-color:#e14a50;box-shadow:0 0 0 3px #e14a5022}
+
+/* Painel administrativo da central de suporte */
+.platform-support-panel .support-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
+.platform-support-panel .support-overview article{display:flex;flex-direction:column;gap:4px;padding:13px 15px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.035)}
+.platform-support-panel .support-overview article b{font-size:24px;color:#fff}.platform-support-panel .support-overview article span{font-size:12px;color:#aeb8c6}
+.platform-support-panel .company-support-layout{display:grid;grid-template-columns:minmax(280px,380px) minmax(0,1fr);gap:16px;align-items:start}
+.platform-support-panel .company-support-list{min-width:0;max-height:760px;overflow:auto;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px;background:rgba(0,0,0,.12)}
+.platform-support-panel .support-list-tools{display:grid;gap:8px;position:sticky;top:0;padding-bottom:8px;background:#111820;z-index:2}
+.platform-support-panel .support-list-tools input,.platform-support-panel .support-list-tools select{width:100%;min-width:0;padding:11px;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:#171f29;color:#fff}
+.platform-support-panel .support-list-count{font-size:11px;color:#aeb8c6;padding:4px 2px 9px}
+.platform-support-panel .company-support-item{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:5px;width:100%;margin:0 0 8px;padding:12px 12px 12px 18px;text-align:left;border:1px solid rgba(255,255,255,.1);border-radius:10px;background:rgba(255,255,255,.035);color:#fff}
+.platform-support-panel .company-support-item.selected{border-color:#e9b52c;background:rgba(233,181,44,.09)}
+.platform-support-panel .company-support-item b{font-size:13px}.platform-support-panel .company-support-item strong{font-size:12px;color:#e4e8ef}.platform-support-panel .company-support-item small{display:flex;align-items:center;gap:5px;color:#aeb8c6;font-size:11px}
+.platform-support-panel .support-priority-dot{position:absolute;left:7px;top:17px;width:5px;height:5px;border-radius:50%;background:#8b98a8}.platform-support-panel .support-priority-dot.urgent{background:#ff4d5d}.platform-support-panel .support-priority-dot.high{background:#ff9d3d}.platform-support-panel .support-priority-dot.normal{background:#e9c34e}.platform-support-panel .support-priority-dot.low{background:#55b8a0}
+.platform-support-panel .support-status-chip{padding:2px 6px;border-radius:20px;background:rgba(255,255,255,.09)}
+.platform-support-panel .company-support-thread{min-width:0;padding:16px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.025)}
+.platform-support-panel .support-empty{padding:20px 8px;text-align:center;color:#aeb8c6}
+@media(max-width:760px){.platform-support-panel .support-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.platform-support-panel .company-support-layout{grid-template-columns:1fr}.platform-support-panel .company-support-list{max-height:360px}}
