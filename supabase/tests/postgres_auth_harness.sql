@@ -66,3 +66,45 @@ $$;
 grant usage on schema storage to anon, authenticated, service_role;
 grant select, insert, update, delete on storage.objects to authenticated, service_role;
 grant select, insert, update, delete on storage.buckets to authenticated, service_role;
+
+
+-- Minimal Vault compatibility layer for isolated CI only.
+-- Production uses the real Supabase Vault extension and encrypted storage.
+create schema vault;
+create table vault.decrypted_secrets (
+  id uuid primary key,
+  decrypted_secret text not null
+);
+create or replace function vault.create_secret(
+  new_secret text,
+  new_name text default null,
+  new_description text default null
+) returns uuid
+language plpgsql
+as $$
+declare
+  secret_id uuid := gen_random_uuid();
+begin
+  insert into vault.decrypted_secrets(id,decrypted_secret)
+  values(secret_id,new_secret);
+  return secret_id;
+end;
+$$;
+create or replace function vault.update_secret(
+  secret_id uuid,
+  new_secret text,
+  new_name text default null,
+  new_description text default null
+) returns void
+language plpgsql
+as $$
+begin
+  update vault.decrypted_secrets
+  set decrypted_secret=new_secret
+  where id=secret_id;
+end;
+$$;
+grant usage on schema vault to anon, authenticated, service_role;
+grant select on vault.decrypted_secrets to service_role;
+grant execute on function vault.create_secret(text,text,text) to service_role;
+grant execute on function vault.update_secret(uuid,text,text,text) to service_role;
