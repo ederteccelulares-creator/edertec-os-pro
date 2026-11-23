@@ -1592,3 +1592,34 @@ td b { font-weight:650; }
   .company-brasilia-clock span{font-size:10px}
   .company-brasilia-clock small{font-size:8px;letter-spacing:.8px}
 }
+
+
+/* Mobile header: place the Brasilia clock above the subscription status */
+@media(max-width:640px){
+  .company-top-actions{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    grid-template-areas:"clock clock" "plan refresh";
+    align-items:center;
+    justify-items:stretch;
+    row-gap:10px;
+    column-gap:10px;
+  }
+  .company-brasilia-clock{
+    grid-area:clock;
+    justify-self:start;
+    text-align:left;
+    margin-left:0;
+    width:max-content;
+    max-width:100%;
+  }
+  .company-plan-period{
+    grid-area:plan;
+    justify-self:start;
+    min-width:0;
+  }
+  .company-icon-button{
+    grid-area:refresh;
+    justify-self:end;
+  }
+}
