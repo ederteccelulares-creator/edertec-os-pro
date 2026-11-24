@@ -11,8 +11,8 @@ export async function createFinancialEntry(input:{companyId:string;branchId?:str
  const {data,error}=await db().from('company_financial_entries').insert({company_id:input.companyId,branch_id:input.branchId||null,entry_type:input.entryType,category:input.category.trim(),description:input.description.trim(),counterparty:input.counterparty?.trim()||null,amount:input.amount,due_date:input.dueDate,notes:input.notes?.trim()||null}).select('*').single()
  if(error)throw error;return data as FinancialEntry
 }
-export async function settleFinancialEntry(companyId:string,entryId:string,method:string){
- const {data,error}=await db().rpc('settle_financial_entry',{p_company_id:companyId,p_entry_id:entryId,p_method:method})
+export async function settleFinancialEntry(companyId:string,entryId:string,method:string,financialAccountId?:string|null){
+ const {data,error}=await db().rpc('settle_financial_entry',{p_company_id:companyId,p_entry_id:entryId,p_method:method,p_financial_account_id:financialAccountId||null})
  if(error)throw error;return data as string
 }
 
