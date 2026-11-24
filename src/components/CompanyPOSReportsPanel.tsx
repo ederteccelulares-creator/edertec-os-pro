@@ -5,7 +5,8 @@ import {supabase} from '../lib/supabase'
 
 type Sale={id:string;sale_number:number;branch_id:string|null;created_at:string;subtotal:number;discount:number;total:number;payment_method:string;status:string;seller_employee_id:string|null;commission_rate:number;commission_amount:number;commission_settlement_id:string|null}
 type Employee={id:string;name:string;branch_id:string|null;commission_percent:number;is_active:boolean}
-type Item={sale_id:string;product_id:string|null;product_name:string;quantity:number;unit_price:number;unit_cost:number;line_total:number}\ntype CommissionSettlement={id:string;employee_id:string;branch_id:string|null;period_start:string;period_end:string;sale_count:number;total_amount:number;status:'pending'|'paid';created_at:string;paid_at:string|null;payment_method:string|null;payment_reference:string|null}
+type Item={sale_id:string;product_id:string|null;product_name:string;quantity:number;unit_price:number;unit_cost:number;line_total:number}
+type CommissionSettlement={id:string;employee_id:string;branch_id:string|null;period_start:string;period_end:string;sale_count:number;total_amount:number;status:'pending'|'paid';created_at:string;paid_at:string|null;payment_method:string|null;payment_reference:string|null}
 const money=(n:number)=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 const dateValue=(d:Date)=>{const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return y+'-'+m+'-'+day}
 const methods:Record<string,string>={pix:'PIX',cash:'Dinheiro',debit_card:'Débito',credit_card:'Crédito',bank_transfer:'Transferência',other:'Outro'}
@@ -17,7 +18,9 @@ export default function CompanyPOSReportsPanel({company}:{company:Company}){
  const [branches,setBranches]=useState<CompanyBranch[]>([])
  const [sales,setSales]=useState<Sale[]>([])
  const [items,setItems]=useState<Item[]>([])
- const [employees,setEmployees]=useState<Employee[]>([])\n const [settlements,setSettlements]=useState<CommissionSettlement[]>([])\n const [settlementBusy,setSettlementBusy]=useState<string|null>(null)
+ const [employees,setEmployees]=useState<Employee[]>([])
+ const [settlements,setSettlements]=useState<CommissionSettlement[]>([])
+ const [settlementBusy,setSettlementBusy]=useState<string|null>(null)
  const [commissionDrafts,setCommissionDrafts]=useState<Record<string,string>>({})
  const [savingEmployee,setSavingEmployee]=useState<string|null>(null)
  const [commissionNotice,setCommissionNotice]=useState('')
