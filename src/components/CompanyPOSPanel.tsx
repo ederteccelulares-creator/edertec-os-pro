@@ -1,7 +1,6 @@
 import {useCallback,useEffect,useMemo,useState} from 'react'
 import {Barcode,Minus,Plus,RefreshCw,Search,ShoppingCart,Trash2,Wallet} from 'lucide-react'
-import {listCompanyProducts,recordCompanyStockMovement,type CompanyProduct} from '../lib/company-inventory'
-import {createCompanyCashTransaction,getOpenCompanyCashSession} from '../lib/company-cash'
+import {listCompanyProducts,type CompanyProduct} from '../lib/company-inventory'
 import {listCompanyBranches,type Company,type CompanyBranch} from '../lib/company-data'
 import {supabase} from '../lib/supabase'
 
@@ -13,6 +12,7 @@ export default function CompanyPOSPanel({company}:{company:Company}){
  const [branches,setBranches]=useState<CompanyBranch[]>([])
  const [accounts,setAccounts]=useState<Array<{id:string;account_name:string;bank_name:string;branch_id:string|null}>>([])
  const [financialAccountId,setFinancialAccountId]=useState('')
+ const [saleAttempt,setSaleAttempt]=useState<{fingerprint:string;key:string}|null>(null)
  const [cart,setCart]=useState<CartLine[]>([])
  const [search,setSearch]=useState('')
  const [branchId,setBranchId]=useState('')
@@ -35,14 +35,17 @@ export default function CompanyPOSPanel({company}:{company:Company}){
  async function finishSale(){if(!cart.length){setError('Adicione produtos ao carrinho.');return}if(cart.some(x=>x.quantity>Number(x.product.stock_quantity))){setError('Há produtos com estoque insuficiente. Atualize o estoque e tente novamente.');return}if(total<=0){setError('O total da venda precisa ser maior que zero.');return}if(method==='cash'&&Number(received)<total){setError('O valor recebido é menor que o total da venda.');return}
   setBusy(true);setError('');setNotice('')
   try{
-   const openSession=await getOpenCompanyCashSession(company.id,branchId||null)
-   if(!openSession)throw new Error('Abra o caixa desta filial antes de finalizar uma venda no PDV.')
    const lines=cart.map(x=>x.quantity+'x '+x.product.name).join(', ')
-   for(const line of cart){await recordCompanyStockMovement({companyId:company.id,productId:line.product.id,movementType:'out',quantity:line.quantity,unitCost:line.product.cost_price,branchId:branchId||null,reason:'Venda PDV · '+lines})}
-   await createCompanyCashTransaction({companyId:company.id,branchId:branchId||null,direction:'in',category:'Venda PDV',description:'Venda PDV: '+lines+(discountValue>0?' · Desconto '+money(discountValue):''),amount:total,paymentMethod:method,financialAccountId:financialAccountId||null})
+   const description='Venda PDV: '+lines+(discountValue>0?' · Desconto '+money(discountValue):'')
+   const items=cart.map(x=>({product_id:x.product.id,quantity:x.quantity}))
+   const fingerprint=JSON.stringify({branchId:branchId||null,items,amount:total,method,financialAccountId:financialAccountId||null})
+   const key=saleAttempt?.fingerprint===fingerprint?saleAttempt.key:crypto.randomUUID()
+   setSaleAttempt({fingerprint,key})
+   const {error:checkoutError}=await supabase!.rpc('finalize_company_pos_sale',{p_company_id:company.id,p_branch_id:branchId||null,p_items:items,p_amount:total,p_payment_method:method,p_financial_account_id:financialAccountId||null,p_idempotency_key:key,p_description:description})
+   if(checkoutError)throw checkoutError
    const change=method==='cash'?Math.max(0,Number(received)-total):0
    setNotice('Venda registrada! Total '+money(total)+(change>0?' · Troco '+money(change):''))
-   setCart([]);setDiscount('0');setReceived('');setFinancialAccountId('');await load()
+   setCart([]);setDiscount('0');setReceived('');setFinancialAccountId('');setSaleAttempt(null);await load()
   }catch(e){setError((e instanceof Error?e.message:'Falha ao registrar venda.')+' Confira o estoque e o caixa antes de tentar novamente.')}
   finally{setBusy(false)}
  }
