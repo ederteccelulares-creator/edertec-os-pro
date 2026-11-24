@@ -1986,3 +1986,46 @@ td b { font-weight:650; }
 .company-expense-line span{overflow-wrap:anywhere}
 .company-expense-line b{white-space:nowrap}
 @media(max-width:700px){.company-expense-report-grid{grid-template-columns:1fr}.company-expense-card:last-child{grid-column:auto}.company-expense-filters{grid-template-columns:1fr}}
+
+
+/* iPhone/iPad Safari: keep the page at its natural viewport scale.
+   Safari automatically zooms the page when a focused form control uses
+   a font smaller than 16px. Keep desktop typography unchanged. */
+@media screen and (max-width: 760px) {
+  html {
+    width:100%;
+    min-width:0;
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+  }
+  body {
+    width:100%;
+    min-width:0;
+    overflow-x:hidden;
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+  }
+  input,
+  select,
+  textarea,
+  .company-auth-card input,
+  .company-form input,
+  .company-form select,
+  .company-form textarea,
+  .company-top select,
+  .company-table-wrap select,
+  .company-branch-switch select,
+  .platform-form input,
+  .platform-form select,
+  .platform-table-wrap select,
+  .tenant-form input,
+  .tenant-form select,
+  .tenant-form textarea {
+    font-size:16px !important;
+  }
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="range"] {
+    font-size:initial !important;
+  }
+}
