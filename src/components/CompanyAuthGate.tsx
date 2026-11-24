@@ -33,6 +33,7 @@ export default function CompanyAuthGate() {
   const [availablePlans, setAvailablePlans] = useState<Array<{id:string;name:string;price:number;billing_interval:string}>>([])
   const [selectedPlanId, setSelectedPlanId] = useState('')
   const [startingCheckout, setStartingCheckout] = useState(false)
+  const [registrationInfo, setRegistrationInfo] = useState<{companyCode:string;username:string;email:string}|null>(null)
 
   const refreshMemberships = useCallback(async () => {
     setSelected(null)
@@ -46,6 +47,29 @@ export default function CompanyAuthGate() {
       if (company) setSelected(company)
     }
   }, [])
+
+
+  async function finishPendingCompany(user: { id:string; email?:string; user_metadata?:Record<string,unknown> }) {
+    const metadata = user.user_metadata || {}
+    const pendingName = String(metadata.signup_company_name || '').trim()
+    if (pendingName.length < 2) return
+    const existing = await listMyCompanies()
+    if (existing.length) return
+    const companyId = await registerCompany({
+      name: pendingName,
+      taxId: String(metadata.signup_company_tax_id || ''),
+      phone: String(metadata.signup_company_phone || ''),
+    })
+    const { data, error } = await supabase!.functions.invoke('company-team', { body: { action: 'list', company_id: companyId } })
+    if (error) throw error
+    const owner = (data?.members || []).find((member:any) => member.user_id === user.id)
+    setRegistrationInfo({
+      companyCode: String(data?.company_code || ''),
+      username: String(owner?.employee?.username || user.email?.split('@')[0] || ''),
+      email: user.email || '',
+    })
+    await refreshMemberships()
+  }
 
   useEffect(() => {
     if (!supabase) { setLoading(false); return }
@@ -62,7 +86,7 @@ export default function CompanyAuthGate() {
     const {data:{subscription}} = supabase.auth.onAuthStateChange((_event,next) => {
       setSession(next)
       if (!next) { setMemberships([]); setSelected(null); setPlatformAdmin(false) }
-      else { setMemberships([]); setSelected(null); setPlatformAdmin(false); window.setTimeout(() => { refreshMemberships().catch(e => setError(e instanceof Error ? e.message : 'Erro ao carregar assistências.')) },0) }
+      else { setMemberships([]); setSelected(null); setPlatformAdmin(false); window.setTimeout(() => { finishPendingCompany(next.user).catch(e => setError(e instanceof Error ? e.message : 'Não foi possível concluir o cadastro da empresa.')) .finally(() => refreshMemberships().catch(e => setError(e instanceof Error ? e.message : 'Erro ao carregar assistências.'))) },0) }
     })
     return () => { alive = false; subscription.unsubscribe() }
   }, [refreshMemberships])
@@ -135,13 +159,28 @@ export default function CompanyAuthGate() {
     event.preventDefault(); setBusy(true); setError(''); setNotice('')
     try {
       if (mode === 'signup') {
-        const {data,error} = await supabase!.auth.signUp({email,password,options:{data:{full_name:fullName}}})
+        const {data,error} = await supabase!.auth.signUp({
+          email,
+          password,
+          options:{data:{
+            full_name:fullName,
+            signup_company_name:companyName.trim(),
+            signup_company_tax_id:taxId.trim(),
+            signup_company_phone:phone.trim(),
+          }}
+        })
         if (error) throw error
-        if (!data.session) setNotice('Cadastro recebido. Confirme seu e-mail e depois entre no sistema.')
-        else setNotice('Conta criada. Agora cadastre sua assistência.')
+        if (!data.user) throw new Error('Não foi possível criar a conta.')
+        if (!data.session) {
+          setNotice('Conta criada! Confirme seu e-mail. Depois, ao entrar no sistema, sua assistência será criada automaticamente e o código de acesso será exibido.')
+        } else {
+          await finishPendingCompany(data.user)
+          setNotice('Conta e assistência criadas com sucesso. Seus dados de acesso estão disponíveis na tela inicial.')
+        }
       } else {
-        const {error} = await supabase!.auth.signInWithPassword({email,password})
+        const {data,error} = await supabase!.auth.signInWithPassword({email,password})
         if (error) throw error
+        if (data.user) await finishPendingCompany(data.user)
       }
     } catch(e) { setError(e instanceof Error ? e.message : 'Falha na autenticação.') }
     finally { setBusy(false) }
@@ -187,11 +226,16 @@ export default function CompanyAuthGate() {
       <button className="company-primary" disabled={busy}>{busy?'Validando...':'Entrar no sistema'}</button>
       <button type="button" className="company-link" onClick={()=>{setQuickMode(false);setError('')}}>Entrar com e-mail e senha</button>
     </form> : <form onSubmit={submitAuth}>
-      {mode==='signup'&&<label>Seu nome<input required value={fullName} onChange={e=>setFullName(e.target.value)} placeholder="Nome completo"/></label>}
+      {mode==='signup'&&<>
+        <label>Seu nome<input required value={fullName} onChange={e=>setFullName(e.target.value)} placeholder="Nome completo"/></label>
+        <label>Nome da assistência<input required minLength={2} value={companyName} onChange={e=>setCompanyName(e.target.value)} placeholder="Ex.: Minha Assistência"/></label>
+        <label>CPF ou CNPJ (opcional)<input value={taxId} onChange={e=>setTaxId(e.target.value)} placeholder="Documento"/></label>
+        <label>Telefone (opcional)<input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="(00) 00000-0000"/></label>
+      </>}
       <label>E-mail<input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="voce@empresa.com"/></label>
       <label>Senha<input type="password" required minLength={8} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Mínimo de 8 caracteres"/></label>
       {error&&<p className="company-error">{error}</p>}{notice&&<p className="company-notice">{notice}</p>}
-      <button className="company-primary" disabled={busy}>{busy?'Aguarde...':mode==='login'?'Entrar':'Criar conta'}</button>
+      <button className="company-primary" disabled={busy}>{busy?'Aguarde...':mode==='login'?'Entrar':'Criar conta e assistência'}</button>
     </form>}
     {mode==='login' && !quickMode && <button className="company-link" onClick={()=>{setQuickMode(true);setError('')}}>Entrar com código da empresa e PIN</button>}
     <button className="company-link" onClick={()=>{setMode(mode==='login'?'signup':'login');setQuickMode(false);setError('');setNotice('')}}>{mode==='login'?'Ainda não tem conta? Criar acesso':'Já tem conta? Entrar'}</button>
@@ -227,7 +271,15 @@ export default function CompanyAuthGate() {
       <button className="company-link" onClick={()=>window.open('https://wa.me/5547992454773?text='+encodeURIComponent('Olá! Quero contratar um plano do Edertec OS Pro para minha empresa: '+selected.name),'_blank','noopener,noreferrer')}><ExternalLink size={15}/> Falar com atendimento pelo WhatsApp</button>
       <button className="company-link" onClick={signOut}>Sair da conta</button>
     </section></main>
-    return <CompanyWorkspace company={selected} role={memberships.find(m=>m.company_id===selected.id)?.role||'technician'} email={session.user.email||''} onSignOut={signOut}/>
+    return <><>{registrationInfo && <section className="company-auth-card" style={{margin:'16px auto',maxWidth:520}}>
+      <h2>Cadastro concluído!</h2>
+      <p>Guarde os dados de acesso da sua empresa:</p>
+      <p><b>Código da empresa:</b> {registrationInfo.companyCode || 'Consulte em Equipe'}</p>
+      <p><b>Usuário:</b> {registrationInfo.username}</p>
+      <p><b>E-mail:</b> {registrationInfo.email}</p>
+      <p>Entre com seu e-mail e senha. Para funcionários, use o código da empresa, usuário e PIN.</p>
+      <button className="company-link" onClick={()=>setRegistrationInfo(null)}>Continuar</button>
+    </section>}</><CompanyWorkspace company={selected} role={memberships.find(m=>m.company_id===selected.id)?.role||'technician'} email={session.user.email||''} onSignOut={signOut}/></>
   }
 
   if (memberships.length>1) return <main className="company-auth"><section className="company-auth-card"><h1>Selecione sua assistência</h1><div className="company-select-list">{memberships.map(m=>{const c=Array.isArray(m.companies)?m.companies[0]:m.companies;return c?<button key={m.company_id} onClick={()=>setSelected(c)}><Building2/><span><b>{c.name}</b><small>{m.role}</small></span></button>:null})}</div><button className="company-link" onClick={signOut}><LogOut size={15}/> Sair</button></section></main>
