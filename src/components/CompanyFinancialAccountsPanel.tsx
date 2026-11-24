@@ -1,0 +1,34 @@
+import {useCallback,useEffect,useState,type FormEvent} from 'react'
+import {Plus,ToggleLeft,ToggleRight} from 'lucide-react'
+import {supabase} from '../lib/supabase'
+import {listCompanyBranches,type Company,type CompanyBranch} from '../lib/company-data'
+
+type Account={id:string;company_id:string;branch_id:string|null;account_name:string;bank_name:string;account_type:'checking'|'savings'|'digital_wallet'|'cash'|'other';agency:string|null;account_last4:string|null;opening_balance:number;notes:string|null;is_active:boolean;created_at:string}
+const money=(n:number)=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
+const types:[Account['account_type'],string][]=[['checking','Conta corrente'],['savings','Poupança'],['digital_wallet','Carteira digital'],['cash','Dinheiro / caixa'],['other','Outra']]
+export default function CompanyFinancialAccountsPanel({company}:{company:Company}){
+ const [rows,setRows]=useState<Account[]>([]),[branches,setBranches]=useState<CompanyBranch[]>([])
+ const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[show,setShow]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('')
+ const [form,setForm]=useState({account_name:'',bank_name:'',account_type:'checking' as Account['account_type'],branch_id:'',agency:'',account_last4:'',opening_balance:'0',notes:''})
+ const load=useCallback(async()=>{if(!supabase)return;setLoading(true);setError('');try{const [a,b]=await Promise.all([supabase.from('company_financial_accounts').select('*').eq('company_id',company.id).order('created_at',{ascending:false}),listCompanyBranches(company.id)]);if(a.error)throw a.error;setRows((a.data||[]) as Account[]);setBranches(b)}catch(e){setError(e instanceof Error?e.message:'Não foi possível carregar as contas.')}finally{setLoading(false)}},[company.id])
+ useEffect(()=>{void load()},[load])
+ async function submit(e:FormEvent){e.preventDefault();if(!supabase)return;setBusy(true);setError('');setNotice('');try{const {error}=await supabase.from('company_financial_accounts').insert({company_id:company.id,branch_id:form.branch_id||null,account_name:form.account_name.trim(),bank_name:form.bank_name.trim(),account_type:form.account_type,agency:form.agency.trim()||null,account_last4:form.account_last4.trim()||null,opening_balance:Number(form.opening_balance),notes:form.notes.trim()||null});if(error)throw error;setForm({account_name:'',bank_name:'',account_type:'checking',branch_id:'',agency:'',account_last4:'',opening_balance:'0',notes:''});setShow(false);setNotice('Conta cadastrada com sucesso.');await load()}catch(e){setError(e instanceof Error?e.message:'Falha ao cadastrar conta.')}finally{setBusy(false)}}
+ async function toggle(row:Account){if(!supabase)return;setBusy(true);setError('');try{const {error}=await supabase.from('company_financial_accounts').update({is_active:!row.is_active}).eq('id',row.id).eq('company_id',company.id);if(error)throw error;await load()}catch(e){setError(e instanceof Error?e.message:'Não foi possível atualizar a conta.')}finally{setBusy(false)}}
+ const branchName=(id:string|null)=>id?branches.find(b=>b.id===id)?.name||'Filial':'Todas / matriz'
+ return <section className="company-panel">
+  <div className="company-panel-head"><div><b>Contas bancárias</b><small>Cadastre as contas usadas pela empresa e identifique cada uma por filial</small></div><button className="company-primary" onClick={()=>setShow(v=>!v)}><Plus size={16}/> Nova conta</button></div>
+  {error&&<div className="company-error-banner">{error}</div>}{notice&&<div className="company-notice-banner">{notice}</div>}
+  <div className="company-backup-content"><p>Por segurança, o sistema guarda apenas os últimos quatro dígitos da conta. Senhas, tokens e dados de acesso bancário não devem ser cadastrados aqui.</p></div>
+  {show&&<form className="company-form" onSubmit={submit}><h3>Nova conta financeira</h3><div className="company-form-grid">
+   <label>Nome da conta<input required maxLength={80} value={form.account_name} onChange={e=>setForm({...form,account_name:e.target.value})} placeholder="Ex.: Conta principal"/></label>
+   <label>Banco / instituição<input required maxLength={80} value={form.bank_name} onChange={e=>setForm({...form,bank_name:e.target.value})} placeholder="Ex.: Banco do Brasil"/></label>
+   <label>Tipo<select value={form.account_type} onChange={e=>setForm({...form,account_type:e.target.value as Account['account_type']})}>{types.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label>
+   <label>Filial<select value={form.branch_id} onChange={e=>setForm({...form,branch_id:e.target.value})}><option value="">Matriz / todas</option>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label>
+   <label>Agência (opcional)<input maxLength={20} value={form.agency} onChange={e=>setForm({...form,agency:e.target.value})}/></label>
+   <label>Últimos 4 dígitos<input inputMode="numeric" maxLength={4} pattern="[0-9]{4}" value={form.account_last4} onChange={e=>setForm({...form,account_last4:e.target.value.replace(/\\D/g,'').slice(0,4)})} placeholder="0000"/></label>
+   <label>Saldo inicial (R$)<input required type="number" step="0.01" value={form.opening_balance} onChange={e=>setForm({...form,opening_balance:e.target.value})}/></label>
+  </div><label>Observações<input value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})}/></label><div className="company-form-actions"><button type="button" className="company-secondary" onClick={()=>setShow(false)}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Salvando...':'Cadastrar conta'}</button></div></form>}
+  {loading?<p className="company-empty">Carregando contas...</p>:rows.length===0?<p className="company-empty">Nenhuma conta cadastrada. Use “Nova conta” para começar.</p>:<div className="company-table-wrap"><table><thead><tr><th>CONTA</th><th>INSTITUIÇÃO</th><th>TIPO</th><th>FILIAL</th><th>SALDO INICIAL</th><th>STATUS</th><th></th></tr></thead><tbody>{rows.map(row=><tr key={row.id}><td><b>{row.account_name}</b>{row.account_last4&&<small>Final {row.account_last4}</small>}</td><td>{row.bank_name}{row.agency&&<small>Agência {row.agency}</small>}</td><td>{types.find(([v])=>v===row.account_type)?.[1]||'Outra'}</td><td>{branchName(row.branch_id)}</td><td>{money(Number(row.opening_balance))}</td><td>{row.is_active?'Ativa':'Inativa'}</td><td><button className="company-secondary company-small-action" disabled={busy} onClick={()=>void toggle(row)}>{row.is_active?<ToggleRight size={15}/>:<ToggleLeft size={15}/>} {row.is_active?'Desativar':'Ativar'}</button></td></tr>)}</tbody></table></div>}
+  <p className="company-inventory-note">Nesta etapa, o cadastro e a identificação das contas já ficam salvos por empresa. O saldo atual com movimentações, transferências e conciliação será conectado na próxima etapa.</p>
+ </section>
+}
