@@ -2029,3 +2029,25 @@ td b { font-weight:650; }
     font-size:initial !important;
   }
 }
+
+
+
+/* Dashboard financeiro */
+.company-finance-dashboard{display:grid;gap:18px;margin:18px 0}
+.company-finance-kpis{margin:0}
+.company-finance-dashboard-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,1fr);gap:16px}
+.company-finance-bars{height:164px;display:flex;align-items:flex-end;justify-content:space-around;gap:12px;padding:12px 8px 0}
+.company-finance-bar-month{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:8px}
+.company-finance-bar-pair{height:132px;display:flex;align-items:flex-end;justify-content:center;gap:5px;width:100%}
+.company-finance-bar{width:min(22px,35%);min-height:3px;border-radius:5px 5px 0 0}
+.company-finance-bar.income,.company-finance-legend i.income{background:#20a875}
+.company-finance-bar.expense,.company-finance-legend i.expense{background:#e28a42}
+.company-finance-bar-month small{font-size:12px;color:var(--muted,#8993a4);text-transform:capitalize}
+.company-finance-legend{display:flex;gap:18px;justify-content:center;padding-top:8px;font-size:12px;color:var(--muted,#8993a4)}
+.company-finance-legend span{display:flex;align-items:center;gap:6px}
+.company-finance-legend i{display:inline-block;width:9px;height:9px;border-radius:3px}
+.company-finance-open-row{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--border,#283142);font-size:14px}
+.company-finance-open-row b{font-variant-numeric:tabular-nums}
+.company-finance-open-row.overdue{color:#d97757}
+.company-finance-footnote{display:flex;align-items:center;gap:6px;color:var(--muted,#8993a4);font-size:12px;margin:4px 0}
+@media(max-width:760px){.company-finance-dashboard-grid{grid-template-columns:1fr}.company-finance-kpis{grid-template-columns:1fr 1fr}.company-finance-kpis article{min-width:0}.company-finance-kpis article strong{font-size:19px}.company-finance-bars{gap:5px}.company-finance-bar{width:14px}}
