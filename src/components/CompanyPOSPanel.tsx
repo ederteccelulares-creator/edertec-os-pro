@@ -3,6 +3,7 @@ import {Barcode,Minus,Plus,RefreshCw,Search,ShoppingCart,Trash2,Wallet} from 'lu
 import {listCompanyProducts,recordCompanyStockMovement,type CompanyProduct} from '../lib/company-inventory'
 import {createCompanyCashTransaction,getOpenCompanyCashSession} from '../lib/company-cash'
 import {listCompanyBranches,type Company,type CompanyBranch} from '../lib/company-data'
+import {supabase} from '../lib/supabase'
 
 type CartLine={product:CompanyProduct;quantity:number}
 const money=(n:number)=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
@@ -10,6 +11,8 @@ const methods=[['pix','PIX'],['cash','Dinheiro'],['debit_card','Cartão de débi
 export default function CompanyPOSPanel({company}:{company:Company}){
  const [products,setProducts]=useState<CompanyProduct[]>([])
  const [branches,setBranches]=useState<CompanyBranch[]>([])
+ const [accounts,setAccounts]=useState<Array<{id:string;account_name:string;bank_name:string;branch_id:string|null}>>([])
+ const [financialAccountId,setFinancialAccountId]=useState('')
  const [cart,setCart]=useState<CartLine[]>([])
  const [search,setSearch]=useState('')
  const [branchId,setBranchId]=useState('')
@@ -20,7 +23,7 @@ export default function CompanyPOSPanel({company}:{company:Company}){
  const [busy,setBusy]=useState(false)
  const [error,setError]=useState('')
  const [notice,setNotice]=useState('')
- const load=useCallback(async()=>{setLoading(true);setError('');try{const [p,b]=await Promise.all([listCompanyProducts({companyId:company.id,search,limit:500}),listCompanyBranches(company.id)]);setProducts(p);setBranches(b)}catch(e){setError(e instanceof Error?e.message:'Não foi possível carregar os produtos do PDV.')}finally{setLoading(false)}},[company.id,search])
+ const load=useCallback(async()=>{setLoading(true);setError('');try{const [p,b,a]=await Promise.all([listCompanyProducts({companyId:company.id,search,limit:500}),listCompanyBranches(company.id),supabase!.from('company_financial_accounts').select('id,account_name,bank_name,branch_id').eq('company_id',company.id).eq('is_active',true).order('account_name')]);if(a.error)throw a.error;setProducts(p);setBranches(b);setAccounts(a.data||[])}catch(e){setError(e instanceof Error?e.message:'Não foi possível carregar os produtos do PDV.')}finally{setLoading(false)}},[company.id,search])
  useEffect(()=>{const timer=window.setTimeout(()=>{void load()},250);return()=>window.clearTimeout(timer)},[load])
  const subtotal=useMemo(()=>cart.reduce((sum,line)=>sum+line.product.sale_price*line.quantity,0),[cart])
  const discountValue=Math.min(Math.max(Number(discount)||0,0),subtotal)
@@ -36,10 +39,10 @@ export default function CompanyPOSPanel({company}:{company:Company}){
    if(!openSession)throw new Error('Abra o caixa desta filial antes de finalizar uma venda no PDV.')
    const lines=cart.map(x=>x.quantity+'x '+x.product.name).join(', ')
    for(const line of cart){await recordCompanyStockMovement({companyId:company.id,productId:line.product.id,movementType:'out',quantity:line.quantity,unitCost:line.product.cost_price,branchId:branchId||null,reason:'Venda PDV · '+lines})}
-   await createCompanyCashTransaction({companyId:company.id,branchId:branchId||null,direction:'in',category:'Venda PDV',description:'Venda PDV: '+lines+(discountValue>0?' · Desconto '+money(discountValue):''),amount:total,paymentMethod:method})
+   await createCompanyCashTransaction({companyId:company.id,branchId:branchId||null,direction:'in',category:'Venda PDV',description:'Venda PDV: '+lines+(discountValue>0?' · Desconto '+money(discountValue):''),amount:total,paymentMethod:method,financialAccountId:financialAccountId||null})
    const change=method==='cash'?Math.max(0,Number(received)-total):0
    setNotice('Venda registrada! Total '+money(total)+(change>0?' · Troco '+money(change):''))
-   setCart([]);setDiscount('0');setReceived('');await load()
+   setCart([]);setDiscount('0');setReceived('');setFinancialAccountId('');await load()
   }catch(e){setError((e instanceof Error?e.message:'Falha ao registrar venda.')+' Confira o estoque e o caixa antes de tentar novamente.')}
   finally{setBusy(false)}
  }
@@ -53,7 +56,7 @@ export default function CompanyPOSPanel({company}:{company:Company}){
   <div className="company-panel company-pos-cart">
    <div className="company-panel-head"><div><b><ShoppingCart size={17}/> Carrinho</b><small>{cart.reduce((n,x)=>n+x.quantity,0)} itens</small></div></div>
    {cart.length===0?<p className="company-empty">O carrinho está vazio. Adicione produtos para iniciar uma venda.</p>:<div className="company-pos-cart-lines">{cart.map(line=><div className="company-pos-line" key={line.product.id}><div><b>{line.product.name}</b><small>{money(line.product.sale_price)} cada</small></div><div className="company-pos-qty"><button type="button" onClick={()=>changeQty(line.product.id,line.quantity-1)}><Minus size={13}/></button><b>{line.quantity}</b><button type="button" disabled={line.quantity>=Number(line.product.stock_quantity)} onClick={()=>changeQty(line.product.id,line.quantity+1)}><Plus size={13}/></button><button type="button" className="company-pos-remove" onClick={()=>changeQty(line.product.id,0)}><Trash2 size={14}/></button></div><strong>{money(line.product.sale_price*line.quantity)}</strong></div>)}</div>}
-   <div className="company-pos-checkout"><label>Desconto (R$)<input type="number" min="0" step="0.01" value={discount} onChange={e=>setDiscount(e.target.value)}/></label><div className="company-pos-total"><span>Subtotal</span><b>{money(subtotal)}</b></div><div className="company-pos-total"><span>Desconto</span><b>{money(discountValue)}</b></div><div className="company-pos-grand"><span>Total a pagar</span><strong>{money(total)}</strong></div><label>Forma de pagamento<select value={method} onChange={e=>setMethod(e.target.value)}>{methods.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label>{method==='cash'&&<><label>Valor recebido (R$)<input type="number" min="0" step="0.01" value={received} onChange={e=>setReceived(e.target.value)}/></label><div className="company-pos-total"><span>Troco</span><b>{money(Math.max(0,Number(received||0)-total))}</b></div></>}<button className="company-primary company-pos-finish" disabled={busy||!cart.length} onClick={()=>void finishSale()}><Wallet size={17}/>{busy?'Registrando venda...':'Finalizar venda'}</button></div>
+   <div className="company-pos-checkout"><label>Desconto (R$)<input type="number" min="0" step="0.01" value={discount} onChange={e=>setDiscount(e.target.value)}/></label><div className="company-pos-total"><span>Subtotal</span><b>{money(subtotal)}</b></div><div className="company-pos-total"><span>Desconto</span><b>{money(discountValue)}</b></div><div className="company-pos-grand"><span>Total a pagar</span><strong>{money(total)}</strong></div><label>Forma de pagamento<select value={method} onChange={e=>setMethod(e.target.value)}>{methods.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label><label>Conta de recebimento<select value={financialAccountId} onChange={e=>setFinancialAccountId(e.target.value)}><option value="">Não vincular conta</option>{accounts.filter(a=>!a.branch_id||a.branch_id===(branchId||null)).map(a=><option key={a.id} value={a.id}>{a.account_name} · {a.bank_name}</option>)}</select></label>{method==='cash'&&<><label>Valor recebido (R$)<input type="number" min="0" step="0.01" value={received} onChange={e=>setReceived(e.target.value)}/></label><div className="company-pos-total"><span>Troco</span><b>{money(Math.max(0,Number(received||0)-total))}</b></div></>}<button className="company-primary company-pos-finish" disabled={busy||!cart.length} onClick={()=>void finishSale()}><Wallet size={17}/>{busy?'Registrando venda...':'Finalizar venda'}</button></div>
   </div>
  </section>
 }
