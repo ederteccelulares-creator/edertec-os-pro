@@ -76,12 +76,14 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   const load = useCallback(async () => {
     setLoading(true); setError('')
     try {
-      const [b,c,o] = await Promise.all([
+      const [b,c,o,a] = await Promise.all([
         listCompanyBranches(company.id),
         listCompanyCustomers(company.id),
         listCompanyServiceOrders({companyId:company.id,branchId:branchId||null,limit:250}),
+        supabase!.from('company_financial_accounts').select('id,account_name,bank_name,branch_id').eq('company_id',company.id).eq('is_active',true).order('account_name'),
       ])
-      setBranches(b); setCustomers(c); setOrders(o)
+      if(a.error)throw a.error
+      setBranches(b); setCustomers(c); setOrders(o); setFinancialAccounts(a.data||[])
     } catch(e) { setError(e instanceof Error?e.message:'Erro ao carregar dados.') }
     finally { setLoading(false) }
   },[company.id,branchId])
