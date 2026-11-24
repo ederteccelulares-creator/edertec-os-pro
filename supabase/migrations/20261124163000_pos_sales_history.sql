@@ -98,33 +98,19 @@ grant execute on function public.finalize_company_pos_sale(uuid,uuid,jsonb,numer
 
 -- Keep POS sales and line items in company backups.
 do $$
-declare d text;
+declare d text; old_allowed text; new_allowed text; old_order text; new_order text;
 begin
+ old_allowed:=quote_literal('company_credit_card_installments')||E'\n ];';
+ new_allowed:=quote_literal('company_credit_card_installments')||','||quote_literal('company_pos_sales')||','||quote_literal('company_pos_sale_items')||E'\n ];';
  select pg_get_functiondef('public.export_company_backup(uuid)'::regprocedure) into d;
- d:=replace(d,
-  $needle$'company_credit_card_installments'
- ];$needle$,
-  $replacement$'company_credit_card_installments','company_pos_sales','company_pos_sale_items'
- ];$replacement$);
+ d:=replace(d,old_allowed,new_allowed);
  execute d;
 
  select pg_get_functiondef('public.restore_company_backup(uuid,uuid,uuid,jsonb)'::regprocedure) into d;
- d:=replace(d,
-  $needle$'company_credit_card_installments'
- ];$needle$,
-  $replacement$'company_credit_card_installments','company_pos_sales','company_pos_sale_items'
- ];$replacement$);
- d:=replace(d,
-  $needle
- execute d;
-end $$;
-notify pgrst,'reload schema';
-cash_transactions','company_financial_entries'$needle$,
-  $replacement
- execute d;
-end $$;
-notify pgrst,'reload schema';
-cash_transactions','company_financial_entries','company_pos_sales','company_pos_sale_items'$replacement$);
+ d:=replace(d,old_allowed,new_allowed);
+ old_order:=quote_literal('stock_movements')||','||quote_literal('payments')||','||quote_literal('purchase_items')||','||quote_literal('cash_transactions')||','||quote_literal('company_financial_entries');
+ new_order:=old_order||','||quote_literal('company_pos_sales')||','||quote_literal('company_pos_sale_items');
+ d:=replace(d,old_order,new_order);
  execute d;
 end $$;
 notify pgrst,'reload schema';
