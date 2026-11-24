@@ -15,7 +15,7 @@ export default function CompanyTeamPanel({companyId,actorRole}:{companyId:string
  async function configurePin(m:Member){
   const pin=window.prompt('Defina um PIN de 6 números para '+(m.employee?.name||m.email)+':');
   if(pin===null)return;
-  if(!/^\\d{6}$/.test(pin)){setError('O PIN deve conter exatamente 6 números.');return;}
+  if(!/^\d{6}$/.test(pin)){setError('O PIN deve conter exatamente 6 números.');return;}
   const confirmation=window.prompt('Digite novamente o mesmo PIN para confirmar:');
   if(confirmation===null)return;
   if(confirmation!==pin){setError('Os PINs não conferem.');return;}
