@@ -138,4 +138,23 @@ revoke all on function public.create_company_pos_commission_settlement(uuid,uuid
 grant execute on function public.create_company_pos_commission_settlement(uuid,uuid,uuid,date,date,uuid) to authenticated;
 revoke all on function public.pay_company_pos_commission_settlement(uuid,uuid,text,text) from public,anon;
 grant execute on function public.pay_company_pos_commission_settlement(uuid,uuid,text,text) to authenticated;
+
+-- Include commission settlements in company backups and restore parents before sales.
+do $
+declare d text; old_allowed text; new_allowed text; old_order text; new_order text;
+begin
+ old_allowed:=quote_literal('company_pos_sale_items')||E'\n ];';
+ new_allowed:=quote_literal('company_pos_sale_items')||','||quote_literal('company_pos_commission_settlements')||E'\n ];';
+ select pg_get_functiondef('public.export_company_backup(uuid)'::regprocedure) into d;
+ d:=replace(d,old_allowed,new_allowed);
+ execute d;
+
+ select pg_get_functiondef('public.restore_company_backup(uuid,uuid,uuid,jsonb)'::regprocedure) into d;
+ d:=replace(d,old_allowed,new_allowed);
+ old_order:=quote_literal('cash_transactions')||','||quote_literal('company_pos_sales');
+ new_order:=quote_literal('cash_transactions')||','||quote_literal('company_pos_commission_settlements')||','||quote_literal('company_pos_sales');
+ d:=replace(d,old_order,new_order);
+ execute d;
+end $;
+
 notify pgrst,'reload schema';
