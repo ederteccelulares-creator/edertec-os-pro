@@ -15,7 +15,9 @@ export default function CompanyAuthGate() {
   const [mode, setMode] = useState<'login'|'signup'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [quickMode, setQuickMode] = useState(false)
+  const [quickMode, setQuickMode] = useState(true)
+  const [companyCode, setCompanyCode] = useState('')
+  const [username, setUsername] = useState('')
   const [pin, setPin] = useState('')
   const [quickCompanyId, setQuickCompanyId] = useState(() => window.localStorage.getItem('edertec_quick_company_id') || '')
   const [fullName, setFullName] = useState('')
@@ -119,12 +121,11 @@ export default function CompanyAuthGate() {
   async function submitQuickLogin(event: FormEvent) {
     event.preventDefault(); setBusy(true); setError(''); setNotice('')
     try {
-      if (!quickCompanyId) throw new Error('Entre primeiro com e-mail e senha para identificar sua assistência neste dispositivo.')
-      const {data,error} = await supabase!.functions.invoke('company-team', {body:{action:'pin_login',company_id:quickCompanyId,email,pin}})
+      const {data,error} = await supabase!.functions.invoke('company-login', {body:{company_code:companyCode,username,pin}})
       if (error) throw error
       if (data?.error) throw new Error(data.error)
       if (!data?.token_hash) throw new Error('Não foi possível iniciar a sessão rápida.')
-      const {error:verifyError} = await supabase!.auth.verifyOtp({token_hash:data.token_hash,type:'email'})
+      const {error:verifyError} = await supabase!.auth.verifyOtp({token_hash:data.token_hash,type:'magiclink'})
       if (verifyError) throw verifyError
     } catch(e) { setError(e instanceof Error ? e.message : 'Falha no acesso rápido.') }
     finally { setBusy(false) }
@@ -177,13 +178,14 @@ export default function CompanyAuthGate() {
 
   if (!session) return <main className="company-auth"><section className="company-auth-card">
     <div className="company-auth-brand"><Smartphone size={25}/><div><b>EDERTEC <i>OS PRO</i></b><small>GESTÃO PARA ASSISTÊNCIAS</small></div></div>
-    <h1>{mode==='login'?'Acesse sua conta':'Crie seu acesso'}</h1>
+    <h1>{mode==='login'?'Acesse sua empresa':'Crie seu acesso'}</h1>
     {mode==='login' && quickMode ? <form onSubmit={submitQuickLogin}>
-      <label>E-mail do funcionário<input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="funcionario@empresa.com"/></label>
-      <label>PIN de 6 números<input type="password" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} required value={pin} onChange={e=>setPin(e.target.value.replace(/[^0-9]/g,'').slice(0,6))} placeholder="••••••"/></label>
+      <label>Código da empresa<input required autoCapitalize="characters" value={companyCode} onChange={e=>setCompanyCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,10))} placeholder="Ex.: AB12CD34"/></label>
+      <label>Nome de usuário<input required autoComplete="username" value={username} onChange={e=>setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g,'').slice(0,30))} placeholder="Ex.: joao"/></label>
+      <label>PIN de 6 números<input type="password" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} required autoComplete="current-password" value={pin} onChange={e=>setPin(e.target.value.replace(/[^0-9]/g,'').slice(0,6))} placeholder="••••••"/></label>
       {error&&<p className="company-error">{error}</p>}
-      <button className="company-primary" disabled={busy}>{busy?'Validando...':'Entrar com PIN'}</button>
-      <button type="button" className="company-link" onClick={()=>{setQuickMode(false);setError('')}}>Usar e-mail e senha</button>
+      <button className="company-primary" disabled={busy}>{busy?'Validando...':'Entrar no sistema'}</button>
+      <button type="button" className="company-link" onClick={()=>{setQuickMode(false);setError('')}}>Entrar com e-mail e senha</button>
     </form> : <form onSubmit={submitAuth}>
       {mode==='signup'&&<label>Seu nome<input required value={fullName} onChange={e=>setFullName(e.target.value)} placeholder="Nome completo"/></label>}
       <label>E-mail<input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="voce@empresa.com"/></label>
@@ -191,7 +193,7 @@ export default function CompanyAuthGate() {
       {error&&<p className="company-error">{error}</p>}{notice&&<p className="company-notice">{notice}</p>}
       <button className="company-primary" disabled={busy}>{busy?'Aguarde...':mode==='login'?'Entrar':'Criar conta'}</button>
     </form>}
-    {mode==='login' && !quickMode && quickCompanyId && <button className="company-link" onClick={()=>{setQuickMode(true);setError('')}}>Entrar com PIN de funcionário</button>}
+    {mode==='login' && !quickMode && <button className="company-link" onClick={()=>{setQuickMode(true);setError('')}}>Entrar com código da empresa e PIN</button>}
     <button className="company-link" onClick={()=>{setMode(mode==='login'?'signup':'login');setQuickMode(false);setError('');setNotice('')}}>{mode==='login'?'Ainda não tem conta? Criar acesso':'Já tem conta? Entrar'}</button>
   </section></main>
 
