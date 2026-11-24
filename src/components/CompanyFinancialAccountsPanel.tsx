@@ -1,5 +1,5 @@
 import {useCallback,useEffect,useState,type FormEvent} from 'react'
-import {Plus,RefreshCw,Landmark,ToggleLeft,ToggleRight} from 'lucide-react'
+import {Plus,ToggleLeft,ToggleRight} from 'lucide-react'
 import {supabase} from '../lib/supabase'
 import {listCompanyBranches,type Company,type CompanyBranch} from '../lib/company-data'
 
