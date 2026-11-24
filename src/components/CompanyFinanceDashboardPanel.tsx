@@ -25,21 +25,18 @@ export default function CompanyFinanceDashboardPanel({companyId,branchId}:{compa
    const monthEnd=dateKey(new Date(now.getFullYear(),now.getMonth()+1,1))
    let movementQuery=supabase.from('cash_transactions').select('id,direction,category,description,amount,occurred_at,branch_id').eq('company_id',companyId).gte('occurred_at',start.toISOString()).order('occurred_at',{ascending:false}).limit(1500)
    let entryQuery=supabase.from('company_financial_entries').select('id,entry_type,amount,due_date,status,branch_id,description,counterparty').eq('company_id',companyId).eq('status','open').order('due_date',{ascending:true}).limit(1500)
-   let accountQuery=supabase.from('company_financial_accounts').select('id,branch_id').eq('company_id',companyId).eq('is_active',true)
-   if(branchId){movementQuery=movementQuery.eq('branch_id',branchId);entryQuery=entryQuery.eq('branch_id',branchId);accountQuery=accountQuery.or('branch_id.is.null,branch_id.eq.'+branchId)}
-   const [m,e,a]=await Promise.all([movementQuery,entryQuery,accountQuery])
+   if(branchId){movementQuery=movementQuery.eq('branch_id',branchId);entryQuery=entryQuery.eq('branch_id',branchId)}
+   const [m,e]=await Promise.all([movementQuery,entryQuery])
    if(m.error)throw m.error
    if(e.error)throw e.error
-   if(a.error)throw a.error
    setMovements((m.data||[]) as Movement[])
    setEntries((e.data||[]) as Entry[])
-   const accountIds=(a.data||[]).map((x:{id:string})=>x.id)
-   if(accountIds.length){
-    const {data,error:balanceError}=await supabase.rpc('list_company_financial_account_balances',{p_company_id:companyId})
-    if(balanceError)throw balanceError
-    const balances=(data||[]) as Balance[]
-    setAccountBalance(balances.filter(x=>accountIds.includes(x.account_id)).reduce((sum,x)=>sum+Number(x.current_balance||0),0))
-   }else setAccountBalance(0)
+   // The bank balance card is intentionally company-wide: include every bank account
+   // from every branch, even when the dashboard's operational branch filter is selected.
+   const {data:balancesData,error:balanceError}=await supabase.rpc('list_company_financial_account_balances',{p_company_id:companyId})
+   if(balanceError)throw balanceError
+   const balances=(balancesData||[]) as Balance[]
+   setAccountBalance(balances.reduce((sum,x)=>sum+Number(x.current_balance||0),0))
    setUpdatedAt(new Date())
    void monthStart;void monthEnd
   }catch(e){setError(e instanceof Error?e.message:'Não foi possível carregar o resumo financeiro.')}
@@ -69,7 +66,7 @@ export default function CompanyFinanceDashboardPanel({companyId,branchId}:{compa
    <article className="green"><span><ArrowDownCircle/></span><div><b>Entradas do mês</b><strong>{loading?'—':money(income)}</strong><small>Recebimentos efetivamente lançados</small></div></article>
    <article className="orange"><span><ArrowUpCircle/></span><div><b>Saídas do mês</b><strong>{loading?'—':money(expense)}</strong><small>Pagamentos efetivamente lançados</small></div></article>
    <article className={income-expense>=0?'blue':'pink'}><span><TrendingUp/></span><div><b>Resultado do mês</b><strong>{loading?'—':money(income-expense)}</strong><small>Entradas menos saídas registradas</small></div></article>
-   <article className="purple"><span><Wallet/></span><div><b>Saldo das contas</b><strong>{loading||accountBalance===null?'—':money(accountBalance)}</strong><small>Contas financeiras ativas</small></div></article>
+   <article className="purple"><span><Wallet/></span><div><b>Saldo total de todas as contas</b><strong>{loading||accountBalance===null?'—':money(accountBalance)}</strong><small>Todas as contas bancárias da empresa · todas as filiais</small></div></article>
   </div>
   <div className="company-finance-dashboard-grid">
    <section className="company-panel"><div className="company-panel-head"><div><b>Movimentação dos últimos 6 meses</b><small>Comparativo de entradas e saídas</small></div></div>
