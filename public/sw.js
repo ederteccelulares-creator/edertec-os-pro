@@ -1,4 +1,4 @@
-const CACHE_NAME = 'edertec-os-pro-shell-v4';
+const CACHE_NAME = 'edertec-os-pro-shell-v5';
 const APP_SCOPE = new URL(self.registration.scope);
 const APP_PATH = APP_SCOPE.pathname.endsWith('/') ? APP_SCOPE.pathname : `${APP_SCOPE.pathname}/`;
 const APP_SHELL = [
