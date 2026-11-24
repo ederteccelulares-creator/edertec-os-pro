@@ -70,3 +70,5 @@ do $$ declare def text; begin
  def:=replace(def,'''company_credit_cards''','''company_credit_cards'',''company_credit_card_purchases'',''company_credit_card_invoices'',''company_credit_card_installments''');
  def:=replace(def,'''company_credit_cards'',''company_credit_card_purchases'',''company_credit_card_invoices'',''company_credit_card_installments'',''service_orders''','''company_credit_cards'',''company_credit_card_purchases'',''company_credit_card_invoices'',''company_credit_card_installments'',''service_orders''');execute def;
 end $$;
+revoke all on function public.create_company_card_purchase(uuid,uuid,uuid,text,text,date,numeric,integer,text) from public, anon;
+grant execute on function public.create_company_card_purchase(uuid,uuid,uuid,text,text,date,numeric,integer,text) to authenticated;
