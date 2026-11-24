@@ -13,6 +13,10 @@ export default function CompanyPOSPanel({company}:{company:Company}){
  const [accounts,setAccounts]=useState<Array<{id:string;account_name:string;bank_name:string;branch_id:string|null}>>([])
  const [financialAccountId,setFinancialAccountId]=useState('')
  const [saleAttempt,setSaleAttempt]=useState<{fingerprint:string;key:string}|null>(null)
+ const [sales,setSales]=useState<any[]>([])
+ const [selectedSale,setSelectedSale]=useState<any|null>(null)
+ const [saleItems,setSaleItems]=useState<any[]>([])
+ const [historyLoading,setHistoryLoading]=useState(false)
  const [cart,setCart]=useState<CartLine[]>([])
  const [search,setSearch]=useState('')
  const [branchId,setBranchId]=useState('')
@@ -25,6 +29,8 @@ export default function CompanyPOSPanel({company}:{company:Company}){
  const [notice,setNotice]=useState('')
  const load=useCallback(async()=>{setLoading(true);setError('');try{const [p,b,a]=await Promise.all([listCompanyProducts({companyId:company.id,search,limit:500}),listCompanyBranches(company.id),supabase!.from('company_financial_accounts').select('id,account_name,bank_name,branch_id').eq('company_id',company.id).eq('is_active',true).order('account_name')]);if(a.error)throw a.error;setProducts(p);setBranches(b);setAccounts(a.data||[])}catch(e){setError(e instanceof Error?e.message:'Não foi possível carregar os produtos do PDV.')}finally{setLoading(false)}},[company.id,search])
  useEffect(()=>{const timer=window.setTimeout(()=>{void load()},250);return()=>window.clearTimeout(timer)},[load])
+ const loadHistory=useCallback(async()=>{if(!supabase)return;setHistoryLoading(true);try{const {data,error}=await supabase.from('company_pos_sales').select('id,sale_number,created_at,total,discount,payment_method,status,change_amount,amount_received,description').eq('company_id',company.id).order('created_at',{ascending:false}).limit(50);if(error)throw error;setSales(data||[])}catch(e){setError(e instanceof Error?e.message:'Não foi possível carregar o histórico de vendas.')}finally{setHistoryLoading(false)}},[company.id])
+ useEffect(()=>{void loadHistory()},[loadHistory])
  const subtotal=useMemo(()=>cart.reduce((sum,line)=>sum+line.product.sale_price*line.quantity,0),[cart])
  const discountValue=Math.min(Math.max(Number(discount)||0,0),subtotal)
  const total=Math.max(0,subtotal-discountValue)
@@ -41,11 +47,11 @@ export default function CompanyPOSPanel({company}:{company:Company}){
    const fingerprint=JSON.stringify({branchId:branchId||null,items,amount:total,method,financialAccountId:financialAccountId||null})
    const key=saleAttempt?.fingerprint===fingerprint?saleAttempt.key:crypto.randomUUID()
    setSaleAttempt({fingerprint,key})
-   const {error:checkoutError}=await supabase!.rpc('finalize_company_pos_sale',{p_company_id:company.id,p_branch_id:branchId||null,p_items:items,p_amount:total,p_payment_method:method,p_financial_account_id:financialAccountId||null,p_idempotency_key:key,p_description:description})
+   const {error:checkoutError}=await supabase!.rpc('finalize_company_pos_sale',{p_company_id:company.id,p_branch_id:branchId||null,p_items:items,p_subtotal:subtotal,p_discount:discountValue,p_amount:total,p_payment_method:method,p_financial_account_id:financialAccountId||null,p_idempotency_key:key,p_description:description,p_amount_received:method==='cash'?Number(received):total})
    if(checkoutError)throw checkoutError
    const change=method==='cash'?Math.max(0,Number(received)-total):0
    setNotice('Venda registrada! Total '+money(total)+(change>0?' · Troco '+money(change):''))
-   setCart([]);setDiscount('0');setReceived('');setFinancialAccountId('');setSaleAttempt(null);await load()
+   setCart([]);setDiscount('0');setReceived('');setFinancialAccountId('');setSaleAttempt(null);await Promise.all([load(),loadHistory()])
   }catch(e){setError((e instanceof Error?e.message:'Falha ao registrar venda.')+' Confira o estoque e o caixa antes de tentar novamente.')}
   finally{setBusy(false)}
  }
