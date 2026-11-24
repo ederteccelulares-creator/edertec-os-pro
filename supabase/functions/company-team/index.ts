@@ -67,6 +67,7 @@ Deno.serve(async(req)=>{
   const hash=await pinDigest(pin);const {error}=await admin.from("employees").update({pin_hash:hash}).eq("company_id",companyId).eq("user_id",target);
   if(error)return reply({error:error.message},500);return reply({success:true,message:"PIN configurado com segurança."});
  }
+ if(targetMember.role==="owner")return reply({error:"O proprietário principal não pode ser alterado por esta tela."},403);
  if(action==="update"){
   const nextRole=String(body.role||"");
   if(!roles.includes(nextRole)||nextRole==="owner")return reply({error:"Perfil inválido."},400);
