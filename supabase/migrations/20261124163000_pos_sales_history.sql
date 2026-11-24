@@ -101,29 +101,15 @@ do $$
 declare d text;
 begin
  select pg_get_functiondef('public.export_company_backup(uuid)'::regprocedure) into d;
- d:=replace(d,'''company_credit_card_installments''','''company_credit_card_installments'',''company_pos_sales'',''company_pos_sale_items''');
+ d:=replace(d,$old$'company_credit_card_installments'$old$,$new$'company_credit_card_installments','company_pos_sales','company_pos_sale_items'$new$);
  execute d;
+
  select pg_get_functiondef('public.restore_company_backup(uuid,uuid,uuid,jsonb)'::regprocedure) into d;
- d:=replace(d,'''company_credit_card_installments''','''company_credit_card_installments'',''company_pos_sales'',''company_pos_sale_items''');
- d:=replace(d,$a
- d:=replace(d,'''closed_by'','''')::uuid] loop''','''closed_by'','''')::uuid,nullif(row_value->>''created_by'','''')::uuid] loop''');
- execute d;
-end $$;
-notify pgrst,'reload schema';company_credit_card_installments','company_pos_sales','company_pos_sale_items','service_orders'$a$,$b
- d:=replace(d,'''closed_by'','''')::uuid] loop''','''closed_by'','''')::uuid,nullif(row_value->>''created_by'','''')::uuid] loop''');
- execute d;
-end $$;
-notify pgrst,'reload schema';company_credit_card_installments','service_orders'$b$);
- d:=replace(d,$c
- d:=replace(d,'''closed_by'','''')::uuid] loop''','''closed_by'','''')::uuid,nullif(row_value->>''created_by'','''')::uuid] loop''');
- execute d;
-end $$;
-notify pgrst,'reload schema';cash_transactions','company_financial_entries'$c$,$d
- d:=replace(d,'''closed_by'','''')::uuid] loop''','''closed_by'','''')::uuid,nullif(row_value->>''created_by'','''')::uuid] loop''');
- execute d;
-end $$;
-notify pgrst,'reload schema';cash_transactions','company_financial_entries','company_pos_sales','company_pos_sale_items'$d$);
- d:=replace(d,'''closed_by'','''')::uuid] loop''','''closed_by'','''')::uuid,nullif(row_value->>''created_by'','''')::uuid] loop''');
+ -- Add both tables to the accepted backup collections.
+ d:=replace(d,$old$'company_credit_card_installments'$old$,$new$'company_credit_card_installments','company_pos_sales','company_pos_sale_items'$new$);
+ -- Restore cash transactions before sales (the sale references its original cash transaction),
+ -- then restore sale headers before their line items.
+ d:=replace(d,$old$'cash_transactions','company_financial_entries'$old$,$new$'cash_transactions','company_financial_entries','company_pos_sales','company_pos_sale_items'$new$);
  execute d;
 end $$;
 notify pgrst,'reload schema';
