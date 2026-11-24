@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const cors={ "Access-Control-Allow-Origin":"*", "Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods":"POST, OPTIONS" };
 const reply=(body:Record<string,unknown>,status=200)=>new Response(JSON.stringify(body),{status,headers:{...cors,"Content-Type":"application/json"}});
 const roles=["owner","admin","manager","attendant","technician"];
+const pinDigest=async(pin:string)=>{const salt=crypto.getRandomValues(new Uint8Array(16));const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(pin),"PBKDF2",false,["deriveBits"]);const bits=await crypto.subtle.deriveBits({name:"PBKDF2",salt,iterations:210000,hash:"SHA-256"},key,256);const hex=(b:Uint8Array)=>Array.from(b).map(x=>x.toString(16).padStart(2,"0")).join("");return hex(salt)+":"+hex(new Uint8Array(bits));};
 Deno.serve(async(req)=>{
  if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
  if(req.method!=="POST")return reply({error:"Método não permitido."},405);
@@ -33,20 +34,23 @@ Deno.serve(async(req)=>{
   return reply({members:users,employees:employees||[]});
  }
  if(action==="create"){
-  const name=String(body.name||"").trim(),email=String(body.email||"").trim().toLowerCase(),password=String(body.password||""),role=String(body.role||"technician"),phone=String(body.phone||"").trim(),jobTitle=String(body.job_title||"").trim();
+  const name=String(body.name||"").trim(),username=String(body.username||"").trim().toLowerCase(),providedEmail=String(body.email||"").trim().toLowerCase(),email=providedEmail||("staff+"+username+"."+companyId.replace(/-/g,"")+"@login.edertecospro.com.br"),password=String(body.password||""),role=String(body.role||"technician"),phone=String(body.phone||"").trim(),jobTitle=String(body.job_title||"").trim();
+  if(!/^[a-z0-9._-]{3,30}$/.test(username))return reply({error:"O usuário deve ter de 3 a 30 caracteres: letras, números, ponto, hífen ou underline."},400);
+  if(providedEmail&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(providedEmail))return reply({error:"Informe um e-mail válido ou deixe em branco."},400);
+  const {data:duplicate}=await admin.from("employees").select("id").eq("company_id",companyId).ilike("username",username).maybeSingle();
+  if(duplicate)return reply({error:"Este nome de usuário já está cadastrado nesta empresa."},409);
   if(name.length<2)return reply({error:"Informe o nome completo."},400);
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return reply({error:"Informe um e-mail válido."},400);
-  if(password.length<8)return reply({error:"A senha inicial deve ter pelo menos 8 caracteres."},400);
+  if(password.length>0&&password.length<8)return reply({error:"A senha opcional deve ter pelo menos 8 caracteres."},400);
   if(!roles.includes(role)||role==="owner")return reply({error:"Perfil inválido."},400);
   if(role==="admin"&&membership.role!=="owner")return reply({error:"Somente o proprietário pode cadastrar outro administrador."},403);
   const {data:existing}=await admin.auth.admin.listUsers({page:1,perPage:1000});
   const already=existing.users.find(u=>u.email?.toLowerCase()===email);
   if(already)return reply({error:"Este e-mail já possui conta. Para evitar vincular uma conta errada, use um e-mail novo ou solicite a transferência pelo suporte."},409);
-  const {data:created,error:createErr}=await admin.auth.admin.createUser({email,password,email_confirm:true,user_metadata:{full_name:name,company_id:companyId}});
+  const {data:created,error:createErr}=await admin.auth.admin.createUser({email,password:password||crypto.randomUUID()+"A9!",email_confirm:true,user_metadata:{full_name:name,company_id:companyId,username}});
   if(createErr||!created.user)return reply({error:createErr?.message||"Não foi possível criar a conta."},400);
   const {error:memberErr}=await admin.from("company_members").insert({company_id:companyId,user_id:created.user.id,role,is_active:true});
   if(memberErr){await admin.auth.admin.deleteUser(created.user.id);return reply({error:memberErr.message},500)}
-  const {error:employeeErr}=await admin.from("employees").insert({company_id:companyId,user_id:created.user.id,name,email,phone:phone||null,job_title:jobTitle||null,is_active:true});
+  const {error:employeeErr}=await admin.from("employees").insert({company_id:companyId,user_id:created.user.id,name,email:providedEmail||null,username,phone:phone||null,job_title:jobTitle||null,is_active:true});
   if(employeeErr){await admin.from("company_members").delete().eq("company_id",companyId).eq("user_id",created.user.id);await admin.auth.admin.deleteUser(created.user.id);return reply({error:employeeErr.message},500)}
   return reply({success:true,message:"Funcionário e usuário cadastrados com sucesso."});
  }
@@ -55,6 +59,11 @@ Deno.serve(async(req)=>{
  const {data:targetMember}=await admin.from("company_members").select("role").eq("company_id",companyId).eq("user_id",target).maybeSingle();
  if(!targetMember)return reply({error:"Usuário não pertence a esta empresa."},404);
  if(targetMember.role==="owner")return reply({error:"O proprietário principal não pode ser alterado por esta tela."},403);
+ if(action==="set_pin"){
+  const pin=String(body.pin||"");if(!/^\\d{6}$/.test(pin))return reply({error:"O PIN deve conter exatamente 6 números."},400);
+  const hash=await pinDigest(pin);const {error}=await admin.from("employees").update({pin_hash:hash}).eq("company_id",companyId).eq("user_id",target);
+  if(error)return reply({error:error.message},500);return reply({success:true,message:"PIN configurado com segurança."});
+ }
  if(action==="update"){
   const nextRole=String(body.role||"");
   if(!roles.includes(nextRole)||nextRole==="owner")return reply({error:"Perfil inválido."},400);
