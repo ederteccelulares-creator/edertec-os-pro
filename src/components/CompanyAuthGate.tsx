@@ -15,6 +15,9 @@ export default function CompanyAuthGate() {
   const [mode, setMode] = useState<'login'|'signup'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [quickMode, setQuickMode] = useState(false)
+  const [pin, setPin] = useState('')
+  const [quickCompanyId] = useState(() => window.localStorage.getItem('edertec_quick_company_id') || '')
   const [fullName, setFullName] = useState('')
   const [companyName, setCompanyName] = useState('')
   const [taxId, setTaxId] = useState('')
@@ -110,6 +113,20 @@ export default function CompanyAuthGate() {
 
   if (!isSupabaseConfigured || !supabase) return <main className="company-auth"><section className="company-auth-card"><h1>EDERTEC OS PRO</h1><p>Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY para conectar o banco.</p></section></main>
   if (loading) return <main className="company-auth"><div className="company-auth-card"><LoaderCircle className="spin"/> Verificando acesso...</div></main>
+
+  async function submitQuickLogin(event: FormEvent) {
+    event.preventDefault(); setBusy(true); setError(''); setNotice('')
+    try {
+      if (!quickCompanyId) throw new Error('Entre primeiro com e-mail e senha para identificar sua assistência neste dispositivo.')
+      const {data,error} = await supabase!.functions.invoke('company-team', {body:{action:'pin_login',company_id:quickCompanyId,email,pin}})
+      if (error) throw error
+      if (data?.error) throw new Error(data.error)
+      if (!data?.token_hash) throw new Error('Não foi possível iniciar a sessão rápida.')
+      const {error:verifyError} = await supabase!.auth.verifyOtp({token_hash:data.token_hash,type:'email'})
+      if (verifyError) throw verifyError
+    } catch(e) { setError(e instanceof Error ? e.message : 'Falha no acesso rápido.') }
+    finally { setBusy(false) }
+  }
 
   async function submitAuth(event: FormEvent) {
     event.preventDefault(); setBusy(true); setError(''); setNotice('')
