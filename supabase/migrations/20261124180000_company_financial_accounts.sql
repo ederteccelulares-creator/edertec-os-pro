@@ -15,15 +15,10 @@ create table if not exists public.company_financial_accounts (
 );
 create index if not exists company_financial_accounts_company_idx on public.company_financial_accounts(company_id,is_active,created_at desc);
 alter table public.company_financial_accounts enable row level security;
-do $
-begin
- if not exists(select 1 from pg_policies where schemaname='public' and tablename='company_financial_accounts' and policyname='Company members can read financial accounts') then
-  create policy "Company members can read financial accounts" on public.company_financial_accounts for select to authenticated using (public.is_company_member(company_id));
- end if;
- if not exists(select 1 from pg_policies where schemaname='public' and tablename='company_financial_accounts' and policyname='Company finance managers can manage financial accounts') then
-  create policy "Company finance managers can manage financial accounts" on public.company_financial_accounts for all to authenticated using (public.has_company_role(company_id,array['owner','admin','manager'])) with check (public.has_company_role(company_id,array['owner','admin','manager']));
- end if;
-end $;
+drop policy if exists "Company members can read financial accounts" on public.company_financial_accounts;
+create policy "Company members can read financial accounts" on public.company_financial_accounts for select to authenticated using (public.is_company_member(company_id));
+drop policy if exists "Company finance managers can manage financial accounts" on public.company_financial_accounts;
+create policy "Company finance managers can manage financial accounts" on public.company_financial_accounts for all to authenticated using (public.has_company_role(company_id,array['owner','admin','manager'])) with check (public.has_company_role(company_id,array['owner','admin','manager']));
 CREATE OR REPLACE FUNCTION public.export_company_backup(p_company_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
