@@ -44,7 +44,7 @@ export default function CompanyPOSPanel({company}:{company:Company}){
    const lines=cart.map(x=>x.quantity+'x '+x.product.name).join(', ')
    const description='Venda PDV: '+lines+(discountValue>0?' · Desconto '+money(discountValue):'')
    const items=cart.map(x=>({product_id:x.product.id,quantity:x.quantity}))
-   const fingerprint=JSON.stringify({branchId:branchId||null,items,amount:total,method,financialAccountId:financialAccountId||null})
+   const fingerprint=JSON.stringify({branchId:branchId||null,items,subtotal,discount:discountValue,amount:total,received:method==='cash'?Number(received):total,method,financialAccountId:financialAccountId||null})
    const key=saleAttempt?.fingerprint===fingerprint?saleAttempt.key:crypto.randomUUID()
    setSaleAttempt({fingerprint,key})
    const {error:checkoutError}=await supabase!.rpc('finalize_company_pos_sale',{p_company_id:company.id,p_branch_id:branchId||null,p_items:items,p_subtotal:subtotal,p_discount:discountValue,p_amount:total,p_payment_method:method,p_financial_account_id:financialAccountId||null,p_idempotency_key:key,p_description:description,p_amount_received:method==='cash'?Number(received):total})
