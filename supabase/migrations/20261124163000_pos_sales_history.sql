@@ -105,7 +105,24 @@ begin
  execute d;
  select pg_get_functiondef('public.restore_company_backup(uuid,uuid,uuid,jsonb)'::regprocedure) into d;
  d:=replace(d,'''company_credit_card_installments''','''company_credit_card_installments'',''company_pos_sales'',''company_pos_sale_items''');
- d:=replace(d,'''company_financial_entries''] loop''','''company_financial_entries'',''company_pos_sales'',''company_pos_sale_items''] loop''');
+ d:=replace(d,$a
+ d:=replace(d,'''closed_by'','''')::uuid] loop''','''closed_by'','''')::uuid,nullif(row_value->>''created_by'','''')::uuid] loop''');
+ execute d;
+end $$;
+notify pgrst,'reload schema';company_credit_card_installments','company_pos_sales','company_pos_sale_items','service_orders'$a$,$b
+ d:=replace(d,'''closed_by'','''')::uuid] loop''','''closed_by'','''')::uuid,nullif(row_value->>''created_by'','''')::uuid] loop''');
+ execute d;
+end $$;
+notify pgrst,'reload schema';company_credit_card_installments','service_orders'$b$);
+ d:=replace(d,$c
+ d:=replace(d,'''closed_by'','''')::uuid] loop''','''closed_by'','''')::uuid,nullif(row_value->>''created_by'','''')::uuid] loop''');
+ execute d;
+end $$;
+notify pgrst,'reload schema';cash_transactions','company_financial_entries'$c$,$d
+ d:=replace(d,'''closed_by'','''')::uuid] loop''','''closed_by'','''')::uuid,nullif(row_value->>''created_by'','''')::uuid] loop''');
+ execute d;
+end $$;
+notify pgrst,'reload schema';cash_transactions','company_financial_entries','company_pos_sales','company_pos_sale_items'$d$);
  d:=replace(d,'''closed_by'','''')::uuid] loop''','''closed_by'','''')::uuid,nullif(row_value->>''created_by'','''')::uuid] loop''');
  execute d;
 end $$;
