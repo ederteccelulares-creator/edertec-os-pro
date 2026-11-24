@@ -25,7 +25,7 @@ Deno.serve(async(req)=>{
   const {data:company}=await admin.from("companies").select("login_code").eq("id",companyId).maybeSingle();
   const {data:members,error}=await admin.from("company_members").select("user_id,role,is_active,created_at").eq("company_id",companyId).order("created_at");
   if(error)return reply({error:error.message},500);
-  const {data:employees,error:empErr}=await admin.from("employees").select("id,user_id,name,phone,email,job_title,is_active,branch_id").eq("company_id",companyId).order("name");
+  const {data:employees,error:empErr}=await admin.from("employees").select("id,user_id,name,username,phone,email,job_title,is_active,branch_id").eq("company_id",companyId).order("name");
   if(empErr)return reply({error:empErr.message},500);
   const users=await Promise.all((members||[]).map(async(m)=>{
    const {data}=await admin.auth.admin.getUserById(m.user_id);
