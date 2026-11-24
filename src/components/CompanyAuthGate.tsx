@@ -66,6 +66,8 @@ export default function CompanyAuthGate() {
   }, [refreshMemberships])
 
 
+  useEffect(() => { if (selected) window.localStorage.setItem('edertec_quick_company_id', selected.id) }, [selected])
+
   useEffect(() => {
     if (!selected || !supabase || platformAdmin) { setAccessStatus(null); return }
     let alive = true
@@ -176,14 +178,21 @@ export default function CompanyAuthGate() {
   if (!session) return <main className="company-auth"><section className="company-auth-card">
     <div className="company-auth-brand"><Smartphone size={25}/><div><b>EDERTEC <i>OS PRO</i></b><small>GESTÃO PARA ASSISTÊNCIAS</small></div></div>
     <h1>{mode==='login'?'Acesse sua conta':'Crie seu acesso'}</h1>
-    <form onSubmit={submitAuth}>
+    {mode==='login' && quickMode ? <form onSubmit={submitQuickLogin}>
+      <label>E-mail do funcionário<input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="funcionario@empresa.com"/></label>
+      <label>PIN de 6 números<input type="password" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} required value={pin} onChange={e=>setPin(e.target.value.replace(/[^0-9]/g,'').slice(0,6))} placeholder="••••••"/></label>
+      {error&&<p className="company-error">{error}</p>}
+      <button className="company-primary" disabled={busy}>{busy?'Validando...':'Entrar com PIN'}</button>
+      <button type="button" className="company-link" onClick={()=>{setQuickMode(false);setError('')}}>Usar e-mail e senha</button>
+    </form> : <form onSubmit={submitAuth}>
       {mode==='signup'&&<label>Seu nome<input required value={fullName} onChange={e=>setFullName(e.target.value)} placeholder="Nome completo"/></label>}
       <label>E-mail<input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="voce@empresa.com"/></label>
       <label>Senha<input type="password" required minLength={8} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Mínimo de 8 caracteres"/></label>
       {error&&<p className="company-error">{error}</p>}{notice&&<p className="company-notice">{notice}</p>}
       <button className="company-primary" disabled={busy}>{busy?'Aguarde...':mode==='login'?'Entrar':'Criar conta'}</button>
-    </form>
-    <button className="company-link" onClick={()=>{setMode(mode==='login'?'signup':'login');setError('');setNotice('')}}>{mode==='login'?'Ainda não tem conta? Criar acesso':'Já tem conta? Entrar'}</button>
+    </form>}
+    {mode==='login' && !quickMode && quickCompanyId && <button className="company-link" onClick={()=>{setQuickMode(true);setError('')}}>Entrar com PIN de funcionário</button>}
+    <button className="company-link" onClick={()=>{setMode(mode==='login'?'signup':'login');setQuickMode(false);setError('');setNotice('')}}>{mode==='login'?'Ainda não tem conta? Criar acesso':'Já tem conta? Entrar'}</button>
   </section></main>
 
   if (platformAdmin) return <PlatformAdminPanel email={session.user.email||''} onSignOut={signOut}/>
