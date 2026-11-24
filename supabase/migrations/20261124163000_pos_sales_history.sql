@@ -115,12 +115,16 @@ begin
   $replacement$'company_credit_card_installments','company_pos_sales','company_pos_sale_items'
  ];$replacement$);
  d:=replace(d,
-  $needle$'cash_transactions','company_financial_entries','company_pos_sales','company_pos_sale_items'$needle$,
-  $replacement$'cash_transactions','company_financial_entries','company_pos_sales','company_pos_sale_items'$replacement$);
- -- If the restore order has not yet listed the sales, append them after cash transactions.
- if position($needle$'company_pos_sales','company_pos_sale_items'$needle$ in d)=0 then
-  d:=replace(d,$needle$'cash_transactions','company_financial_entries'$needle$,$replacement$'cash_transactions','company_financial_entries','company_pos_sales','company_pos_sale_items'$replacement$);
- end if;
+  $needle
+ execute d;
+end $$;
+notify pgrst,'reload schema';
+cash_transactions','company_financial_entries'$needle$,
+  $replacement
+ execute d;
+end $$;
+notify pgrst,'reload schema';
+cash_transactions','company_financial_entries','company_pos_sales','company_pos_sale_items'$replacement$);
  execute d;
 end $$;
 notify pgrst,'reload schema';
