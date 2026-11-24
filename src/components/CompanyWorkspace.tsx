@@ -25,6 +25,7 @@ const money = (n:number) => Number(n||0).toLocaleString('pt-BR',{style:'currency
 export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   const [tab,setTab] = useState<'dashboard'|'orders'|'customers'|'inventory'|'suppliers'|'purchases'|'receipts'|'partPurchases'|'cash'|'entries'|'pos'|'backup'|'settings'|'customerPortal'|'support'|'team'|'plans'>('dashboard')
   const [menuOpen,setMenuOpen] = useState(false)
+  const [financeMenuOpen,setFinanceMenuOpen] = useState(false)
   const [companyInfo,setCompanyInfo] = useState(company)
   const [companySaving,setCompanySaving] = useState(false)
   const [logoFile,setLogoFile] = useState<File|null>(null)
@@ -347,8 +348,13 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
         {canManage&&<button className={tab==='purchases'?'active':''} onClick={()=>navigate('purchases')}><ShoppingCart size={18}/> Compras</button>}
         {canManage&&<button className={tab==='receipts'?'active':''} onClick={()=>navigate('receipts')}><Receipt size={18}/> Recibo simples</button>}
         {canManage&&<button className={tab==='partPurchases'?'active':''} onClick={()=>navigate('partPurchases')}><ShieldCheck size={18}/> Compra de peças</button>}
-        {canManage&&<button className={tab==='cash'?'active':''} onClick={()=>navigate('cash')}><Wallet size={18}/> Fluxo de caixa</button>}
-        {canManage&&<button className={tab==='entries'?'active':''} onClick={()=>navigate('entries')}><Wallet size={18}/> Contas a pagar/receber</button>}
+        {canManage&&<div className="company-nav-group">
+          <button type="button" className={tab==='cash'||tab==='entries'?'active':''} aria-expanded={financeMenuOpen} onClick={()=>setFinanceMenuOpen(open=>!open)}><Wallet size={18}/> Financeiro <span className="company-nav-chevron">{financeMenuOpen?'−':'+'}</span></button>
+          {financeMenuOpen&&<div className="company-nav-submenu">
+            <button type="button" className={tab==='cash'?'active':''} onClick={()=>navigate('cash')}>Fluxo de caixa</button>
+            <button type="button" className={tab==='entries'?'active':''} onClick={()=>navigate('entries')}>Contas a pagar/receber</button>
+          </div>}
+        </div>}
         {canAdmin&&<button className={tab==='team'?'active':''} onClick={()=>navigate('team')}><Users size={18}/> Funcionários e usuários</button>}
         {canAdmin&&<button className={tab==='backup'?'active':''} onClick={()=>navigate('backup')}><Database size={18}/> Backup e segurança</button>}
         {canAdmin&&<button className={tab==='plans'?'active':''} onClick={()=>navigate('plans')}><CreditCard size={18}/> Planos e assinatura</button>}

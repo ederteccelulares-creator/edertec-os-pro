@@ -1913,3 +1913,18 @@ td b { font-weight:650; }
 .company-customer-suggestions>button small{font-size:11px;color:#b8c4d3}
 .company-customer-suggestions>small{display:block;padding:10px;color:#cbd4e2}
 .company-selected-customer{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 12px;padding:10px;border:1px solid #2c8a64;border-radius:8px;background:rgba(44,138,100,.12);color:#e7f8ef}
+
+
+/* Submenu expansível do Financeiro no menu lateral */
+.company-nav-group{display:grid;gap:5px;min-width:0}
+.company-sidebar nav .company-nav-group>button{width:100%;justify-content:flex-start}
+.company-nav-chevron{margin-left:auto;color:var(--ed-muted,#9aa6b8);font-size:17px;line-height:1}
+.company-nav-submenu{display:grid;gap:4px;margin-left:18px;padding-left:10px;border-left:1px solid #35445a}
+.company-sidebar nav .company-nav-submenu button{min-height:38px;padding:9px 12px;font-size:11px;color:#aab5c5}
+.company-sidebar nav .company-nav-submenu button.active{background:#30291e;color:var(--ed-gold-soft)}
+@media(max-width:760px){
+  .company-sidebar nav .company-nav-group{grid-column:1/-1}
+  .company-sidebar nav .company-nav-group>button,
+  .company-sidebar nav .company-nav-submenu button{min-width:0;min-height:42px;flex-direction:row;justify-content:flex-start;text-align:left;font-size:11px;padding:9px 12px}
+  .company-nav-submenu{margin-left:14px}
+}
