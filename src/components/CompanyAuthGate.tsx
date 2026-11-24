@@ -149,8 +149,8 @@ export default function CompanyAuthGate() {
   async function submitCompany(event: FormEvent) {
     event.preventDefault(); setBusy(true); setError(''); setNotice('')
     try {
-      const normalize = (value:string) => value.trim().toLocaleLowerCase('pt-BR').replace(/\\s+/g,' ')
-      const digits = (value:string) => value.replace(/\\D/g,'')
+      const normalize = (value:string) => value.trim().toLocaleLowerCase('pt-BR').replace(/\s+/g,' ')
+      const digits = (value:string) => value.replace(/\D/g,'')
       const existing = memberships.find(m => {
         const company = Array.isArray(m.companies) ? m.companies[0] : m.companies
         if (!company || m.role !== 'owner') return false
