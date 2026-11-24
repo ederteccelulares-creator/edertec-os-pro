@@ -1928,3 +1928,10 @@ td b { font-weight:650; }
   .company-sidebar nav .company-nav-submenu button{min-width:0;min-height:42px;flex-direction:row;justify-content:flex-start;text-align:left;font-size:11px;padding:9px 12px}
   .company-nav-submenu{margin-left:14px}
 }
+
+/* Ações administrativas do histórico do PDV */
+.company-danger{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:8px 12px;border:1px solid rgba(239,68,68,.55);border-radius:9px;background:rgba(185,28,28,.16);color:#fecaca;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.company-danger:hover:not(:disabled){background:rgba(185,28,28,.3);border-color:#ef4444}
+.company-danger:disabled{opacity:.5;cursor:not-allowed}
+.company-pos-history td:last-child{white-space:nowrap}
+.company-pos-history td:last-child button+button{margin-left:6px}
