@@ -101,7 +101,31 @@ do $$
 declare d text;
 begin
  select pg_get_functiondef('public.export_company_backup(uuid)'::regprocedure) into d;
+ d:=replace(d,$old
+ execute d;
+
+ select pg_get_functiondef('public.restore_company_backup(uuid,uuid,uuid,jsonb)'::regprocedure) into d;
+ -- Add both tables to the accepted backup collections.
  d:=replace(d,$old$'company_credit_card_installments'$old$,$new$'company_credit_card_installments','company_pos_sales','company_pos_sale_items'$new$);
+ -- Restore cash transactions before sales (the sale references its original cash transaction),
+ -- then restore sale headers before their line items.
+ d:=replace(d,$old$'cash_transactions','company_financial_entries'$old$,$new$'cash_transactions','company_financial_entries','company_pos_sales','company_pos_sale_items'$new$);
+ execute d;
+end $$;
+notify pgrst,'reload schema';
+company_credit_card_installments'\n ];$old$,$new
+ execute d;
+
+ select pg_get_functiondef('public.restore_company_backup(uuid,uuid,uuid,jsonb)'::regprocedure) into d;
+ -- Add both tables to the accepted backup collections.
+ d:=replace(d,$old$'company_credit_card_installments'$old$,$new$'company_credit_card_installments','company_pos_sales','company_pos_sale_items'$new$);
+ -- Restore cash transactions before sales (the sale references its original cash transaction),
+ -- then restore sale headers before their line items.
+ d:=replace(d,$old$'cash_transactions','company_financial_entries'$old$,$new$'cash_transactions','company_financial_entries','company_pos_sales','company_pos_sale_items'$new$);
+ execute d;
+end $$;
+notify pgrst,'reload schema';
+company_credit_card_installments','company_pos_sales','company_pos_sale_items'\n ];$new$);
  execute d;
 
  select pg_get_functiondef('public.restore_company_backup(uuid,uuid,uuid,jsonb)'::regprocedure) into d;
