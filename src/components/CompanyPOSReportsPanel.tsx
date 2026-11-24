@@ -24,7 +24,8 @@ export default function CompanyPOSReportsPanel({company}:{company:Company}){
   setLoading(true);setError('')
   try{
    const branchResult=await listCompanyBranches(company.id);setBranches(branchResult)
-   let query=supabase.from('company_pos_sales').select('id,sale_number,branch_id,created_at,subtotal,discount,total,payment_method,status').eq('company_id',company.id).gte('created_at',start+'T00:00:00').lt('created_at',end+'T23:59:59.999Z').order('created_at',{ascending:false}).limit(10000)
+   const startAt=new Date(start+'T00:00:00');const endAt=new Date(end+'T00:00:00');endAt.setDate(endAt.getDate()+1)
+   let query=supabase.from('company_pos_sales').select('id,sale_number,branch_id,created_at,subtotal,discount,total,payment_method,status').eq('company_id',company.id).gte('created_at',startAt.toISOString()).lt('created_at',endAt.toISOString()).order('created_at',{ascending:false}).limit(10000)
    if(branchId)query=query.eq('branch_id',branchId)
    const {data,error:queryError}=await query
    if(queryError)throw queryError
@@ -49,7 +50,7 @@ export default function CompanyPOSReportsPanel({company}:{company:Company}){
  const revenue=completed.reduce((n,s)=>n+Number(s.total),0)
  const discounts=completed.reduce((n,s)=>n+Number(s.discount),0)
  const cost=items.reduce((n,i)=>n+Number(i.unit_cost)*Number(i.quantity),0)
- const grossProfit=revenue+discounts-items.reduce((n,i)=>n+Number(i.unit_cost)*Number(i.quantity),0)-discounts
+ const grossProfit=revenue-cost
  const soldUnits=items.reduce((n,i)=>n+Number(i.quantity),0)
  const avg=completed.length?revenue/completed.length:0
  const paymentTotals=useMemo(()=>Object.entries(completed.reduce((acc,s)=>{acc[s.payment_method]=(acc[s.payment_method]||0)+Number(s.total);return acc},{} as Record<string,number>)).sort((a,b)=>b[1]-a[1]),[completed])
