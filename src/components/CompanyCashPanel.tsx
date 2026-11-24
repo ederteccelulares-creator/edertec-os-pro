@@ -1,5 +1,6 @@
 import {useCallback,useEffect,useMemo,useState,type FormEvent} from 'react'
 import {ArrowDownCircle,ArrowUpCircle,Plus,RefreshCw,Wallet} from 'lucide-react'
+import {supabase} from '../lib/supabase'
 import {createCompanyCashTransaction,listCompanyCashTransactions,listCompanyCashSessions,openCompanyCashSession,closeCompanyCashSession,type CashTransaction,type CashSession} from '../lib/company-cash'
 import {listCompanyBranches,type Company,type CompanyBranch} from '../lib/company-data'
 const money=(n:number)=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
