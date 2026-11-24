@@ -1,5 +1,5 @@
 -- Ensure commission settlement rows are restored before sales that reference them.
--- Match whitespace as emitted by pg_get_functiondef; do not assume one-line array formatting.
+-- pg_get_functiondef formats the restore array across multiple lines.
 do $$
 declare
  d text;
