@@ -96,44 +96,31 @@ $$;
 revoke all on function public.finalize_company_pos_sale(uuid,uuid,jsonb,numeric,numeric,numeric,text,uuid,uuid,text,numeric) from public,anon;
 grant execute on function public.finalize_company_pos_sale(uuid,uuid,jsonb,numeric,numeric,numeric,text,uuid,uuid,text,numeric) to authenticated;
 
--- Keep POS sales and their line items in company backups and restore dependency order.
+-- Keep POS sales and line items in company backups.
 do $$
 declare d text;
 begin
  select pg_get_functiondef('public.export_company_backup(uuid)'::regprocedure) into d;
- d:=replace(d,$old
+ d:=replace(d,
+  $needle$'company_credit_card_installments'
+ ];$needle$,
+  $replacement$'company_credit_card_installments','company_pos_sales','company_pos_sale_items'
+ ];$replacement$);
  execute d;
 
  select pg_get_functiondef('public.restore_company_backup(uuid,uuid,uuid,jsonb)'::regprocedure) into d;
- -- Add both tables to the accepted backup collections.
- d:=replace(d,$old$'company_credit_card_installments'$old$,$new$'company_credit_card_installments','company_pos_sales','company_pos_sale_items'$new$);
- -- Restore cash transactions before sales (the sale references its original cash transaction),
- -- then restore sale headers before their line items.
- d:=replace(d,$old$'cash_transactions','company_financial_entries'$old$,$new$'cash_transactions','company_financial_entries','company_pos_sales','company_pos_sale_items'$new$);
- execute d;
-end $$;
-notify pgrst,'reload schema';
-company_credit_card_installments'\n ];$old$,$new
- execute d;
-
- select pg_get_functiondef('public.restore_company_backup(uuid,uuid,uuid,jsonb)'::regprocedure) into d;
- -- Add both tables to the accepted backup collections.
- d:=replace(d,$old$'company_credit_card_installments'$old$,$new$'company_credit_card_installments','company_pos_sales','company_pos_sale_items'$new$);
- -- Restore cash transactions before sales (the sale references its original cash transaction),
- -- then restore sale headers before their line items.
- d:=replace(d,$old$'cash_transactions','company_financial_entries'$old$,$new$'cash_transactions','company_financial_entries','company_pos_sales','company_pos_sale_items'$new$);
- execute d;
-end $$;
-notify pgrst,'reload schema';
-company_credit_card_installments','company_pos_sales','company_pos_sale_items'\n ];$new$);
- execute d;
-
- select pg_get_functiondef('public.restore_company_backup(uuid,uuid,uuid,jsonb)'::regprocedure) into d;
- -- Add both tables to the accepted backup collections.
- d:=replace(d,$old$'company_credit_card_installments'$old$,$new$'company_credit_card_installments','company_pos_sales','company_pos_sale_items'$new$);
- -- Restore cash transactions before sales (the sale references its original cash transaction),
- -- then restore sale headers before their line items.
- d:=replace(d,$old$'cash_transactions','company_financial_entries'$old$,$new$'cash_transactions','company_financial_entries','company_pos_sales','company_pos_sale_items'$new$);
+ d:=replace(d,
+  $needle$'company_credit_card_installments'
+ ];$needle$,
+  $replacement$'company_credit_card_installments','company_pos_sales','company_pos_sale_items'
+ ];$replacement$);
+ d:=replace(d,
+  $needle$'cash_transactions','company_financial_entries','company_pos_sales','company_pos_sale_items'$needle$,
+  $replacement$'cash_transactions','company_financial_entries','company_pos_sales','company_pos_sale_items'$replacement$);
+ -- If the restore order has not yet listed the sales, append them after cash transactions.
+ if position($needle$'company_pos_sales','company_pos_sale_items'$needle$ in d)=0 then
+  d:=replace(d,$needle$'cash_transactions','company_financial_entries'$needle$,$replacement$'cash_transactions','company_financial_entries','company_pos_sales','company_pos_sale_items'$replacement$);
+ end if;
  execute d;
 end $$;
 notify pgrst,'reload schema';
