@@ -17,7 +17,7 @@ export default function CompanyAuthGate() {
   const [password, setPassword] = useState('')
   const [quickMode, setQuickMode] = useState(false)
   const [pin, setPin] = useState('')
-  const [quickCompanyId] = useState(() => window.localStorage.getItem('edertec_quick_company_id') || '')
+  const [quickCompanyId, setQuickCompanyId] = useState(() => window.localStorage.getItem('edertec_quick_company_id') || '')
   const [fullName, setFullName] = useState('')
   const [companyName, setCompanyName] = useState('')
   const [taxId, setTaxId] = useState('')
@@ -66,7 +66,7 @@ export default function CompanyAuthGate() {
   }, [refreshMemberships])
 
 
-  useEffect(() => { if (selected) window.localStorage.setItem('edertec_quick_company_id', selected.id) }, [selected])
+  useEffect(() => { if (selected) { window.localStorage.setItem('edertec_quick_company_id', selected.id); setQuickCompanyId(selected.id) } }, [selected])
 
   useEffect(() => {
     if (!selected || !supabase || platformAdmin) { setAccessStatus(null); return }
