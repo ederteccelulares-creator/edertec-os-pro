@@ -4,7 +4,7 @@ export type CashTransaction={id:string;company_id:string;branch_id:string|null;f
 export async function listCompanyCashTransactions(companyId:string):Promise<CashTransaction[]>{
  const {data,error}=await db().from('cash_transactions').select('id,company_id,branch_id,financial_account_id,direction,category,description,amount,payment_method,occurred_at,created_at,company_financial_accounts(account_name,bank_name)').eq('company_id',companyId).order('occurred_at',{ascending:false}).limit(300)
  if(error)throw error
- return (data??[]) as CashTransaction[]
+ return (data??[]).map(row=>({...row,company_financial_accounts:Array.isArray(row.company_financial_accounts)?row.company_financial_accounts[0]??null:row.company_financial_accounts??null})) as CashTransaction[]
 }
 export async function createCompanyCashTransaction(input:{companyId:string;branchId?:string|null;direction:'in'|'out';category:string;description:string;amount:number;paymentMethod:string;financialAccountId?:string|null}){
  const amount=Number(input.amount),description=input.description.trim(),category=input.category.trim()
