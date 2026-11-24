@@ -16,12 +16,14 @@ create unique index if not exists company_pos_commission_settlements_cash_transa
  on public.company_pos_commission_settlements(cash_transaction_id)
  where cash_transaction_id is not null;
 
+drop function if exists public.pay_company_pos_commission_settlement(uuid,uuid,text,text);
+
 create or replace function public.pay_company_pos_commission_settlement(
  p_company_id uuid,
  p_settlement_id uuid,
  p_payment_method text,
- p_payment_reference text default null,
- p_financial_account_id uuid default null
+ p_payment_reference text,
+ p_financial_account_id uuid
 ) returns uuid
 language plpgsql security definer set search_path=''
 as $$
