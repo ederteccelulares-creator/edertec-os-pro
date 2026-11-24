@@ -1957,3 +1957,12 @@ td b { font-weight:650; }
 .company-pos-report-note{display:block;margin-top:9px}
 @media(max-width:760px){.company-pos-report-filters{grid-template-columns:1fr 1fr}.company-pos-report-filters label:last-child{grid-column:1/-1}.company-pos-report-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.company-pos-report-columns{grid-template-columns:1fr}}
 @media(max-width:420px){.company-pos-report-cards article{padding:11px}.company-pos-report-cards article>span{font-size:10px}.company-pos-report-cards article strong{font-size:16px}}
+
+.company-pos-commission-edit{display:grid;gap:7px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.company-pos-commission-edit:last-child{border-bottom:0}
+.company-pos-commission-edit>label{display:grid;gap:3px;font-size:12px;color:#e7ebf1}
+.company-pos-commission-edit small{font-size:10px;color:var(--company-muted,#9aa6b8)}
+.company-pos-commission-edit>div{display:flex;align-items:center;gap:7px}
+.company-pos-commission-edit input{width:82px;min-height:36px;padding:7px;border:1px solid var(--company-border,#354254);border-radius:7px;background:#101722;color:#f3f5f8}
+.company-pos-commission-edit>div>span{font-size:12px;color:var(--company-muted,#9aa6b8)}
+.company-pos-commission-edit button{margin-left:auto}
