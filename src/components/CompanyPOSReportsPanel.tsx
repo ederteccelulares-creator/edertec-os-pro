@@ -26,7 +26,7 @@ export default function CompanyPOSReportsPanel({company}:{company:Company}){
    const branchResult=await listCompanyBranches(company.id);setBranches(branchResult)
    const startAt=new Date(start+'T00:00:00');const endAt=new Date(end+'T00:00:00');endAt.setDate(endAt.getDate()+1)
    let query=supabase.from('company_pos_sales').select('id,sale_number,branch_id,created_at,subtotal,discount,total,payment_method,status').eq('company_id',company.id).gte('created_at',startAt.toISOString()).lt('created_at',endAt.toISOString()).order('created_at',{ascending:false}).limit(10000)
-   if(branchId)query=query.eq('branch_id',branchId)
+   if(branchId==='__none__')query=query.is('branch_id',null);else if(branchId)query=query.eq('branch_id',branchId)
    const {data,error:queryError}=await query
    if(queryError)throw queryError
    const rows=(data||[]) as Sale[]
@@ -59,7 +59,7 @@ export default function CompanyPOSReportsPanel({company}:{company:Company}){
  return <section className="company-pos-reports">
   <div className="company-panel">
    <div className="company-panel-head"><div><b><BarChart3 size={17}/> Relatórios do PDV</b><small>Vendas, margens, pagamentos e desempenho por filial</small></div><button type="button" className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar</button></div>
-   <div className="company-pos-report-filters"><label>Data inicial<input type="date" value={start} max={end||undefined} onChange={e=>setStart(e.target.value)}/></label><label>Data final<input type="date" value={end} min={start||undefined} onChange={e=>setEnd(e.target.value)}/></label><label>Filial<select value={branchId} onChange={e=>setBranchId(e.target.value)}><option value="">Todas as unidades</option>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label></div>
+   <div className="company-pos-report-filters"><label>Data inicial<input type="date" value={start} max={end||undefined} onChange={e=>setStart(e.target.value)}/></label><label>Data final<input type="date" value={end} min={start||undefined} onChange={e=>setEnd(e.target.value)}/></label><label>Filial<select value={branchId} onChange={e=>setBranchId(e.target.value)}><option value="">Todas as unidades</option><option value="__none__">Matriz / sem filial</option>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label></div>
    {error&&<div className="company-error-banner">{error}</div>}
    {loading?<p className="company-empty">Calculando relatórios...</p>:<>
     <div className="company-pos-report-cards">
