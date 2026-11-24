@@ -42,7 +42,7 @@ Deno.serve(async(req)=>{
   if(duplicate)return reply({error:"Este nome de usuário já está cadastrado nesta empresa."},409);
   if(name.length<2)return reply({error:"Informe o nome completo."},400);
   if(password.length>0&&password.length<8)return reply({error:"A senha opcional deve ter pelo menos 8 caracteres."},400);
-  if(!/^\\d{6}$/.test(pin))return reply({error:"Defina um PIN inicial de exatamente 6 números."},400);
+  if(!/^\d{6}$/.test(pin))return reply({error:"Defina um PIN inicial de exatamente 6 números."},400);
   if(!roles.includes(role)||role==="owner")return reply({error:"Perfil inválido."},400);
   if(role==="admin"&&membership.role!=="owner")return reply({error:"Somente o proprietário pode cadastrar outro administrador."},403);
   const {data:existing}=await admin.auth.admin.listUsers({page:1,perPage:1000});
@@ -63,7 +63,7 @@ Deno.serve(async(req)=>{
  if(!targetMember)return reply({error:"Usuário não pertence a esta empresa."},404);
  if(targetMember.role==="owner")return reply({error:"O proprietário principal não pode ser alterado por esta tela."},403);
  if(action==="set_pin"){
-  const pin=String(body.pin||"");if(!/^\\d{6}$/.test(pin))return reply({error:"O PIN deve conter exatamente 6 números."},400);
+  const pin=String(body.pin||"");if(!/^\d{6}$/.test(pin))return reply({error:"O PIN deve conter exatamente 6 números."},400);
   const hash=await pinDigest(pin);const {error}=await admin.from("employees").update({pin_hash:hash}).eq("company_id",companyId).eq("user_id",target);
   if(error)return reply({error:error.message},500);return reply({success:true,message:"PIN configurado com segurança."});
  }
