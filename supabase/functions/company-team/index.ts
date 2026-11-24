@@ -35,13 +35,14 @@ Deno.serve(async(req)=>{
   return reply({members:users,employees:employees||[],company_code:company?.login_code||null});
  }
  if(action==="create"){
-  const name=String(body.name||"").trim(),username=String(body.username||"").trim().toLowerCase(),providedEmail=String(body.email||"").trim().toLowerCase(),email=providedEmail||("staff+"+username+"."+companyId.replace(/-/g,"")+"@login.edertecospro.com.br"),password=String(body.password||""),role=String(body.role||"technician"),phone=String(body.phone||"").trim(),jobTitle=String(body.job_title||"").trim();
+  const name=String(body.name||"").trim(),username=String(body.username||"").trim().toLowerCase(),providedEmail=String(body.email||"").trim().toLowerCase(),email=providedEmail||("staff+"+username+"."+companyId.replace(/-/g,"")+"@login.edertecospro.com.br"),password=String(body.password||""),pin=String(body.pin||""),role=String(body.role||"technician"),phone=String(body.phone||"").trim(),jobTitle=String(body.job_title||"").trim();
   if(!/^[a-z0-9._-]{3,30}$/.test(username))return reply({error:"O usuário deve ter de 3 a 30 caracteres: letras, números, ponto, hífen ou underline."},400);
   if(providedEmail&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(providedEmail))return reply({error:"Informe um e-mail válido ou deixe em branco."},400);
   const {data:duplicate}=await admin.from("employees").select("id").eq("company_id",companyId).ilike("username",username).maybeSingle();
   if(duplicate)return reply({error:"Este nome de usuário já está cadastrado nesta empresa."},409);
   if(name.length<2)return reply({error:"Informe o nome completo."},400);
   if(password.length>0&&password.length<8)return reply({error:"A senha opcional deve ter pelo menos 8 caracteres."},400);
+  if(!/^\\d{6}$/.test(pin))return reply({error:"Defina um PIN inicial de exatamente 6 números."},400);
   if(!roles.includes(role)||role==="owner")return reply({error:"Perfil inválido."},400);
   if(role==="admin"&&membership.role!=="owner")return reply({error:"Somente o proprietário pode cadastrar outro administrador."},403);
   const {data:existing}=await admin.auth.admin.listUsers({page:1,perPage:1000});
@@ -51,7 +52,8 @@ Deno.serve(async(req)=>{
   if(createErr||!created.user)return reply({error:createErr?.message||"Não foi possível criar a conta."},400);
   const {error:memberErr}=await admin.from("company_members").insert({company_id:companyId,user_id:created.user.id,role,is_active:true});
   if(memberErr){await admin.auth.admin.deleteUser(created.user.id);return reply({error:memberErr.message},500)}
-  const {error:employeeErr}=await admin.from("employees").insert({company_id:companyId,user_id:created.user.id,name,email:providedEmail||null,username,phone:phone||null,job_title:jobTitle||null,is_active:true});
+  const pinHash=await pinDigest(pin);
+  const {error:employeeErr}=await admin.from("employees").insert({company_id:companyId,user_id:created.user.id,name,email:providedEmail||null,username,pin_hash:pinHash,phone:phone||null,job_title:jobTitle||null,is_active:true});
   if(employeeErr){await admin.from("company_members").delete().eq("company_id",companyId).eq("user_id",created.user.id);await admin.auth.admin.deleteUser(created.user.id);return reply({error:employeeErr.message},500)}
   return reply({success:true,message:"Funcionário e usuário cadastrados com sucesso."});
  }
