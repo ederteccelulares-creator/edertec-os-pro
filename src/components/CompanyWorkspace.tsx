@@ -11,6 +11,7 @@ import CompanyExpenseReportPanel from './CompanyExpenseReportPanel'
 import CompanyFinancialAccountsPanel from './CompanyFinancialAccountsPanel'
 import CompanyCreditCardsPanel from './CompanyCreditCardsPanel'
 import CompanyCardInvoicesPanel from './CompanyCardInvoicesPanel'
+import CompanyFinanceDashboardPanel from './CompanyFinanceDashboardPanel'
 import CustomerPortalAdminPanel from './CustomerPortalAdminPanel'
 import CompanySupportPanel from './CompanySupportPanel'
 import CompanyTeamPanel from './CompanyTeamPanel'
@@ -439,6 +440,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
           <article className="green"><span><Package/></span><div><b>Aguardando aprovação</b><strong>{pendingOrders.length}</strong><small>aguardando retorno do cliente</small></div></article>
           {canManage&&<article className="orange"><span><Wallet/></span><div><b>Valores em OS</b><strong>{money(orderRevenue)}</strong><small>valor total registrado</small></div></article>}
         </div>
+        {canManage&&<CompanyFinanceDashboardPanel companyId={company.id} branchId={branchId}/>}
         <section className="company-panel company-dashboard-recent"><div className="company-panel-head"><div><b>Últimas ordens de serviço</b><small>Acompanhe os atendimentos recentes</small></div><button className="company-text-link" onClick={()=>navigate('orders')}>Ver todas →</button></div>
           {loading?<p className="company-empty">Carregando...</p>:orders.length===0?<p className="company-empty">Nenhuma OS registrada</p>:orders.slice(0,5).map(o=><div className="company-dashboard-order" key={o.id}><span>#{o.order_number}</span><div><b>{o.customers?.name||'Cliente não informado'}</b><small>{[o.device_brand,o.device_model].filter(Boolean).join(' ')}</small></div><em>{statusLabels[o.status]||o.status}</em></div>)}
         </section>
