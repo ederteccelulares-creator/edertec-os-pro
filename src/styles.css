@@ -1966,3 +1966,12 @@ td b { font-weight:650; }
 .company-pos-commission-edit input{width:82px;min-height:36px;padding:7px;border:1px solid var(--company-border,#354254);border-radius:7px;background:#101722;color:#f3f5f8}
 .company-pos-commission-edit>div>span{font-size:12px;color:var(--company-muted,#9aa6b8)}
 .company-pos-commission-edit button{margin-left:auto}
+
+
+.pwa-update-prompt{position:fixed;z-index:10000;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid rgba(80,170,255,.38);border-radius:14px;background:#111923;color:#f7f9fc;box-shadow:0 12px 36px rgba(0,0,0,.35)}
+.pwa-update-prompt>div{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}
+.pwa-update-prompt b{font-size:14px}
+.pwa-update-prompt span{font-size:12px;color:#b8c4d3;line-height:1.4}
+.pwa-update-prompt button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:0 12px;border:0;border-radius:9px;background:#d6a84f;color:#151515;font-weight:700;white-space:nowrap}
+.pwa-update-prompt button.pwa-update-dismiss{min-width:32px;width:32px;padding:0;background:transparent;color:#c5ced8}
+@media(max-width:520px){.pwa-update-prompt{left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));gap:8px;padding:12px}.pwa-update-prompt span{font-size:11px}.pwa-update-prompt button{min-height:38px;padding:0 9px;font-size:12px}}
