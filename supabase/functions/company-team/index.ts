@@ -53,8 +53,10 @@ Deno.serve(async(req)=>{
   const {error:memberErr}=await admin.from("company_members").insert({company_id:companyId,user_id:created.user.id,role,is_active:true});
   if(memberErr){await admin.auth.admin.deleteUser(created.user.id);return reply({error:memberErr.message},500)}
   const pinHash=await pinDigest(pin);
-  const {error:employeeErr}=await admin.from("employees").insert({company_id:companyId,user_id:created.user.id,name,email:providedEmail||null,username,pin_hash:pinHash,phone:phone||null,job_title:jobTitle||null,is_active:true});
+  const {error:employeeErr}=await admin.from("employees").insert({company_id:companyId,user_id:created.user.id,name,email:providedEmail||null,username,phone:phone||null,job_title:jobTitle||null,is_active:true});
   if(employeeErr){await admin.from("company_members").delete().eq("company_id",companyId).eq("user_id",created.user.id);await admin.auth.admin.deleteUser(created.user.id);return reply({error:employeeErr.message},500)}
+  const {error:pinErr}=await admin.rpc("set_employee_pin_secure",{p_company_id:companyId,p_user_id:created.user.id,p_pin:pin,p_pin_hash:pinHash});
+  if(pinErr){await admin.from("employees").delete().eq("company_id",companyId).eq("user_id",created.user.id);await admin.from("company_members").delete().eq("company_id",companyId).eq("user_id",created.user.id);await admin.auth.admin.deleteUser(created.user.id);const duplicatePin=pinErr.message?.includes("USERNAME_PIN_ALREADY_USED_BY_ANOTHER_COMPANY");return reply({error:duplicatePin?"Este usuário já utiliza esse PIN em outra empresa. Escolha um PIN diferente.":"Não foi possível configurar o PIN com segurança."},duplicatePin?409:500)}
   return reply({success:true,message:"Funcionário e usuário cadastrados com sucesso."});
  }
  const target=String(body.user_id||"");
@@ -64,8 +66,9 @@ Deno.serve(async(req)=>{
  if(targetMember.role==="owner")return reply({error:"O proprietário principal não pode ser alterado por esta tela."},403);
  if(action==="set_pin"){
   const pin=String(body.pin||"");if(!/^\d{6}$/.test(pin))return reply({error:"O PIN deve conter exatamente 6 números."},400);
-  const hash=await pinDigest(pin);const {error}=await admin.from("employees").update({pin_hash:hash}).eq("company_id",companyId).eq("user_id",target);
-  if(error)return reply({error:error.message},500);return reply({success:true,message:"PIN configurado com segurança."});
+  const hash=await pinDigest(pin);const {error}=await admin.rpc("set_employee_pin_secure",{p_company_id:companyId,p_user_id:target,p_pin:pin,p_pin_hash:hash});
+  if(error){const duplicatePin=error.message?.includes("USERNAME_PIN_ALREADY_USED_BY_ANOTHER_COMPANY");return reply({error:duplicatePin?"Este usuário já utiliza esse PIN em outra empresa. Escolha um PIN diferente.":"Não foi possível configurar o PIN com segurança."},duplicatePin?409:500)}
+  return reply({success:true,message:"PIN configurado com segurança."});
  }
  if(targetMember.role==="owner")return reply({error:"O proprietário principal não pode ser alterado por esta tela."},403);
  if(action==="update"){
