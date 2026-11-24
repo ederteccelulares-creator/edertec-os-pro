@@ -140,7 +140,7 @@ revoke all on function public.pay_company_pos_commission_settlement(uuid,uuid,te
 grant execute on function public.pay_company_pos_commission_settlement(uuid,uuid,text,text) to authenticated;
 
 -- Include commission settlements in company backups and restore parents before sales.
-do $
+do $$
 declare d text; old_allowed text; new_allowed text; old_order text; new_order text;
 begin
  old_allowed:=quote_literal('company_pos_sale_items')||E'\n ];';
@@ -155,6 +155,6 @@ begin
  new_order:=quote_literal('cash_transactions')||','||quote_literal('company_pos_commission_settlements')||','||quote_literal('company_pos_sales');
  d:=replace(d,old_order,new_order);
  execute d;
-end $;
+end $$;
 
 notify pgrst,'reload schema';
