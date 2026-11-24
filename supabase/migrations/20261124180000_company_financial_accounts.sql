@@ -1,4 +1,4 @@
-create table public.company_financial_accounts (
+create table if not exists public.company_financial_accounts (
  id uuid primary key default gen_random_uuid(),
  company_id uuid not null references public.companies(id) on delete cascade,
  branch_id uuid,
@@ -13,14 +13,12 @@ create table public.company_financial_accounts (
  created_at timestamptz not null default now(),
  constraint company_financial_accounts_branch_company_fk foreign key(branch_id,company_id) references public.branches(id,company_id)
 );
-create index company_financial_accounts_company_idx on public.company_financial_accounts(company_id,is_active,created_at desc);
+create index if not exists company_financial_accounts_company_idx on public.company_financial_accounts(company_id,is_active,created_at desc);
 alter table public.company_financial_accounts enable row level security;
-create policy "Company members can read financial accounts" on public.company_financial_accounts
- for select to authenticated using (public.is_company_member(company_id));
-create policy "Company finance managers can manage financial accounts" on public.company_financial_accounts
- for all to authenticated
- using (public.has_company_role(company_id,array['owner','admin','manager']))
- with check (public.has_company_role(company_id,array['owner','admin','manager']));
+drop policy if exists "Company members can read financial accounts" on public.company_financial_accounts;
+create policy "Company members can read financial accounts" on public.company_financial_accounts for select to authenticated using (public.is_company_member(company_id));
+drop policy if exists "Company finance managers can manage financial accounts" on public.company_financial_accounts;
+create policy "Company finance managers can manage financial accounts" on public.company_financial_accounts for all to authenticated using (public.has_company_role(company_id,array['owner','admin','manager'])) with check (public.has_company_role(company_id,array['owner','admin','manager']));
 CREATE OR REPLACE FUNCTION public.export_company_backup(p_company_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql

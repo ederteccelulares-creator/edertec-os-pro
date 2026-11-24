@@ -1935,3 +1935,25 @@ td b { font-weight:650; }
 .company-danger:disabled{opacity:.5;cursor:not-allowed}
 .company-pos-history td:last-child{white-space:nowrap}
 .company-pos-history td:last-child button+button{margin-left:6px}
+
+/* Relatórios gerenciais do PDV */
+.company-pos-reports{display:grid;gap:14px}
+.company-pos-report-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}
+.company-pos-report-filters label{display:grid;gap:6px;color:var(--company-muted,#aab5c5);font-size:11px;font-weight:700}
+.company-pos-report-filters input,.company-pos-report-filters select{width:100%;min-width:0;min-height:40px;padding:9px 10px;border:1px solid var(--company-border,#354254);border-radius:8px;background:#101722;color:#f3f5f8;font:inherit}
+.company-pos-report-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 18px}
+.company-pos-report-cards article{display:grid;gap:8px;min-width:0;padding:14px;border:1px solid var(--company-border,#30394a);border-radius:11px;background:rgba(255,255,255,.025)}
+.company-pos-report-cards article>span{display:flex;align-items:center;gap:7px;color:var(--company-muted,#aab5c5);font-size:11px}
+.company-pos-report-cards article strong{font-size:clamp(16px,2vw,22px);overflow-wrap:anywhere;color:#f4f5f7}
+.company-pos-report-cards article small,.company-pos-report-note{font-size:10px;line-height:1.5;color:var(--company-muted,#9aa6b8)}
+.company-pos-report-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 14px}
+.company-pos-report-block{min-width:0;padding:14px;border:1px solid var(--company-border,#30394a);border-radius:11px;background:rgba(255,255,255,.02)}
+.company-pos-report-block h4{margin:0 0 12px;font-size:13px;color:#f1f3f6}
+.company-pos-report-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:12px}
+.company-pos-report-row:last-child{border-bottom:0}
+.company-pos-report-row>span{display:grid;gap:3px;color:#dce2ea}
+.company-pos-report-row small{font-size:10px;color:var(--company-muted,#9aa6b8)}
+.company-pos-report-row b{white-space:nowrap;color:#f4f5f7}
+.company-pos-report-note{display:block;margin-top:9px}
+@media(max-width:760px){.company-pos-report-filters{grid-template-columns:1fr 1fr}.company-pos-report-filters label:last-child{grid-column:1/-1}.company-pos-report-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.company-pos-report-columns{grid-template-columns:1fr}}
+@media(max-width:420px){.company-pos-report-cards article{padding:11px}.company-pos-report-cards article>span{font-size:10px}.company-pos-report-cards article strong{font-size:16px}}
