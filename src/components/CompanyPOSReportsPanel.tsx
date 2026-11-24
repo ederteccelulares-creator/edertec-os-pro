@@ -6,7 +6,7 @@ import {supabase} from '../lib/supabase'
 type Sale={id:string;sale_number:number;branch_id:string|null;created_at:string;subtotal:number;discount:number;total:number;payment_method:string;status:string;seller_employee_id:string|null;commission_rate:number;commission_amount:number;commission_settlement_id:string|null}
 type Employee={id:string;name:string;branch_id:string|null;commission_percent:number;is_active:boolean}
 type Item={sale_id:string;product_id:string|null;product_name:string;quantity:number;unit_price:number;unit_cost:number;line_total:number}
-type CommissionSettlement={id:string;employee_id:string;branch_id:string|null;period_start:string;period_end:string;sale_count:number;total_amount:number;status:'pending'|'paid';created_at:string;paid_at:string|null;payment_method:string|null;payment_reference:string|null}
+type CommissionSettlement={id:string;employee_id:string;branch_id:string|null;period_start:string;period_end:string;sale_count:number;total_amount:number;status:'pending'|'paid';created_at:string;paid_at:string|null;payment_method:string|null;payment_reference:string|null;cash_transaction_id:string|null}\ntype FinancialAccount={id:string;account_name:string;bank_name:string;branch_id:string|null}
 const money=(n:number)=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 const dateValue=(d:Date)=>{const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return y+'-'+m+'-'+day}
 const methods:Record<string,string>={pix:'PIX',cash:'Dinheiro',debit_card:'Débito',credit_card:'Crédito',bank_transfer:'Transferência',other:'Outro'}
@@ -19,7 +19,7 @@ export default function CompanyPOSReportsPanel({company}:{company:Company}){
  const [sales,setSales]=useState<Sale[]>([])
  const [items,setItems]=useState<Item[]>([])
  const [employees,setEmployees]=useState<Employee[]>([])
- const [settlements,setSettlements]=useState<CommissionSettlement[]>([])
+ const [settlements,setSettlements]=useState<CommissionSettlement[]>([])\n const [financialAccounts,setFinancialAccounts]=useState<FinancialAccount[]>([])\n const [paymentDraft,setPaymentDraft]=useState<{settlementId:string;method:string;accountId:string;reference:string}|null>(null)
  const [settlementBusy,setSettlementBusy]=useState<string|null>(null)
  const [commissionDrafts,setCommissionDrafts]=useState<Record<string,string>>({})
  const [savingEmployee,setSavingEmployee]=useState<string|null>(null)
@@ -31,7 +31,7 @@ export default function CompanyPOSReportsPanel({company}:{company:Company}){
   if(!start||!end||start>end){setError('Informe um período válido.');return}
   setLoading(true);setError('')
   try{
-   const [branchResult,employeeResult]=await Promise.all([listCompanyBranches(company.id),supabase.from('employees').select('id,name,branch_id,commission_percent,is_active').eq('company_id',company.id).eq('is_active',true).order('name')]);if(employeeResult.error)throw employeeResult.error;setBranches(branchResult);const employeeRows=(employeeResult.data||[]) as Employee[];setEmployees(employeeRows);setCommissionDrafts(Object.fromEntries(employeeRows.map(e=>[e.id,String(e.commission_percent)])))
+   const [branchResult,employeeResult,accountResult]=await Promise.all([listCompanyBranches(company.id),supabase.from('employees').select('id,name,branch_id,commission_percent,is_active').eq('company_id',company.id).eq('is_active',true).order('name'),supabase.from('company_financial_accounts').select('id,account_name,bank_name,branch_id').eq('company_id',company.id).eq('is_active',true).order('account_name')]);if(employeeResult.error)throw employeeResult.error;if(accountResult.error)throw accountResult.error;setBranches(branchResult);setFinancialAccounts((accountResult.data||[]) as FinancialAccount[]);const employeeRows=(employeeResult.data||[]) as Employee[];setEmployees(employeeRows);setCommissionDrafts(Object.fromEntries(employeeRows.map(e=>[e.id,String(e.commission_percent)])))
    const startAt=new Date(start+'T00:00:00');const endAt=new Date(end+'T00:00:00');endAt.setDate(endAt.getDate()+1)
    let query=supabase.from('company_pos_sales').select('id,sale_number,branch_id,created_at,subtotal,discount,total,payment_method,status,seller_employee_id,commission_rate,commission_amount,commission_settlement_id').eq('company_id',company.id).gte('created_at',startAt.toISOString()).lt('created_at',endAt.toISOString()).order('created_at',{ascending:false}).limit(10000)
    if(branchId==='__none__')query=query.is('branch_id',null);else if(branchId)query=query.eq('branch_id',branchId)
@@ -48,7 +48,7 @@ export default function CompanyPOSReportsPanel({company}:{company:Company}){
     if(itemError)throw itemError
     lineItems=lineItems.concat((part||[]) as Item[])
    }
-   setSales(rows);setItems(lineItems);const {data:settlementRows,error:settlementError}=await supabase.from('company_pos_commission_settlements').select('id,employee_id,branch_id,period_start,period_end,sale_count,total_amount,status,created_at,paid_at,payment_method,payment_reference').eq('company_id',company.id).gte('period_end',start).lte('period_start',end).order('created_at',{ascending:false});if(settlementError)throw settlementError;let visibleSettlements=(settlementRows||[]) as CommissionSettlement[];if(branchId==='__none__')visibleSettlements=visibleSettlements.filter(s=>s.branch_id===null);else if(branchId)visibleSettlements=visibleSettlements.filter(s=>s.branch_id===branchId);setSettlements(visibleSettlements)
+   setSales(rows);setItems(lineItems);const {data:settlementRows,error:settlementError}=await supabase.from('company_pos_commission_settlements').select('id,employee_id,branch_id,period_start,period_end,sale_count,total_amount,status,created_at,paid_at,payment_method,payment_reference,cash_transaction_id').eq('company_id',company.id).gte('period_end',start).lte('period_start',end).order('created_at',{ascending:false});if(settlementError)throw settlementError;let visibleSettlements=(settlementRows||[]) as CommissionSettlement[];if(branchId==='__none__')visibleSettlements=visibleSettlements.filter(s=>s.branch_id===null);else if(branchId)visibleSettlements=visibleSettlements.filter(s=>s.branch_id===branchId);setSettlements(visibleSettlements)
   }catch(e){setError(e instanceof Error?e.message:'Não foi possível carregar os relatórios do PDV.')}
   finally{setLoading(false)}
  },[company.id,start,end,branchId])
@@ -77,18 +77,31 @@ export default function CompanyPOSReportsPanel({company}:{company:Company}){
   }catch(e){setError(e instanceof Error?e.message:'Não foi possível fechar as comissões.')}
   finally{setSettlementBusy(null)}
  }
- async function payCommission(settlementId:string){
-  if(!supabase)return
-  const method=window.prompt('Informe a forma de pagamento (PIX, dinheiro, transferência etc.):')
-  if(!method?.trim())return
-  const reference=window.prompt('Comprovante ou referência do pagamento (opcional):')||''
-  setSettlementBusy(settlementId);setError('');setCommissionNotice('')
+ function payCommission(settlementId:string){
+  setError('');setCommissionNotice('')
+  setPaymentDraft({settlementId,method:'pix',accountId:'',reference:''})
+ }
+ async function submitCommissionPayment(){
+  if(!supabase||!paymentDraft)return
+  const draft=paymentDraft
+  if(!draft.method){setError('Selecione a forma de pagamento.');return}
+  const settlement=settlements.find(s=>s.id===draft.settlementId)
+  if(!settlement){setError('Fechamento de comissão não encontrado. Atualize o relatório.');return}
+  if(!window.confirm('Confirmar o pagamento de '+money(Number(settlement.total_amount))+'? O sistema registrará uma saída no caixa e, se selecionada, atualizará a conta financeira.'))return
+  setSettlementBusy(draft.settlementId);setError('');setCommissionNotice('')
   try{
-   const {error}=await supabase.rpc('pay_company_pos_commission_settlement',{p_company_id:company.id,p_settlement_id:settlementId,p_payment_method:method.trim(),p_payment_reference:reference.trim()||null})
+   const {error}=await supabase.rpc('pay_company_pos_commission_settlement',{
+    p_company_id:company.id,
+    p_settlement_id:draft.settlementId,
+    p_payment_method:draft.method,
+    p_payment_reference:draft.reference.trim()||null,
+    p_financial_account_id:draft.accountId||null
+   })
    if(error)throw error
-   setCommissionNotice('Pagamento marcado como realizado. Registre a saída no caixa/financeiro separadamente, conforme o comprovante.')
+   setPaymentDraft(null)
+   setCommissionNotice('Pagamento confirmado e saída registrada no fluxo de caixa. A movimentação foi vinculada à conta escolhida quando informada.')
    await load()
-  }catch(e){setError(e instanceof Error?e.message:'Não foi possível confirmar o pagamento.')}
+  }catch(e){setError(e instanceof Error?e.message:'Não foi possível confirmar o pagamento e registrar a saída.')}
   finally{setSettlementBusy(null)}
  }
  async function saveCommission(employeeId:string){const value=Number(commissionDrafts[employeeId]);if(!Number.isFinite(value)||value<0||value>100){setError('A comissão deve ficar entre 0% e 100%.');return}setSavingEmployee(employeeId);setError('');setCommissionNotice('');try{const {error}=await supabase!.from('employees').update({commission_percent:value}).eq('company_id',company.id).eq('id',employeeId);if(error)throw error;setEmployees(old=>old.map(e=>e.id===employeeId?{...e,commission_percent:value}:e));setCommissionNotice('Comissão atualizada. A nova taxa será aplicada somente às próximas vendas.')}catch(e){setError(e instanceof Error?e.message:'Não foi possível salvar a comissão.')}finally{setSavingEmployee(null)}}
@@ -113,7 +126,16 @@ export default function CompanyPOSReportsPanel({company}:{company:Company}){
      <div className="company-pos-report-block"><h4>Desempenho e comissões por funcionário</h4>{employeeTotals.length?employeeTotals.map(e=><div className="company-pos-report-row" key={e.id}><span>{e.name}<small>{e.count} vendas · Comissão {money(e.commission)}</small></span><b>{money(e.total)}</b></div>):<p className="company-empty">Ainda não há vendas atribuídas a funcionários neste período.</p>}</div>
      <div className="company-pos-report-block"><h4>Configurar comissão por funcionário</h4><p className="company-pos-report-note">Percentual sobre o valor final da venda. A alteração vale para novas vendas; registros anteriores não são recalculados.</p>{employees.length?employees.map(e=><div className="company-pos-commission-edit" key={e.id}><label>{e.name}<small>{e.branch_id?branches.find(b=>b.id===e.branch_id)?.name||'Filial':'Todas as unidades'}</small></label><div><input type="number" min="0" max="100" step="0.25" value={commissionDrafts[e.id]??'0'} onChange={event=>setCommissionDrafts(old=>({...old,[e.id]:event.target.value}))}/><span>%</span><button type="button" className="company-secondary" disabled={savingEmployee===e.id} onClick={()=>void saveCommission(e.id)}>{savingEmployee===e.id?'Salvando':'Salvar'}</button></div></div>):<p className="company-empty">Nenhum funcionário ativo cadastrado.</p>}</div>
     </div>
-    <div className="company-pos-report-block"><h4>Fechamento de comissões</h4><p className="company-pos-report-note">Selecione uma filial ou Matriz / sem filial para fechar. O fechamento é individual por unidade. A quitação exige confirmação manual e não lança despesa automaticamente no caixa.</p>{employeeTotals.length?employeeTotals.map(e=>{const employee=employees.find(x=>x.id===e.id);const pending=completed.filter(s=>s.seller_employee_id===employee?.id&&!s.commission_settlement_id&&Number(s.commission_amount)>0).reduce((n,s)=>n+Number(s.commission_amount),0);return <div className="company-pos-report-row" key={e.id}><span>{e.name}<small>Comissão ainda não fechada: {money(pending)}</small></span><button type="button" className="company-secondary" disabled={!employee||!branchId||pending<=0||settlementBusy===employee?.id} onClick={()=>employee&&void closeCommission(employee.id)}>{settlementBusy===employee?.id?'Fechando':'Fechar período'}</button></div>}):<p className="company-empty">Nenhuma comissão pendente para fechar neste período.</p>}{settlements.length>0&&<div className="company-table-wrap"><table><thead><tr><th>FUNCIONÁRIO</th><th>PERÍODO</th><th>VENDAS</th><th>VALOR</th><th>STATUS</th><th>AÇÃO</th></tr></thead><tbody>{settlements.map(s=><tr key={s.id}><td>{employees.find(e=>e.id===s.employee_id)?.name||'Funcionário'}</td><td>{s.period_start} a {s.period_end}</td><td>{s.sale_count}</td><td>{money(Number(s.total_amount))}</td><td>{s.status==='paid'?'Pago':'Pendente'}</td><td>{s.status==='pending'?<button type="button" className="company-secondary" disabled={settlementBusy===s.id} onClick={()=>void payCommission(s.id)}>{settlementBusy===s.id?'Salvando':'Confirmar pagamento'}</button>:<small>{s.payment_method||'Pago'} · {s.paid_at?new Date(s.paid_at).toLocaleDateString('pt-BR'):''}</small>}</td></tr>)}</tbody></table></div>}</div>
+    <div className="company-pos-report-block"><h4>Fechamento de comissões</h4><p className="company-pos-report-note">Selecione uma filial ou Matriz / sem filial para fechar. O fechamento é individual por unidade. A quitação exige confirmação manual e registra uma saída no caixa na mesma operação.</p>{employeeTotals.length?employeeTotals.map(e=>{const employee=employees.find(x=>x.id===e.id);const pending=completed.filter(s=>s.seller_employee_id===employee?.id&&!s.commission_settlement_id&&Number(s.commission_amount)>0).reduce((n,s)=>n+Number(s.commission_amount),0);return <div className="company-pos-report-row" key={e.id}><span>{e.name}<small>Comissão ainda não fechada: {money(pending)}</small></span><button type="button" className="company-secondary" disabled={!employee||!branchId||pending<=0||settlementBusy===employee?.id} onClick={()=>employee&&void closeCommission(employee.id)}>{settlementBusy===employee?.id?'Fechando':'Fechar período'}</button></div>}):<p className="company-empty">Nenhuma comissão pendente para fechar neste período.</p>}{paymentDraft&&<form className="company-form" onSubmit={event=>{event.preventDefault();void submitCommissionPayment()}}>
+ <h4>Confirmar pagamento da comissão</h4>
+ <p className="company-pos-report-note">Ao confirmar, o sistema cria uma única saída no fluxo de caixa. Se houver caixa aberto na unidade do fechamento, a saída também ficará vinculada a ele.</p>
+ <div className="company-form-grid">
+  <label>Forma de pagamento<select required value={paymentDraft.method} onChange={event=>setPaymentDraft(old=>old?{...old,method:event.target.value}:old)}><option value="pix">PIX</option><option value="cash">Dinheiro</option><option value="debit_card">Cartão de débito</option><option value="credit_card">Cartão de crédito</option><option value="bank_transfer">Transferência</option><option value="boleto">Boleto</option><option value="other">Outro</option></select></label>
+  <label>Conta financeira (opcional)<select value={paymentDraft.accountId} onChange={event=>setPaymentDraft(old=>old?{...old,accountId:event.target.value}:old)}><option value="">Não vincular conta</option>{financialAccounts.filter(a=>!a.branch_id||a.branch_id===settlements.find(s=>s.id===paymentDraft.settlementId)?.branch_id).map(a=><option key={a.id} value={a.id}>{a.account_name} · {a.bank_name}</option>)}</select></label>
+  <label>Comprovante / referência (opcional)<input maxLength={160} value={paymentDraft.reference} onChange={event=>setPaymentDraft(old=>old?{...old,reference:event.target.value}:old)} placeholder="ID do PIX, número do comprovante..."/></label>
+ </div>
+ <div className="company-form-actions"><button type="button" className="company-secondary" onClick={()=>setPaymentDraft(null)}>Cancelar</button><button type="submit" className="company-primary" disabled={settlementBusy===paymentDraft.settlementId}>{settlementBusy===paymentDraft.settlementId?'Registrando...':'Confirmar pagamento e lançar saída'}</button></div>
+ </form>}{settlements.length>0&&<div className="company-table-wrap"><table><thead><tr><th>FUNCIONÁRIO</th><th>PERÍODO</th><th>VENDAS</th><th>VALOR</th><th>STATUS</th><th>AÇÃO</th></tr></thead><tbody>{settlements.map(s=><tr key={s.id}><td>{employees.find(e=>e.id===s.employee_id)?.name||'Funcionário'}</td><td>{s.period_start} a {s.period_end}</td><td>{s.sale_count}</td><td>{money(Number(s.total_amount))}</td><td>{s.status==='paid'?'Pago':'Pendente'}</td><td>{s.status==='pending'?<button type="button" className="company-secondary" disabled={settlementBusy===s.id} onClick={()=>void payCommission(s.id)}>{settlementBusy===s.id?'Salvando':'Confirmar pagamento'}</button>:<small>{s.payment_method||'Pago'} · {s.paid_at?new Date(s.paid_at).toLocaleDateString('pt-BR'):''}</small>}</td></tr>)}</tbody></table></div>}</div>
     <div className="company-pos-report-block"><h4>10 produtos mais vendidos</h4>{productTotals.length?<div className="company-table-wrap"><table><thead><tr><th>PRODUTO</th><th>QTD.</th><th>FATURAMENTO</th><th>LUCRO BRUTO*</th></tr></thead><tbody>{productTotals.map(p=><tr key={p.name}><td>{p.name}</td><td>{p.qty}</td><td>{money(p.revenue)}</td><td>{money(p.profit)}</td></tr>)}</tbody></table></div>:<p className="company-empty">Sem itens vendidos no período.</p>}<small className="company-pos-report-note">* Lucro bruto por produto antes da distribuição dos descontos da venda. O lucro geral considera os descontos concedidos.</small></div>
    </>}
   </div>
