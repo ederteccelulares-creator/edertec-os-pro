@@ -22,6 +22,7 @@ Deno.serve(async(req)=>{
  if(!membership?.is_active||!["owner","admin"].includes(membership.role))return reply({error:"Somente proprietário ou administrador pode gerenciar usuários."},403);
  const action=String(body.action||"list");
  if(action==="list"){
+  const {data:company}=await admin.from("companies").select("login_code").eq("id",companyId).maybeSingle();
   const {data:members,error}=await admin.from("company_members").select("user_id,role,is_active,created_at").eq("company_id",companyId).order("created_at");
   if(error)return reply({error:error.message},500);
   const {data:employees,error:empErr}=await admin.from("employees").select("id,user_id,name,phone,email,job_title,is_active,branch_id").eq("company_id",companyId).order("name");
@@ -31,7 +32,7 @@ Deno.serve(async(req)=>{
    const e=(employees||[]).find(x=>x.user_id===m.user_id);
    return {user_id:m.user_id,email:data.user?.email||e?.email||"",role:m.role,is_active:m.is_active,created_at:m.created_at,employee:e||null};
   }));
-  return reply({members:users,employees:employees||[]});
+  return reply({members:users,employees:employees||[],company_code:company?.login_code||null});
  }
  if(action==="create"){
   const name=String(body.name||"").trim(),username=String(body.username||"").trim().toLowerCase(),providedEmail=String(body.email||"").trim().toLowerCase(),email=providedEmail||("staff+"+username+"."+companyId.replace(/-/g,"")+"@login.edertecospro.com.br"),password=String(body.password||""),role=String(body.role||"technician"),phone=String(body.phone||"").trim(),jobTitle=String(body.job_title||"").trim();
