@@ -1,18 +1,15 @@
 import {supabase} from './supabase'
 function db(){if(!supabase)throw new Error('Supabase não está configurado.');return supabase}
-export type CashTransaction={id:string;company_id:string;branch_id:string|null;direction:'in'|'out';category:string;description:string;amount:number;payment_method:string|null;occurred_at:string;created_at:string}
+export type CashTransaction={id:string;company_id:string;branch_id:string|null;financial_account_id:string|null;direction:'in'|'out';category:string;description:string;amount:number;payment_method:string|null;occurred_at:string;created_at:string;company_financial_accounts?:{account_name:string;bank_name:string}|null}
 export async function listCompanyCashTransactions(companyId:string):Promise<CashTransaction[]>{
- const {data,error}=await db().from('cash_transactions').select('id,company_id,branch_id,direction,category,description,amount,payment_method,occurred_at,created_at').eq('company_id',companyId).order('occurred_at',{ascending:false}).limit(300)
+ const {data,error}=await db().from('cash_transactions').select('id,company_id,branch_id,financial_account_id,direction,category,description,amount,payment_method,occurred_at,created_at,company_financial_accounts(account_name,bank_name)').eq('company_id',companyId).order('occurred_at',{ascending:false}).limit(300)
  if(error)throw error
  return (data??[]) as CashTransaction[]
 }
-export async function createCompanyCashTransaction(input:{companyId:string;branchId?:string|null;direction:'in'|'out';category:string;description:string;amount:number;paymentMethod:string}){
+export async function createCompanyCashTransaction(input:{companyId:string;branchId?:string|null;direction:'in'|'out';category:string;description:string;amount:number;paymentMethod:string;financialAccountId?:string|null}){
  const amount=Number(input.amount),description=input.description.trim(),category=input.category.trim()
  if(!Number.isFinite(amount)||amount<=0||!description||!category)throw new Error('Informe descrição, categoria e valor válido.')
- let sessionQuery=db().from('cash_sessions').select('id').eq('company_id',input.companyId).eq('status','open')
- sessionQuery=input.branchId?sessionQuery.eq('branch_id',input.branchId):sessionQuery.is('branch_id',null)
- const {data:session}=await sessionQuery.maybeSingle()
- const {data,error}=await db().from('cash_transactions').insert({company_id:input.companyId,branch_id:input.branchId||null,cash_session_id:session?.id||null,direction:input.direction,category,description,amount,payment_method:input.paymentMethod}).select('id').single()
+ const {data,error}=await db().rpc('create_company_cash_transaction',{p_company_id:input.companyId,p_branch_id:input.branchId||null,p_direction:input.direction,p_category:category,p_description:description,p_amount:amount,p_payment_method:input.paymentMethod,p_financial_account_id:input.financialAccountId||null})
  if(error)throw error
  return data
 }
