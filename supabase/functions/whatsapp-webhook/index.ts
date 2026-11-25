@@ -21,7 +21,7 @@ function json(body: unknown, status = 200) {
 }
 async function platformAdmin(req: Request) {
   if (!admin || !ANON_KEY) return { ok: false as const, status: 503, message: "Backend não configurado." };
-  const jwt = (req.headers.get("Authorization") || "").replace(/^Bearer\\s+/i, "");
+  const jwt = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
   if (!jwt) return { ok: false as const, status: 401, message: "Autenticação necessária." };
   const userClient = createClient(SUPABASE_URL, ANON_KEY, {
     global: { headers: { Authorization: `Bearer ${jwt}` } },
