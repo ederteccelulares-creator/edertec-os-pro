@@ -176,7 +176,7 @@ export default function CompanyAuthGate() {
           email,
           password,
           options:{
-            emailRedirectTo: (import.meta.env.VITE_APP_URL as string | undefined)?.trim() || window.location.origin,
+            emailRedirectTo: (import.meta.env.VITE_APP_URL as string | undefined)?.trim() || 'https://edertecospro.com.br/',
             data:{
               full_name:fullName,
               signup_company_name:companyName.trim(),
