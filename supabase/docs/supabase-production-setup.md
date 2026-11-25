@@ -55,6 +55,7 @@ supabase functions deploy invite-team
 supabase functions deploy export-organization
 supabase functions deploy validate-organization-backup
 supabase functions deploy restore-organization-backup
+supabase functions deploy send-company-welcome
 ```
 
 O Supabase fornece `SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` ao runtime das Edge Functions. A chave privilegiada deve permanecer exclusivamente no servidor. Opcionalmente, defina o endereço publicado para os convites:
@@ -62,6 +63,10 @@ O Supabase fornece `SUPABASE_URL`, `SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_
 ```bash
 supabase secrets set APP_SITE_URL=https://SEU-DOMINIO
 ```
+
+## E-mails de cadastro de empresas
+
+Siga o guia [E-mails de cadastro de empresas](company-signup-email-setup.md) para personalizar o template de confirmação em português, configurar SMTP e publicar a função de boas-vindas. A migração `20261125190000_company_welcome_email.sql` deve ser aplicada antes de publicar `send-company-welcome`; configure `RESEND_API_KEY`, `RESEND_FROM_EMAIL` e `APP_SITE_URL` como secrets do Supabase.
 
 ## 6. Primeiro Super Admin
 
