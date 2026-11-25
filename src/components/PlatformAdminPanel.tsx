@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { Building2, ShieldCheck, CreditCard, Package, RefreshCw, LogOut, Plus, LifeBuoy, Menu } from 'lucide-react'
+import { Building2, ShieldCheck, CreditCard, Package, RefreshCw, LogOut, Plus, LifeBuoy, Menu, MessageCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import PlatformSupportPanel from './PlatformSupportPanel'
+import PlatformWhatsAppPanel from './PlatformWhatsAppPanel'
 
 type CompanyRow = { id:string; name:string; tax_id:string|null; status:string; created_at:string }
 type PlanRow = { id:string; code:string; name:string; description:string|null; price:number; billing_interval:string; max_branches:number|null; max_users:number|null; is_active:boolean }
@@ -13,7 +14,7 @@ const intervalLabels:Record<string,string>={monthly:'Mensal',yearly:'Anual',six_
 const PLATFORM_TAB_KEY='edertec-platform-admin-tab-v1'
 
 export default function PlatformAdminPanel({email,onSignOut}:Props) {
-  const [tab,setTab]=useState<'companies'|'plans'|'subscriptions'|'support'|'billing'>(()=>{try{const saved=localStorage.getItem(PLATFORM_TAB_KEY);return saved==='billing'||saved==='plans'||saved==='subscriptions'||saved==='support'||saved==='companies'?saved:'companies'}catch{return 'companies'}})
+  const [tab,setTab]=useState<'companies'|'plans'|'subscriptions'|'support'|'billing'|'whatsapp'>(()=>{try{const saved=localStorage.getItem(PLATFORM_TAB_KEY);return saved==='whatsapp'||saved==='billing'||saved==='plans'||saved==='subscriptions'||saved==='support'||saved==='companies'?saved:'companies'}catch{return 'companies'}})
   const [menuOpen,setMenuOpen]=useState(false)
   const [companies,setCompanies]=useState<CompanyRow[]>([])
   const [plans,setPlans]=useState<PlanRow[]>([])
@@ -221,7 +222,7 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
   }
 
   return <main className="platform-admin">
-    <header className="platform-head"><div className="platform-brand"><ShieldCheck/><span><b>EDERTEC OS PRO</b><small>SUPER ADMIN · PAINEL DA PLATAFORMA</small></span></div><div className="platform-head-actions"><button type="button" className="platform-menu-toggle" aria-expanded={menuOpen} aria-controls="platform-menu-options" onClick={()=>setMenuOpen(v=>!v)}><Menu size={19}/><span>Menu</span></button><div className="platform-user"><span>{email}</span><button onClick={onSignOut}><LogOut size={15}/> Sair</button></div></div><nav id="platform-menu-options" className={menuOpen?'platform-tabs platform-tabs-open':'platform-tabs'} hidden={!menuOpen}><button className={tab==='companies'?'active':''} onClick={()=>{setTab('companies');setMenuOpen(false)}}>Empresas</button><button className={tab==='plans'?'active':''} onClick={()=>{setTab('plans');setMenuOpen(false)}}>Planos</button><button className={tab==='subscriptions'?'active':''} onClick={()=>{setTab('subscriptions');setMenuOpen(false)}}>Assinaturas</button><button className={tab==='support'?'active':''} onClick={()=>{setTab('support');setMenuOpen(false)}}><LifeBuoy size={15}/> Chamados</button><button className={tab==='billing'?'active':''} onClick={()=>{setTab('billing');setMenuOpen(false)}}><CreditCard size={15}/> Mercado Pago</button></nav></header>
+    <header className="platform-head"><div className="platform-brand"><ShieldCheck/><span><b>EDERTEC OS PRO</b><small>SUPER ADMIN · PAINEL DA PLATAFORMA</small></span></div><div className="platform-head-actions"><button type="button" className="platform-menu-toggle" aria-expanded={menuOpen} aria-controls="platform-menu-options" onClick={()=>setMenuOpen(v=>!v)}><Menu size={19}/><span>Menu</span></button><div className="platform-user"><span>{email}</span><button onClick={onSignOut}><LogOut size={15}/> Sair</button></div></div><nav id="platform-menu-options" className={menuOpen?'platform-tabs platform-tabs-open':'platform-tabs'} hidden={!menuOpen}><button className={tab==='companies'?'active':''} onClick={()=>{setTab('companies');setMenuOpen(false)}}>Empresas</button><button className={tab==='plans'?'active':''} onClick={()=>{setTab('plans');setMenuOpen(false)}}>Planos</button><button className={tab==='subscriptions'?'active':''} onClick={()=>{setTab('subscriptions');setMenuOpen(false)}}>Assinaturas</button><button className={tab==='support'?'active':''} onClick={()=>{setTab('support');setMenuOpen(false)}}><LifeBuoy size={15}/> Chamados</button><button className={tab==='billing'?'active':''} onClick={()=>{setTab('billing');setMenuOpen(false)}}><CreditCard size={15}/> Mercado Pago</button><button className={tab==='whatsapp'?'active':''} onClick={()=>{setTab('whatsapp');setMenuOpen(false)}}><MessageCircle size={15}/> WhatsApp</button></nav></header>
     <section className="platform-content">
       <div className="platform-title"><div><small>CONTROLE CENTRAL</small><h1>Super Admin</h1><p>Gerencie empresas, planos e assinaturas da plataforma.</p></div><button className="platform-refresh" onClick={()=>void load()}><RefreshCw size={15}/> Atualizar</button></div>
       {error&&<div className="platform-error">{error}</div>}{notice&&<div className="platform-notice">{notice}</div>}
@@ -229,6 +230,7 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
       
       {loading?<p className="platform-empty">Carregando dados da plataforma...</p>:<>
         {tab==='support'&&<PlatformSupportPanel/>}
+        {tab==='whatsapp'&&<PlatformWhatsAppPanel/>}
         {tab==='billing'&&<section className="platform-panel">
           <div className="platform-panel-title"><h2>Integração de pagamentos · Mercado Pago</h2><span className="platform-hint">Credenciais protegidas</span></div>
           <div className="platform-mp-external"><p className="platform-hint">Primeiro, separe esta tela do Edertec OS Pro em uma nova guia. Assim você mantém as configurações abertas enquanto consulta o Mercado Pago.</p><button type="button" className="platform-mp-open" onClick={()=>{window.open(window.location.href,"_blank","noopener,noreferrer")}}>Abrir esta tela do Edertec OS Pro em nova guia ↗</button><p className="platform-hint">Depois, na outra guia, consulte suas credenciais e configure os Webhooks no Mercado Pago.</p><a className="platform-mp-open" href="https://www.mercadopago.com.br/developers/panel" target="_blank" rel="noopener noreferrer" onClick={(event)=>{event.preventDefault();window.open("https://www.mercadopago.com.br/developers/panel","_blank","noopener,noreferrer")}}>Abrir Mercado Pago em nova guia ↗</a></div>
