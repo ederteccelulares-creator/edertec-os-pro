@@ -49,7 +49,7 @@ export default function CompanyAuthGate() {
   }, [])
 
 
-  async function finishPendingCompany(user: { id:string; email?:string; user_metadata?:Record<string,unknown> }) {
+  async function finishPendingCompany(user: { id:string; email?:string; email_confirmed_at?:string; user_metadata?:Record<string,unknown> }) {
     const metadata = user.user_metadata || {}
     const pendingName = String(metadata.signup_company_name || '').trim()
     if (pendingName.length < 2) return
@@ -69,6 +69,19 @@ export default function CompanyAuthGate() {
       email: user.email || '',
     })
     await refreshMemberships()
+    // The welcome email is sent only after Supabase confirms the owner's email
+    // and the company has been created. Email delivery failure must not block access.
+    if (user.email_confirmed_at) {
+      const { error: welcomeError } = await supabase!.functions.invoke('send-company-welcome', {
+        body: { company_id: companyId },
+      })
+      if (welcomeError) {
+        console.error('Falha ao enviar e-mail de boas-vindas:', welcomeError)
+        setNotice('Sua assistência foi criada. Não foi possível enviar o e-mail de boas-vindas agora; os dados de acesso estão nesta tela.')
+      } else {
+        setNotice('Assistência criada e e-mail de boas-vindas enviado.')
+      }
+    }
   }
 
   useEffect(() => {
@@ -162,12 +175,15 @@ export default function CompanyAuthGate() {
         const {data,error} = await supabase!.auth.signUp({
           email,
           password,
-          options:{data:{
-            full_name:fullName,
-            signup_company_name:companyName.trim(),
-            signup_company_tax_id:taxId.trim(),
-            signup_company_phone:phone.trim(),
-          }}
+          options:{
+            emailRedirectTo: (import.meta.env.VITE_APP_URL as string | undefined)?.trim() || window.location.origin,
+            data:{
+              full_name:fullName,
+              signup_company_name:companyName.trim(),
+              signup_company_tax_id:taxId.trim(),
+              signup_company_phone:phone.trim(),
+            },
+          }
         })
         if (error) throw error
         if (!data.user) throw new Error('Não foi possível criar a conta.')
