@@ -43,8 +43,29 @@ export default function CompanyAuthGate() {
     if (error) throw error
     setPlatformAdmin(data === true)
     if (rows.length === 1) {
-      const company = Array.isArray(rows[0].companies) ? rows[0].companies[0] : rows[0].companies
-      if (company) setSelected(company)
+      const membership = rows[0]
+      const company = Array.isArray(membership.companies) ? membership.companies[0] : membership.companies
+      if (company) {
+        setSelected(company)
+        // Recover the registration credentials on later logins too.
+        // The company may have been created in a previous confirmation session.
+        if (membership.role === 'owner') {
+          try {
+            const { data: teamData, error: teamError } = await supabase!.functions.invoke('company-team', {
+              body: { action: 'list', company_id: membership.company_id },
+            })
+            if (teamError) throw teamError
+            const { data: authData } = await supabase!.auth.getUser()\n            const owner = (teamData?.members || []).find((member: any) => member.user_id === authData.user?.id)
+            setRegistrationInfo({
+              companyCode: String(teamData?.company_code || ''),
+              username: String(owner?.employee?.username || ''),
+              email: String(owner?.email || ''),
+            })
+          } catch (e) {
+            console.error('Não foi possível recuperar os dados de acesso da empresa:', e)
+          }
+        }
+      }
     }
   }, [])
 
