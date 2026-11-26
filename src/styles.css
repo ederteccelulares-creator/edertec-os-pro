@@ -2451,3 +2451,30 @@ td b { font-weight:650; }
     color:#b8c6d8 !important;
   }
 }
+
+
+/* Contraste consistente para títulos internos em todos os módulos desktop */
+@media (min-width: 761px) {
+  .company-main .company-panel-head b,
+  .company-main .company-panel-head b strong,
+  .company-main .company-inventory-history .company-panel-head b,
+  .company-main .company-form h2,
+  .company-main .company-form h3,
+  .company-main .company-form h4,
+  .company-main .company-panel h2,
+  .company-main .company-panel h3,
+  .company-main .company-panel h4,
+  .company-main .company-inventory-tools,
+  .company-main .company-panel-title {
+    color:#edf3fb !important;
+  }
+  .company-main .company-panel-head small,
+  .company-main .company-form small,
+  .company-main .company-inventory-history small {
+    color:#b5c4d7 !important;
+  }
+  .company-main .company-panel-head svg,
+  .company-main .company-inventory-history svg {
+    color:#e6c77f;
+  }
+}
