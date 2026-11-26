@@ -2542,3 +2542,38 @@ td b { font-weight:650; }
     color:#e6c77f;
   }
 }
+
+
+/* Dashboard: corrigir textos e números dos indicadores, mantendo ícones coloridos */
+@media (min-width: 761px) {
+  .company-dashboard-stats article,
+  .company-dashboard-stats article.pink,
+  .company-dashboard-stats article.blue,
+  .company-dashboard-stats article.green,
+  .company-dashboard-stats article.orange {
+    color:#edf3fb !important;
+  }
+  .company-dashboard-stats article > div > b,
+  .company-dashboard-stats article.pink > div > b,
+  .company-dashboard-stats article.blue > div > b,
+  .company-dashboard-stats article.green > div > b,
+  .company-dashboard-stats article.orange > div > b {
+    color:#edf3fb !important;
+  }
+  .company-dashboard-stats article > div > strong,
+  .company-dashboard-stats article.pink > div > strong,
+  .company-dashboard-stats article.blue > div > strong,
+  .company-dashboard-stats article.green > div > strong,
+  .company-dashboard-stats article.orange > div > strong {
+    color:#ffffff !important;
+    opacity:1 !important;
+  }
+  .company-dashboard-stats article > div > small,
+  .company-dashboard-stats article.pink > div > small,
+  .company-dashboard-stats article.blue > div > small,
+  .company-dashboard-stats article.green > div > small,
+  .company-dashboard-stats article.orange > div > small {
+    color:#b9c8da !important;
+    opacity:1 !important;
+  }
+}
