@@ -377,6 +377,13 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
     </aside>
     <main className="company-main">
       <div className="company-mobilebar"><button onClick={()=>setMenuOpen(true)} aria-label="Abrir menu"><Menu/></button><div><b>EDERTEC <i>OS PRO</i></b><small>{companyInfo.name}</small></div><span className="company-mobile-avatar">{(email[0]||'U').toUpperCase()}</span></div>
+      <nav className="company-bottom-nav" aria-label="Navegação rápida">
+        <button className={tab==='dashboard'?'active':''} onClick={()=>navigate('dashboard')}><LayoutDashboard size={19}/><span>Início</span></button>
+        <button className={tab==='orders'?'active':''} onClick={()=>navigate('orders')}><ClipboardList size={19}/><span>Ordens</span></button>
+        {canManage&&<button className={tab==='pos'?'active':''} onClick={()=>navigate('pos')}><ShoppingCart size={19}/><span>PDV</span></button>}
+        <button className={tab==='customers'?'active':''} onClick={()=>navigate('customers')}><Users size={19}/><span>Clientes</span></button>
+        <button onClick={()=>setMenuOpen(true)}><Menu size={19}/><span>Menu</span></button>
+      </nav>
       <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='receipts'?'Recibo simples':tab==='partPurchases'?'Registro de compra de peças':tab==='backup'?'Backup de dados':tab==='settings'?'Configurações':tab==='team'?'Funcionários e usuários':tab==='customerPortal'?'Compartilhar Área do Cliente':tab==='support'?'Suporte e chamados':tab==='pos'?'PDV / Vendas':tab==='plans'?'Planos e assinatura':tab==='accounts'?'Contas bancárias':tab==='creditCards'?'Cartões de crédito':tab==='cardInvoices'?'Faturas e parcelas':tab==='cash'?'Caixa':'Financeiro'}</h1></div><div className="company-top-actions"><div className="company-brasilia-clock"><b>{brasiliaTime}</b><span>{brasiliaDate}</span><small>Horário de Brasília</small></div><div className={'company-plan-period '+(planInfo?.subscription_status==='trial'?'is-trial':!planInfo?.subscription_status||planInfo?.subscription_status==='expired'?'is-unsubscribed':'')}>
           <b>{planInfo?.plan_name||(planInfo?.subscription_status==='trial'?'Período de teste':'Nenhum plano contratado')}</b>
           {planInfo?.subscription_status==='trial'?<>
@@ -434,6 +441,12 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
 
       {tab==='dashboard'&&<section className="company-dashboard">
         <p className="company-dashboard-subtitle">Visão geral da assistência técnica</p>
+        <div className="company-dashboard-quick">
+          <button onClick={()=>navigate('orders')}><span><Plus size={18}/></span><b>Nova ordem de serviço</b><small>Registrar atendimento</small></button>
+          {canManage&&<button onClick={()=>navigate('pos')}><span><ShoppingCart size={18}/></span><b>Abrir PDV</b><small>Registrar uma venda</small></button>}
+          {canManage&&<button onClick={()=>navigate('inventory')}><span><Package size={18}/></span><b>Estoque</b><small>Consultar produtos</small></button>}
+          {canManage&&<button onClick={()=>navigate('cash')}><span><Wallet size={18}/></span><b>Caixa</b><small>Abertura e fechamento</small></button>}
+        </div>
         <div className="company-dashboard-stats">
           <article className="pink"><span><ClipboardList/></span><div><b>OS Ativas</b><strong>{activeOrders.length}</strong><small>ordens em andamento</small></div></article>
           <article className="blue"><span><Users/></span><div><b>Clientes</b><strong>{customers.length}</strong><small>cadastrados</small></div></article>
