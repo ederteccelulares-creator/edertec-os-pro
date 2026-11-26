@@ -2389,3 +2389,52 @@ td b { font-weight:650; }
   .company-error-banner { background:#3a2025;border:1px solid #75434b;color:#ffb8bd; }
   .company-notice-banner { background:#18372e;border:1px solid #2e6b54;color:#a7e6c5; }
 }
+
+ 
+/* Ajuste de contraste desktop: reduzir superfícies brancas sem alterar o layout */
+@media (min-width: 761px) {
+  .company-app { background:#0b1119 !important; color:#e8edf5 !important; }
+  .company-main { background:#0f1722 !important; color:#e8edf5 !important; }
+  .company-top { background:transparent !important; }
+  .company-top h1,.company-main h1,.company-main h2,.company-main h3 { color:#edf2f8 !important; }
+  .company-main p,.company-main small,.company-dashboard-subtitle { color:#aab8ca !important; }
+  .company-panel,
+  .company-dashboard-stats article,
+  .company-dashboard-quick>button,
+  .company-dashboard-recent {
+    background:linear-gradient(145deg,#1b2939,#141f2d) !important;
+    border:1px solid #304258 !important;
+    color:#e8edf5 !important;
+    box-shadow:0 12px 28px #0003 !important;
+  }
+  .company-dashboard-quick>button b,
+  .company-dashboard-stats article b,
+  .company-dashboard-stats article strong { color:#edf2f8 !important; }
+  .company-dashboard-quick>button small,
+  .company-dashboard-stats article small { color:#a8b7ca !important; }
+  .company-dashboard-quick>button>span { background:#26364a !important;color:#e5c77f !important; }
+  .company-dashboard-stats article>span { background:#26364a !important;color:#e5c77f !important; }
+  .company-dashboard-order { border-color:#34465d !important;color:#e8edf5 !important; }
+  .company-main .company-table-wrap,
+  .company-main .company-form,
+  .company-main .company-print-settings {
+    background:#152131 !important;border-color:#34465d !important;color:#e8edf5 !important;
+  }
+  .company-main input,.company-main select,.company-main textarea {
+    background:#0e1825 !important;border:1px solid #3a4c63 !important;color:#edf2f8 !important;
+  }
+  .company-main input::placeholder,.company-main textarea::placeholder { color:#8192a8 !important; }
+  .company-main label { color:#bdc9d8 !important; }
+  .company-main .company-secondary,.company-main .company-icon-button {
+    background:#243448 !important;border-color:#40546d !important;color:#e5edf7 !important;
+  }
+  .company-main .company-pos-tools,
+  .company-main .company-pos-branch { color:#bdc9d8 !important; }
+  .company-main .company-pos-product { background:#1c2b3c !important;border-color:#3a4e66 !important;color:#edf2f8 !important; }
+  .company-main .company-pos-line { border-color:#34465d !important;color:#e8edf5 !important; }
+  .company-main .company-pos-grand { background:#292a27 !important;border-color:#80683c !important;color:#f1d38e !important; }
+  .company-main .company-pos-total { color:#e8edf5 !important; }
+  .company-main .company-table-wrap th { background:#202f41 !important;color:#d7e1ed !important; }
+  .company-main .company-table-wrap td { background:#152131 !important;color:#d7e1ed !important;border-color:#2d4056 !important; }
+  .company-main .company-empty { color:#aab8ca !important; }
+}
