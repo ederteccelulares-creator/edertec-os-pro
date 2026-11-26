@@ -15,6 +15,7 @@ export type CompanyRole = 'owner' | 'admin' | 'manager' | 'attendant' | 'technic
 
 export type Company = {
   id: string
+  login_code?: string | null
   name: string
   legal_name: string | null
   tax_id: string | null
@@ -81,7 +82,7 @@ export async function listMyCompanies(): Promise<CompanyMembership[]> {
 
   const { data, error } = await api
     .from('company_members')
-    .select('company_id, role, companies(id,name,legal_name,tax_id,email,phone,status,logo_url)')
+    .select('company_id, role, companies(id,login_code,name,legal_name,tax_id,email,phone,status,logo_url)')
     .eq('user_id', auth.user.id)
     .eq('is_active', true)
   if (error) throw error
@@ -162,7 +163,7 @@ export async function updateCompanyProfile(input: {
       logo_url: input.logoUrl || null,
     })
     .eq('id', input.companyId)
-    .select('id,name,legal_name,tax_id,email,phone,status,logo_url')
+    .select('id,login_code,name,legal_name,tax_id,email,phone,status,logo_url')
     .single()
   if (error) throw error
   return data as Company
