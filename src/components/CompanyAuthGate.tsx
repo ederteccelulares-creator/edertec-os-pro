@@ -112,8 +112,15 @@ export default function CompanyAuthGate() {
       if (!alive) return
       setSession(data.session)
       if (data.session) {
-        try { await refreshMemberships() }
-        catch (e) { if (alive) setError(e instanceof Error ? e.message : 'Não foi possível carregar suas assistências.') }
+        try {
+          // A confirmação do e-mail pode abrir o site com uma sessão já criada.
+          // Finalize o cadastro pendente também nesse primeiro carregamento,
+          // não apenas quando o evento SIGNED_IN é emitido.
+          await finishPendingCompany(data.session.user)
+          await refreshMemberships()
+        } catch (e) {
+          if (alive) setError(e instanceof Error ? e.message : 'Não foi possível concluir o acesso. Tente entrar novamente.')
+        }
       }
       if (alive) setLoading(false)
     })
