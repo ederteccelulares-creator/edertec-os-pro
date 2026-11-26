@@ -15,7 +15,7 @@ export default function CompanyAuthGate() {
   const [mode, setMode] = useState<'login'|'signup'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [quickMode, setQuickMode] = useState(true)
+  const [quickMode, setQuickMode] = useState(false)
   const [companyCode, setCompanyCode] = useState('')
   const [username, setUsername] = useState('')
   const [pin, setPin] = useState('')
