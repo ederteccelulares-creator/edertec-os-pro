@@ -50,11 +50,13 @@ export async function listCompanyProducts(filters: InventoryFilters): Promise<Co
 
   if (filters.activeOnly !== false) query = query.eq('is_active', true)
   const term = filters.search?.trim()
-  // Keep the inventory empty until the user explicitly searches.
-  if (!term) return []
-  const safe = term.replace(/[,%()]/g, ' ').trim()
-  if (!safe) return []
-  query = query.or(`name.ilike.%${safe}%,sku.ilike.%${safe}%`)
+  // Without a search term, return the full active product list.
+  // The inventory needs this list on initial load; the PDV applies its
+  // own client-side rule and only displays matches after the user types.
+  if (term) {
+    const safe = term.replace(/[,%()]/g, ' ').trim()
+    if (safe) query = query.or(`name.ilike.%${safe}%,sku.ilike.%${safe}%`)
+  }
   const { data, error } = await query
   if (error) throw error
   return (data ?? []) as CompanyProduct[]
