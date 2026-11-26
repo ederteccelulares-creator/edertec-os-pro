@@ -2092,3 +2092,68 @@ td b { font-weight:650; }
     z-index:50;
   }
 }
+
+
+/* Edertec OS Pro — acabamento visual responsivo */
+.company-app{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0}
+.company-sidebar{box-shadow:8px 0 28px #0002}
+.company-logo{gap:12px}
+.company-current{border-radius:10px;padding:11px 12px;font-weight:650}
+.company-main{max-width:1720px}
+.company-top{padding-bottom:18px}
+.company-top h1{letter-spacing:-.8px}
+.company-panel{border-radius:15px;box-shadow:0 10px 30px #00000020}
+.company-panel-head{gap:14px}
+.company-primary,.company-secondary,.company-danger{min-height:42px;border-radius:10px;font-weight:650}
+.company-table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.company-table-wrap table{min-width:620px}
+.company-form{border-radius:14px}
+.company-form input,.company-form select,.company-form textarea{min-height:44px;border-radius:10px}
+.company-sidebar nav button{transition:background .18s ease,border-color .18s ease,color .18s ease,transform .18s ease}
+.company-sidebar nav button:focus-visible,.company-primary:focus-visible,.company-secondary:focus-visible{outline:2px solid var(--ed-gold,#d6ad60);outline-offset:2px}
+@media(max-width:760px){
+  .company-mobilebar{position:sticky;top:0;z-index:40;height:66px;padding:0 14px;gap:11px;background:rgba(16,20,25,.96);backdrop-filter:blur(14px);box-shadow:0 5px 20px #0003}
+  .company-mobilebar>div{gap:2px}
+  .company-mobilebar b{font-size:14px;letter-spacing:.35px}
+  .company-mobilebar small{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#9da7b4}
+  .company-mobile-avatar{width:36px;height:36px;flex:0 0 36px;border:1px solid #414852}
+  .company-sidebar{background:#141920!important;border-right:1px solid #343b45!important}
+  .company-sidebar nav{gap:5px!important;padding:8px 0}
+  .company-sidebar nav button{min-height:48px!important;border-radius:10px!important;font-size:13px!important}
+  .company-sidebar nav button.active{background:#29231a!important;border:1px solid #6b5632!important;box-shadow:inset 3px 0 #d6ad60!important;color:#f4d99e!important}
+  .company-nav-submenu{margin:3px 0 7px 14px!important;padding-left:9px!important}
+  .company-nav-submenu button{min-height:42px!important;font-size:12px!important}
+  .company-main{padding:15px 12px calc(34px + env(safe-area-inset-bottom))!important}
+  .company-top{gap:11px!important;margin-bottom:14px!important;padding-bottom:13px!important}
+  .company-top small{font-size:9px!important;letter-spacing:1.3px!important}
+  .company-top h1{font-size:24px!important;line-height:1.15!important}
+  .company-top-actions{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:8px!important}
+  .company-top-actions>*{width:100%;max-width:none!important}
+  .company-panel{padding:14px 12px!important;border-radius:13px!important;margin-bottom:12px}
+  .company-panel-head{gap:10px!important;padding-bottom:11px!important;margin-bottom:13px!important}
+  .company-panel-head b{font-size:14px!important}
+  .company-panel-head small{font-size:11px!important;line-height:1.45}
+  .company-panel-head>button,.company-panel-head .company-primary{width:100%;min-height:44px}
+  .company-form{padding:12px!important;margin:12px 0 16px!important}
+  .company-form-grid{grid-template-columns:minmax(0,1fr)!important;gap:11px!important}
+  .company-form-actions{grid-template-columns:1fr!important;display:grid!important}
+  .company-form-actions button{width:100%;min-height:44px}
+  .company-table-wrap{margin-left:-2px;margin-right:-2px;width:calc(100% + 4px)}
+  .company-table-wrap table{min-width:640px;font-size:11px}
+  .company-table-wrap th,.company-table-wrap td{padding:10px 9px;white-space:nowrap}
+  .company-dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+  .company-dashboard-stats article{min-width:0;padding:12px!important;border-radius:12px!important}
+  .company-dashboard-stats strong{font-size:22px!important;overflow-wrap:anywhere}
+  .company-dashboard-stats b{font-size:10px!important}
+  .company-dashboard-recent{padding:13px!important;border-radius:13px!important}
+  .company-error-banner,.company-notice-banner{border-radius:10px;padding:12px;font-size:12px;line-height:1.5}
+}
+@media(max-width:380px){
+  .company-main{padding-left:9px!important;padding-right:9px!important}
+  .company-dashboard-stats{gap:7px!important}
+  .company-dashboard-stats article{padding:10px!important}
+  .company-top h1{font-size:22px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .company-sidebar nav button{transition:none}
+}
