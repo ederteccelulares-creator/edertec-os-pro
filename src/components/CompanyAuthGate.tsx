@@ -47,39 +47,6 @@ export default function CompanyAuthGate() {
       const company = Array.isArray(membership.companies) ? membership.companies[0] : membership.companies
       if (company) {
         setSelected(company)
-        // Recover the registration credentials on later logins too.
-        // The company may have been created in a previous confirmation session.
-        if (membership.role === 'owner') {
-          try {
-            const { data: teamData, error: teamError } = await supabase!.functions.invoke('company-team', {
-              body: { action: 'list', company_id: membership.company_id },
-            })
-            if (teamError) throw teamError
-            const { data: authData } = await supabase!.auth.getUser()
-            const owner = (teamData?.members || []).find((member: any) => member.user_id === authData.user?.id)
-            setRegistrationInfo({
-              companyCode: String(teamData?.company_code || ''),
-              username: String(owner?.employee?.username || ''),
-              email: String(owner?.email || ''),
-            })
-            // Retry the welcome email on owner login as well. The function's
-            // idempotency ledger prevents duplicate messages after a success.
-            const { data: currentAuth } = await supabase!.auth.getUser()
-            if (currentAuth.user?.email_confirmed_at) {
-              const { error: welcomeError } = await supabase!.functions.invoke('send-company-welcome', {
-                body: { company_id: membership.company_id },
-              })
-              if (welcomeError) {
-                console.error('Falha ao enviar e-mail de boas-vindas:', welcomeError)
-                setNotice('Seus dados de acesso estão nesta tela. O envio do e-mail não foi concluído; tente novamente mais tarde.')
-              } else {
-                setNotice('Dados de acesso recuperados. O e-mail de boas-vindas foi enviado ou já havia sido enviado.')
-              }
-            }
-          } catch (e) {
-            console.error('Não foi possível recuperar os dados de acesso da empresa:', e)
-          }
-        }
       }
     }
   }, [])
