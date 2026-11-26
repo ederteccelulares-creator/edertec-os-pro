@@ -2438,3 +2438,16 @@ td b { font-weight:650; }
   .company-main .company-table-wrap td { background:#152131 !important;color:#d7e1ed !important;border-color:#2d4056 !important; }
   .company-main .company-empty { color:#aab8ca !important; }
 }
+
+
+/* Correção de legibilidade dos títulos do PDV no tema escuro */
+@media (min-width: 761px) {
+  .company-pos .company-panel-head b,
+  .company-pos .company-panel-head b svg {
+    color:#f1f5fb !important;
+    stroke:#e7c77f !important;
+  }
+  .company-pos .company-panel-head small {
+    color:#b8c6d8 !important;
+  }
+}
