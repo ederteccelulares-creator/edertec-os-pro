@@ -2332,3 +2332,60 @@ td b { font-weight:650; }
   .company-dashboard-quick>button{padding:8px}
   .company-dashboard-quick>button>b{font-size:10px}
 }
+
+
+/* Desktop refinement — Edertec graphite, navy and champagne gold */
+@media (min-width: 761px) {
+  .company-app { background:#0b111a; color:#edf2f8; }
+  .company-sidebar { background:#101925; border-right:1px solid #26364a; }
+  .company-logo>span { background:linear-gradient(145deg,#e9c879,#a77b35);color:#17130c;box-shadow:0 8px 24px #c99b4e22; }
+  .company-logo i,.company-text-link { color:#e2bd70!important; }
+  .company-sidebar nav button { color:#aebbd0; transition:background .18s ease,color .18s ease; }
+  .company-sidebar nav button.active { background:#29271f;color:#f0cf86;border:1px solid #62502e;box-shadow:inset 3px 0 #d9b665; }
+  .company-sidebar nav button:hover { background:#1b2939;color:#fff; }
+  .company-current { background:#151f2d;border-color:#304158;color:#e2bd70; }
+  .company-main { padding:34px 38px; }
+  .company-top { padding:0 0 22px;border-bottom:1px solid #263448;margin-bottom:26px; }
+  .company-top h1 { color:#f2f5fa;letter-spacing:-.6px; }
+  .company-top small { color:#d8b76d; }
+  .company-panel { background:linear-gradient(145deg,#172333,#131d2a);border-color:#2b3b50;border-radius:15px;box-shadow:0 14px 34px #0003; }
+  .company-panel-head b { color:#f0f4fa; }
+  .company-panel-head small,.company-empty { color:#9aaac0; }
+  .company-form,.company-print-settings { background:#101a27;border-color:#304158; }
+  .company-form input,.company-form select,.company-form textarea,
+  .company-print-settings input,.company-print-settings select,
+  .company-pos-tools input,.company-pos-tools select,
+  .company-pos-checkout input,.company-pos-checkout select {
+    background:#0d1724;border-color:#34465e;color:#edf3fa;
+  }
+  .company-form input:focus,.company-form select:focus,.company-form textarea:focus,
+  .company-pos-tools input:focus,.company-pos-checkout input:focus { border-color:#c9a45b;box-shadow:0 0 0 3px #c9a45b18; }
+  .company-primary { background:linear-gradient(120deg,#e8c879,#bd9147);color:#20190d;box-shadow:0 8px 22px #c49a4b20;font-weight:700; }
+  .company-primary:hover { background:linear-gradient(120deg,#f0d58e,#d0a454); }
+  .company-icon-button,.company-secondary { background:#1b2a3b;border-color:#3a4d65;color:#dce6f2; }
+  .company-dashboard-stats article { background:linear-gradient(145deg,#19283a,#141f2e);border-color:#30445c;border-radius:15px;box-shadow:0 12px 28px #0003; }
+  .company-dashboard-stats .pink { border-color:#68522f;box-shadow:0 10px 28px #c9a45b12; }
+  .company-dashboard-stats .pink>span { background:linear-gradient(145deg,#e8c879,#9d7332);color:#21190b; }
+  .company-dashboard-stats .pink b,.company-dashboard-order>span { color:#e5c47b; }
+  .company-dashboard-stats .blue { border-color:#31547a; }
+  .company-dashboard-stats .green { border-color:#28614f; }
+  .company-dashboard-stats .orange { border-color:#75502d; }
+  .company-dashboard-recent { background:#152131; }
+  .company-dashboard-order { border-color:#2b3d52; }
+  .company-dashboard-order em { color:#e6c77f;background:#302a1d; }
+  .company-pos { gap:18px; }
+  .company-pos-products,.company-pos-cart,.company-pos-history { padding:22px; }
+  .company-pos-tools>label:first-child { background:#0e1927;border-color:#34465e;color:#a9b8cc; }
+  .company-pos-product { background:#1a293a;border-color:#34475e;color:#eef3f9;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease; }
+  .company-pos-product:hover { transform:translateY(-2px);border-color:#c5a25f;box-shadow:0 10px 24px #0003; }
+  .company-pos-product>span { color:#e2bd70; }
+  .company-pos-product strong,.company-pos-product em { color:#e7c77f; }
+  .company-pos-line { border-color:#2d4056; }
+  .company-pos-qty button { background:#1b2a3b;border-color:#3b5068;color:#e5c77e; }
+  .company-pos-total { border-color:#2b3d52; }
+  .company-pos-grand { background:#202b36;border:1px solid #675632;border-radius:10px;padding:14px;color:#f3d58e; }
+  .company-table-wrap th { color:#a7b7cb;border-color:#304158; }
+  .company-table-wrap td { border-color:#293b50;color:#d4deea; }
+  .company-error-banner { background:#3a2025;border:1px solid #75434b;color:#ffb8bd; }
+  .company-notice-banner { background:#18372e;border:1px solid #2e6b54;color:#a7e6c5; }
+}
