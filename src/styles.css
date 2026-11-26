@@ -2478,3 +2478,67 @@ td b { font-weight:650; }
     color:#e6c77f;
   }
 }
+
+
+/* Padronização global de legibilidade em todos os módulos desktop */
+@media (min-width: 761px) {
+  .company-main .company-panel-head b,
+  .company-main .company-panel-head strong,
+  .company-main .company-panel > h2,
+  .company-main .company-panel > h3,
+  .company-main .company-panel > h4,
+  .company-main .company-panel h2,
+  .company-main .company-panel h3,
+  .company-main .company-panel h4,
+  .company-main .company-form h2,
+  .company-main .company-form h3,
+  .company-main .company-form h4,
+  .company-main .company-modal h2,
+  .company-main .company-modal h3,
+  .company-main .company-modal h4,
+  .company-main .company-section-title,
+  .company-main .company-subtitle {
+    color:#f0f4fa !important;
+  }
+  .company-main .company-panel small,
+  .company-main .company-form small,
+  .company-main .company-panel-head small,
+  .company-main .company-muted,
+  .company-main .company-description,
+  .company-main .company-empty,
+  .company-main .company-help-text {
+    color:#b8c6d8 !important;
+  }
+  .company-main .company-panel,
+  .company-main .company-modal,
+  .company-main .company-form,
+  .company-main .company-card,
+  .company-main .company-section,
+  .company-main .company-list-card {
+    color:#e7edf6;
+  }
+  .company-main input,
+  .company-main select,
+  .company-main textarea {
+    color:#edf3fb !important;
+    caret-color:#e6c77f;
+  }
+  .company-main input::placeholder,
+  .company-main textarea::placeholder {
+    color:#91a2b8 !important;
+    opacity:1;
+  }
+  .company-main table th {
+    color:#e0e8f2 !important;
+  }
+  .company-main table td {
+    color:#d5dfeb;
+  }
+  .company-main button:not(.company-primary):not(.company-danger):not(.company-warning) {
+    color:#e5edf7;
+  }
+  .company-main .company-panel-head svg,
+  .company-main .company-section-title svg {
+    color:#e6c77f;
+  }
+}
