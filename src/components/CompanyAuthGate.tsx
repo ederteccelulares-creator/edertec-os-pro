@@ -55,7 +55,8 @@ export default function CompanyAuthGate() {
               body: { action: 'list', company_id: membership.company_id },
             })
             if (teamError) throw teamError
-            const { data: authData } = await supabase!.auth.getUser()\n            const owner = (teamData?.members || []).find((member: any) => member.user_id === authData.user?.id)
+            const { data: authData } = await supabase!.auth.getUser()
+            const owner = (teamData?.members || []).find((member: any) => member.user_id === authData.user?.id)
             setRegistrationInfo({
               companyCode: String(teamData?.company_code || ''),
               username: String(owner?.employee?.username || ''),
