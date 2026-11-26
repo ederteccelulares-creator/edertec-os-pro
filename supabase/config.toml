@@ -1,16 +1,16 @@
-[functions.invite-team]
+[functions.company-login]
+verify_jwt = false
+
+[functions.company-team]
 verify_jwt = true
 
-[functions.export-organization]
+[functions.send-company-welcome]
 verify_jwt = true
 
-[functions.validate-organization-backup]
+[functions.restore-company-backup]
 verify_jwt = true
 
-[functions.restore-organization-backup]
-verify_jwt = true
-
-[functions.respond-service-order-quote]
+[functions.whatsapp-webhook]
 verify_jwt = false
 
 [functions.mercadopago-billing]
