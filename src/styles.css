@@ -2255,3 +2255,80 @@ td b { font-weight:650; }
   .company-dashboard-stats article{padding:10px!important}
   .company-dashboard-stats article>div strong{font-size:21px!important}
 }
+
+
+/* Refinamento dashboard + PDV — modelo 2 */
+.company-dashboard-quick{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:4px 0 18px;
+}
+.company-dashboard-quick>button{
+  display:grid;grid-template-columns:42px minmax(0,1fr);grid-template-rows:auto auto;align-items:center;
+  column-gap:11px;text-align:left;padding:14px;background:#fff;border:1px solid #e3eaf4;
+  border-radius:14px;color:#193452;cursor:pointer;min-width:0;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;
+}
+.company-dashboard-quick>button:hover{transform:translateY(-2px);border-color:#a9c7f4;box-shadow:0 8px 22px #1d4f9110}
+.company-dashboard-quick>button>span{grid-row:1/3;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:#edf3ff;color:#2563eb}
+.company-dashboard-quick>button>b{font-size:13px;line-height:1.3}
+.company-dashboard-quick>button>small{font-size:11px;color:#7b8ba1;margin-top:3px}
+.company-bottom-nav{display:none}
+.company-pos{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(310px,.85fr);align-items:start;gap:16px}
+.company-pos-products{min-width:0}
+.company-pos-cart{min-width:0;position:sticky;top:18px}
+.company-pos-history{grid-column:1/-1;min-width:0}
+.company-pos-tools{gap:12px}
+.company-pos-tools>label:first-child{flex:1;min-width:180px}
+.company-pos-product-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.company-pos-product{display:flex;flex-direction:column;align-items:stretch;gap:8px;text-align:left;padding:12px;min-width:0;transition:border-color .16s ease,box-shadow .16s ease}
+.company-pos-product>span{height:100px;display:grid;place-items:center;border-radius:9px;background:#edf3ff;color:#3973ce}
+.company-pos-product-image{height:112px!important;background:#f5f8fc!important;border-color:#e5ebf3!important}
+.company-pos-product>b{font-size:13px;line-height:1.35;min-height:34px}
+.company-pos-product>strong{font-size:16px;color:#1d5fc4}
+.company-pos-product>small{color:#7d8ca1}
+.company-pos-product>em{font-style:normal;display:flex;align-items:center;gap:5px;color:#2563eb;font-size:12px;font-weight:700}
+.company-pos-cart .company-panel-head b{display:flex;align-items:center;gap:7px}
+.company-pos-cart .company-pos-grand{padding:12px 0;border-top:1px solid #e7edf5;border-bottom:1px solid #e7edf5;margin:7px 0}
+.company-pos-cart .company-pos-grand strong{font-size:25px;color:#1556b7}
+.company-pos-finish{width:100%;min-height:49px!important;font-size:15px!important}
+@media(max-width:900px){
+  .company-dashboard-quick{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .company-pos{grid-template-columns:minmax(0,1fr)}
+  .company-pos-cart{position:static}
+  .company-pos-history{grid-column:auto}
+}
+@media(max-width:760px){
+  .company-bottom-nav{
+    display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));align-items:center;
+    position:fixed;z-index:30;left:0;right:0;bottom:0;min-height:66px;
+    padding:6px 7px calc(6px + env(safe-area-inset-bottom));
+    background:#fff;border-top:1px solid #e1e8f2;box-shadow:0 -6px 22px #10254412;
+  }
+  .company-bottom-nav button{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    min-width:0;min-height:48px;border:0;background:transparent;color:#8290a3;
+    font-size:10px;font-weight:650;cursor:pointer;border-radius:10px;
+  }
+  .company-bottom-nav button.active{color:#1d5fc4;background:#edf3ff}
+  .company-bottom-nav button svg{flex:0 0 auto}
+  .company-main{padding-bottom:calc(88px + env(safe-area-inset-bottom))!important}
+  .company-dashboard-quick{gap:9px;margin:2px 0 14px}
+  .company-dashboard-quick>button{grid-template-columns:36px minmax(0,1fr);gap:8px;padding:10px}
+  .company-dashboard-quick>button>span{width:36px;height:36px;border-radius:10px}
+  .company-dashboard-quick>button>b{font-size:11px}
+  .company-dashboard-quick>button>small{font-size:10px}
+  .company-pos{display:flex!important;flex-direction:column!important;gap:12px!important}
+  .company-pos-products,.company-pos-cart,.company-pos-history{width:100%;order:initial}
+  .company-pos-cart{order:2}
+  .company-pos-products{order:1}
+  .company-pos-history{order:3}
+  .company-pos-tools>label:first-child{min-width:0;width:100%}
+  .company-pos-product-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .company-pos-product{min-height:210px}
+  .company-pos-product-image{height:92px!important}
+  .company-pos-checkout{position:static!important}
+}
+@media(max-width:380px){
+  .company-bottom-nav{min-height:62px}
+  .company-bottom-nav button{font-size:9px}
+  .company-dashboard-quick>button{padding:8px}
+  .company-dashboard-quick>button>b{font-size:10px}
+}
