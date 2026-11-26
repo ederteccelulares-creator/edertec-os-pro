@@ -1,5 +1,10 @@
 -- Minimal Supabase Auth compatibility layer for isolated PostgreSQL CI.
 -- This is NOT a production Supabase schema and contains no real user data.
+-- Supabase normally installs pgcrypto in the extensions schema; mirror that
+-- prerequisite so migrations using extensions.gen_random_bytes/hmac also run in CI.
+create schema extensions;
+create extension if not exists pgcrypto with schema extensions;
+
 create schema auth;
 
 create table auth.users (
