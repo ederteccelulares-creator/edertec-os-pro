@@ -69,6 +69,7 @@ export async function createCompanyProduct(input: {
   description?: string
   costPrice?: number
   salePrice?: number
+  initialStock?: number
   minimumStock?: number
   imageFile?: File | null
 }) {
@@ -80,11 +81,7 @@ export async function createCompanyProduct(input: {
   }
   const costPrice = Number(input.costPrice ?? 0)
   const salePrice = Number(input.salePrice ?? 0)
-  const minimumStock = Number(input.minimumStock ?? 0)
-  if (![costPrice,salePrice,minimumStock].every(Number.isFinite) ||
-      costPrice < 0 || salePrice < 0 || minimumStock < 0) {
-    throw new Error('Preços e quantidades devem ser números positivos ou zero.')
-  }
+  const initialStock = Number(input.initialStock ?? 0)\n  const minimumStock = Number(input.minimumStock ?? 0)\n  if (![costPrice,salePrice,initialStock,minimumStock].every(Number.isFinite) ||\n      costPrice < 0 || salePrice < 0 || initialStock < 0 || minimumStock < 0 ||\n      !Number.isInteger(initialStock) || !Number.isInteger(minimumStock)) {\n    throw new Error('Preços devem ser positivos ou zero; quantidades devem ser números inteiros não negativos.')\n  }
 
   const { data, error } = await db()
     .from('products')
@@ -103,8 +100,7 @@ export async function createCompanyProduct(input: {
     .select('id,company_id,sku,name,description,image_url,cost_price,sale_price,stock_quantity,min_stock,is_active,created_at,updated_at')
     .single()
   if (error) throw error
-  let product = data as CompanyProduct
-  if (input.imageFile) {
+  let product = data as CompanyProduct\n  if (initialStock > 0) {\n    try {\n      await recordCompanyStockMovement({\n        companyId: input.companyId,\n        productId: product.id,\n        movementType: 'in',\n        quantity: initialStock,\n        unitCost: costPrice,\n        reason: 'Saldo inicial no cadastro do produto',\n      })\n    } catch (movementError) {\n      throw new Error('O produto foi criado, mas a entrada do saldo inicial falhou. Não cadastre novamente; atualize o estoque pelo botão Movimentar. Detalhe: ' + (movementError instanceof Error ? movementError.message : 'erro desconhecido.'))\n    }\n  }\n  if (input.imageFile) {
     const file = input.imageFile
     if (!['image/jpeg','image/png','image/webp'].includes(file.type)) throw new Error('A foto deve estar em JPG, PNG ou WebP.')
     if (file.size > 5 * 1024 * 1024) throw new Error('A foto deve ter no máximo 5 MB.')
