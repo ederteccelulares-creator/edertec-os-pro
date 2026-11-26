@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent, type ChangeEvent } from 'react'
-import { Building2, ClipboardList, Users, Package, Truck, ShoppingCart, Wallet, Plus, RefreshCw, LogOut, Database, Download, LayoutDashboard, Menu, X, Smartphone, Printer, Settings, LifeBuoy, CreditCard, Receipt, ShieldCheck } from 'lucide-react'
+import { Building2, ClipboardList, Users, Package, Truck, ShoppingCart, Wallet, Plus, RefreshCw, LogOut, Database, Download, LayoutDashboard, Menu, X, Smartphone, Printer, Settings, LifeBuoy, CreditCard, Receipt, ShieldCheck, Copy } from 'lucide-react'
 import CompanyInventoryPanel from './CompanyInventoryPanel'
 import CompanyPOSPanel from './CompanyPOSPanel'
 import CompanySuppliersPanel from './CompanySuppliersPanel'
@@ -505,6 +505,17 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
         {loading?<p className="company-empty">Carregando...</p>:customers.length===0?<p className="company-empty">Nenhum cliente cadastrado.</p>:<div className="company-table-wrap"><table><thead><tr><th>NOME</th><th>TELEFONE</th><th>E-MAIL</th><th>DOCUMENTO</th></tr></thead><tbody>{customers.map(c=><tr key={c.id}><td>{c.name}</td><td>{c.phone||'—'}</td><td>{c.email||'—'}</td><td>{c.document||'—'}</td></tr>)}</tbody></table></div>}
       </section>}
       {tab==='settings'&&<section className="company-settings-stack">
+        <div className="company-panel">
+          <div className="company-panel-head"><div><b>Dados para login com PIN</b><small>Compartilhe este código com os usuários da sua assistência</small></div><ShieldCheck size={22}/></div>
+          <div className="company-print-settings">
+            <label>Código da empresa</label>
+            <div className="company-inline-actions">
+              <input aria-label="Código da empresa para login" readOnly value={companyInfo.login_code||''} placeholder="Código indisponível"/>
+              <button type="button" className="company-secondary" disabled={!companyInfo.login_code} onClick={()=>{void navigator.clipboard.writeText(companyInfo.login_code||'').then(()=>setNotice('Código da empresa copiado.')).catch(()=>setError('Não foi possível copiar o código.'))}}><Copy size={15}/> Copiar</button>
+            </div>
+            <p>O usuário deverá informar este código, seu nome de usuário e o PIN de 6 números para entrar pelo acesso alternativo.</p>
+          </div>
+        </div>
         <div className="company-panel">
           <div className="company-panel-head"><div><b>Dados da empresa</b><small>Informações exibidas nas ordens de serviço</small></div><Building2 size={22}/></div>
           <form className="company-print-settings" onSubmit={saveCompanyDetails}>
