@@ -87,7 +87,8 @@ export default function CompanyInventoryPanel({company}:{company:Company}) {
         <label>SKU / Código<input value={form.sku} onChange={e=>setForm({...form,sku:e.target.value})}/></label>
         <label>Preço de custo (R$)<input required type="number" min="0" step="0.01" value={form.costPrice} onChange={e=>setForm({...form,costPrice:e.target.value})}/></label>
         <label>Preço de venda (R$)<input required type="number" min="0" step="0.01" value={form.salePrice} onChange={e=>setForm({...form,salePrice:e.target.value})}/></label>
-        <label>Quantidade inicial<input required type="number" min="0" step="1" value={form.initialStock} onChange={e=>setForm({...form,initialStock:e.target.value})}/><small>Quantidade que está entrando no estoque neste cadastro.</small></label>\n        <label>Estoque mínimo<input required type="number" min="0" step="1" value={form.minimumStock} onChange={e=>setForm({...form,minimumStock:e.target.value})}/><small>Limite para alertar quando o estoque estiver baixo.</small></label>
+        <label>Quantidade inicial<input required type="number" min="0" step="1" value={form.initialStock} onChange={e=>setForm({...form,initialStock:e.target.value})}/><small>Quantidade que está entrando no estoque neste cadastro.</small></label>
+        <label>Estoque mínimo<input required type="number" min="0" step="1" value={form.minimumStock} onChange={e=>setForm({...form,minimumStock:e.target.value})}/><small>Limite para alertar quando o estoque estiver baixo.</small></label>
       </div>
       <label>Descrição<input value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/></label>
       <label>Foto do produto (JPG, PNG ou WebP · até 5 MB)<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e:ChangeEvent<HTMLInputElement>)=>setImageFile(e.target.files?.[0]||null)}/>{imageFile&&<small>{imageFile.name}</small>}</label>
