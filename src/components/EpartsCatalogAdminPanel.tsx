@@ -126,22 +126,38 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
   return <section className="company-panel eparts-admin-panel">
     <style>{`
       .eparts-admin-panel .eparts-tabs {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr));
-        gap: 10px;
-        width: 100%;
-        min-width: 0;
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
       }
       .eparts-admin-panel .eparts-tabs > button {
-        min-width: 0;
-        width: 100%;
-        max-width: 100%;
-        justify-content: center;
-        white-space: normal;
-        text-align: center;
-        line-height: 1.25;
-        padding: 12px 10px;
-        overflow-wrap: anywhere;
+        display: flex !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: initial !important;
+        justify-content: center !important;
+        white-space: normal !important;
+        text-align: center !important;
+        line-height: 1.25 !important;
+        padding: 12px 8px !important;
+        overflow-wrap: anywhere !important;
+        box-sizing: border-box !important;
+      }
+      @media (max-width: 640px) {
+        .eparts-admin-panel .eparts-tabs {
+          grid-template-columns: minmax(0, 1fr) !important;
+        }
+        .eparts-admin-panel .eparts-tabs > button {
+          justify-content: flex-start !important;
+          text-align: left !important;
+          min-height: 48px !important;
+          padding: 13px 16px !important;
+        }
       }
       @media (max-width: 600px) {
         .eparts-admin-panel {
@@ -161,12 +177,12 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
       }
     `}</style>
     <div className="company-panel-head"><div><b>Central Eparts</b><small>Cadastros e catálogo do marketplace · comissão da plataforma: 12%</small></div><button className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar</button></div>
-    <div className="company-inline-actions eparts-tabs" style={{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:10,width:'100%',minWidth:0}}>
-      <button className={tab==='products'?'company-primary':'company-secondary'} style={{minWidth:0,width:'100%',maxWidth:'100%',justifyContent:'center',whiteSpace:'normal',textAlign:'center',overflowWrap:'anywhere',lineHeight:1.25,padding:'12px 8px'}} onClick={()=>{setTab('products');setShowForm(false)}}><Package size={15}/> Produtos ({products.length})</button>
-      <button className={tab==='suppliers'?'company-primary':'company-secondary'} style={{minWidth:0,width:'100%',maxWidth:'100%',justifyContent:'center',whiteSpace:'normal',textAlign:'center',overflowWrap:'anywhere',lineHeight:1.25,padding:'12px 8px'}} onClick={()=>{setTab('suppliers');setShowForm(false)}}><Truck size={15}/> Fornecedores ({suppliers.length})</button>
-      <button className={tab==='brands'?'company-primary':'company-secondary'} style={{minWidth:0,width:'100%',maxWidth:'100%',justifyContent:'center',whiteSpace:'normal',textAlign:'center',overflowWrap:'anywhere',lineHeight:1.25,padding:'12px 8px'}} onClick={()=>{setTab('brands');setShowForm(false)}}><Boxes size={15}/> Marcas ({brands.length})</button>
-      <button className={tab==='sales'?'company-primary':'company-secondary'} style={{minWidth:0,width:'100%',maxWidth:'100%',justifyContent:'center',whiteSpace:'normal',textAlign:'center',overflowWrap:'anywhere',lineHeight:1.25,padding:'12px 8px'}} onClick={()=>{setTab('sales');setShowForm(false)}}><Truck size={15}/> Vendas ({sales.length})</button>
-      <button className={tab==='payouts'?'company-primary':'company-secondary'} style={{minWidth:0,width:'100%',maxWidth:'100%',justifyContent:'center',whiteSpace:'normal',textAlign:'center',overflowWrap:'anywhere',lineHeight:1.25,padding:'12px 8px'}} onClick={()=>{setTab('payouts');setShowForm(false)}}><Wallet size={15}/> Repasses ({payouts.length})</button>
+    <div className="company-inline-actions eparts-tabs">
+      <button className={tab==='products'?'company-primary':'company-secondary'} onClick={()=>{setTab('products');setShowForm(false)}}><Package size={15}/> Produtos ({products.length})</button>
+      <button className={tab==='suppliers'?'company-primary':'company-secondary'} onClick={()=>{setTab('suppliers');setShowForm(false)}}><Truck size={15}/> Fornecedores ({suppliers.length})</button>
+      <button className={tab==='brands'?'company-primary':'company-secondary'} onClick={()=>{setTab('brands');setShowForm(false)}}><Boxes size={15}/> Marcas ({brands.length})</button>
+      <button className={tab==='sales'?'company-primary':'company-secondary'} onClick={()=>{setTab('sales');setShowForm(false)}}><Truck size={15}/> Vendas ({sales.length})</button>
+      <button className={tab==='payouts'?'company-primary':'company-secondary'} onClick={()=>{setTab('payouts');setShowForm(false)}}><Wallet size={15}/> Repasses ({payouts.length})</button>
     </div>
     <div className="company-panel-head eparts-list-head"><div><b>{tab==='products'?'Produtos do catálogo':tab==='suppliers'?'Fornecedores cadastrados':tab==='brands'?'Marcas cadastradas':tab==='payouts'?'Repasses aos fornecedores':'Pedidos e vendas'}</b><small>{tab==='products'?'Gerencie preço, custo, estoque e publicação no catálogo':tab==='suppliers'?'Cadastre parceiros que acompanham suas vendas':tab==='brands'?'Organize os produtos por marca':tab==='payouts'?'Registre e consulte valores já repassados':'Acompanhe pedidos, comissão da Eparts e valores dos fornecedores'}</small></div>{tab!=='sales'&&tab!=='payouts'&&<button className="company-primary" onClick={startNew}><BadgePlus size={16}/> Novo cadastro</button>}</div>
     {error&&<div className="company-error-banner">{error}</div>}{notice&&<div className="company-success-banner">{notice}</div>}
