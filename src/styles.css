@@ -2880,3 +2880,54 @@ td b { font-weight:650; }
     animation:none !important;
   }
 }
+
+
+/* Identidade Edertec premium: reforco visual grafite, vermelho e dourado */
+@media (min-width: 761px) {
+  .company-main {
+    background:radial-gradient(ellipse at 92% 4%,#6b20251f 0%,transparent 31%),radial-gradient(ellipse at 8% 0%,#9b6a2b12 0%,transparent 26%),linear-gradient(135deg,#090b10 0%,#111116 52%,#171116 100%) !important;
+  }
+  .company-main .company-top { border-bottom:1px solid #76502f !important; box-shadow:0 8px 24px #0004 !important; }
+  .company-main .company-dashboard-quick > button,
+  .company-main .company-dashboard-stats article,
+  .company-main .company-panel,
+  .company-main .company-form,
+  .company-main .company-table-wrap {
+    background:linear-gradient(120deg,#26242a 0%,#191a20 58%,#21171b 100%) !important;
+    border:1px solid #755333 !important;
+    box-shadow:0 12px 30px #0007,inset 0 1px #ffffff0b !important;
+  }
+  .company-main .company-dashboard-quick > button { border-left:3px solid #a92a32 !important; }
+  .company-main .company-dashboard-quick > button:before {
+    content:""; position:absolute; left:0; right:22%; top:0; height:1px;
+    background:linear-gradient(90deg,#f0444d99,#e6c77f55,transparent); pointer-events:none;
+  }
+  .company-main .company-dashboard-stats article { position:relative; overflow:hidden; }
+  .company-main .company-dashboard-stats article:after {
+    content:""; position:absolute; top:-38px; right:-38px; width:112px; height:112px;
+    border:1px solid #d934402e; border-radius:50%;
+    box-shadow:0 0 24px #d9344018,inset 0 0 20px #d9344010; pointer-events:none;
+  }
+  .company-main .company-dashboard-stats article > span,
+  .company-main .company-dashboard-quick > button > span {
+    background:linear-gradient(145deg,#432b25,#27191d) !important;
+    border:1px solid #a77945 !important; color:#f3c875 !important; box-shadow:0 0 16px #d82c3822 !important;
+  }
+  .company-main .company-dashboard-stats article strong { color:#fffaf2 !important; text-shadow:0 0 14px #f0c47722; }
+  .company-main .company-dashboard-stats article b,
+  .company-main .company-dashboard-quick > button b,
+  .company-main .company-panel-head b { color:#fff3e4 !important; }
+  .company-main .company-panel-head { border-bottom:1px solid #62452f !important; }
+  .company-main .company-table-wrap th {
+    background:linear-gradient(90deg,#39271f,#292329) !important; color:#f4d28b !important; border-bottom:1px solid #9a6b3e !important;
+  }
+  .company-main .company-primary {
+    background:linear-gradient(110deg,#981b26,#e12d39) !important; border:1px solid #ff5960 !important;
+    box-shadow:0 6px 20px #e3223448,inset 0 1px #ffffff24 !important;
+  }
+  .company-app aside { box-shadow:8px 0 34px #0008,inset -1px 0 #7a4c32 !important; }
+  .company-app aside nav > button.active,
+  .company-app aside nav .company-nav-group > button.active {
+    background:linear-gradient(100deg,#5a1c23,#261519) !important; box-shadow:inset 3px 0 #ff3c47,0 0 22px #e326383d !important;
+  }
+}
