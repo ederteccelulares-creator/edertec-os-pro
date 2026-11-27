@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     || (() => { try { return JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") || "{}").default; } catch { return undefined; } })();
   if (!url || !serviceKey) return json({ error: "Storage monitor is not configured." }, 503);
 
-  const jwt = (req.headers.get("Authorization") || "").replace(/^Bearer\\s+/i, "");
+  const jwt = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
   if (!jwt) return json({ error: "Authentication required." }, 401);
 
   const admin = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
