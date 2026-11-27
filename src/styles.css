@@ -3581,3 +3581,174 @@ td b { font-weight:650; }
     box-shadow:inset 3px 0 #e33a43 !important;
   }
 }
+
+
+/* Edertec brand unification — platform admin, tenant, settings, backup and customer portal */
+:root {
+  --edertec-bg:#09090c;
+  --edertec-surface:#19181d;
+  --edertec-surface-2:#211b1d;
+  --edertec-border:#594634;
+  --edertec-gold:#e8b957;
+  --edertec-red:#ed2635;
+  --edertec-text:#f7f1e9;
+  --edertec-muted:#b9ada4;
+}
+.platform-page,.tenant-page,.customer-portal-page {
+  background:radial-gradient(ellipse at 90% 0%,#291316 0%,#101014 36%,#09090c 78%) !important;
+  color:var(--edertec-text) !important;
+}
+.platform-header,.tenant-header {
+  background:linear-gradient(105deg,#101014,#1c1417) !important;
+  border-color:#63452f !important;
+}
+.platform-brand>span,.tenant-brand>span {
+  background:linear-gradient(145deg,#541a20,#211216) !important;
+  border:1px solid #e02b39 !important;
+  color:#ff5961 !important;
+  box-shadow:0 0 17px #ed26352a !important;
+}
+.platform-brand i,.tenant-brand i {color:#ff414d !important}
+.platform-brand small,.tenant-brand small {color:#c5b7ac !important}
+.platform-account button,.tenant-account button {
+  background:#211b1d !important;
+  border:1px solid #775533 !important;
+  color:#f0c66f !important;
+}
+.platform-content {color:var(--edertec-text)}
+.platform-heading p,.platform-org-title small,.platform-plan-grid strong small,
+.platform-plan-grid p,.platform-plan-grid article>small,.platform-footer {color:var(--edertec-muted) !important}
+.platform-stats article,.platform-org,.platform-plan-grid article {
+  background:linear-gradient(145deg,#211f23,#141418 72%,#211518) !important;
+  border:1px solid #614a36 !important;
+  box-shadow:0 9px 24px #0007,inset 0 1px #ffffff0a !important;
+}
+.platform-stats span {color:#d0bda8 !important}
+.platform-stats b,.platform-org-title b,.platform-plan-grid strong {color:#f5d18a !important}
+.platform-status {background:#35231e !important;color:#f0c66f !important;border:1px solid #765132}
+.platform-org-controls label {color:#d4c3b3 !important}
+.platform-org-controls select,.platform-org-controls input,
+.tenant-page input,.tenant-page select,.tenant-page textarea,
+.platform-page input,.platform-page select,.platform-page textarea,
+.customer-portal-page input,.customer-portal-page select,.customer-portal-page textarea {
+  background:#111115 !important;
+  border:1px solid #654a35 !important;
+  color:#f7f1e9 !important;
+  accent-color:#ed2635;
+}
+.platform-org-controls select:focus,.platform-org-controls input:focus,
+.tenant-page input:focus,.tenant-page select:focus,.tenant-page textarea:focus,
+.platform-page input:focus,.platform-page select:focus,.platform-page textarea:focus,
+.customer-portal-page input:focus,.customer-portal-page select:focus,.customer-portal-page textarea:focus {
+  border-color:#e6b454 !important;
+  box-shadow:0 0 0 3px #ed263526 !important;
+  outline:0 !important;
+}
+.tenant-stats article,.tenant-panel,.tenant-form,.tenant-history-modal,
+.tenant-device-panel,.tenant-intake-checklist,.tenant-intake-media,
+.tenant-report-grid article,.tenant-report-columns>div,
+.tenant-finance-summary article,.tenant-sale-total,.tenant-team-notice,
+.tenant-customer-list article,.tenant-device-list article,
+.tenant-device-order-history article,.tenant-dashboard-recent,
+.tenant-dashboard-order,.tenant-table-wrap table,
+.platform-page .tenant-panel {
+  background:linear-gradient(145deg,#211f23,#151519 72%,#211518) !important;
+  border-color:#5b4635 !important;
+  color:#f5eee5 !important;
+}
+.tenant-page .tenant-panel-head b,.tenant-page .tenant-panel h2,
+.tenant-page .tenant-panel h3,.platform-page .tenant-panel-head b,
+.platform-page .tenant-panel h2,.platform-page .tenant-panel h3 {
+  color:#f5d18a !important;
+}
+.tenant-page .tenant-panel-head small,.tenant-page .tenant-panel p,
+.tenant-page .tenant-form label,.tenant-page .tenant-table-wrap td,
+.platform-page .tenant-panel small {color:#c4b7aa !important}
+.tenant-page .tenant-tabs {border-color:#63452f !important}
+.tenant-page .tenant-tabs button {
+  color:#c8bcb2 !important;
+  border-bottom-color:transparent !important;
+}
+.tenant-page .tenant-tabs button.selected,
+.tenant-page .tenant-tabs button[aria-selected="true"] {
+  color:#fff1df !important;
+  border-bottom:2px solid #ed2635 !important;
+  background:linear-gradient(180deg,#4a171d55,transparent) !important;
+}
+.tenant-primary,.platform-page .tenant-primary {
+  background:linear-gradient(135deg,#ff3947,#b90e20) !important;
+  border:1px solid #ff5962 !important;
+  color:#fff !important;
+  box-shadow:0 0 15px #ed26352b !important;
+}
+.tenant-page button:not(.tenant-primary):not(.tenant-notification-toggle),
+.platform-page button:not(.tenant-primary) {
+  border-color:#765536;
+}
+.tenant-page .tenant-history-button,.tenant-page .tenant-account button,
+.tenant-page .tenant-notification-toggle {
+  background:#211b1d !important;
+  color:#f0c66f !important;
+  border-color:#765536 !important;
+}
+.tenant-table-wrap th,.platform-page table th {
+  background:#30201d !important;
+  color:#f0c66f !important;
+  border-color:#63452f !important;
+}
+.tenant-table-wrap td,.platform-page table td {
+  border-color:#44352d !important;
+}
+.tenant-table-wrap tr:hover td,.platform-page table tr:hover td {
+  background:#3a2023 !important;
+}
+.tenant-report-grid small,.tenant-report-grid span {color:#c4b7aa !important}
+.tenant-report-columns h3 {color:#f0c66f !important}
+.tenant-report-row {color:#d5c7ba !important;border-color:#4c3b30 !important}
+.tenant-report-row i {background:#49372c !important}
+.tenant-report-row i em {background:linear-gradient(90deg,#b70f22,#ff4b51) !important}
+.tenant-page .tenant-inline-notice {
+  background:#30231d !important;color:#f2d39a !important;border:1px solid #765536 !important;
+}
+.customer-portal-card {
+  background:linear-gradient(145deg,#211f23,#141418 72%,#211518) !important;
+  border-color:#765536 !important;
+  box-shadow:0 24px 80px #0009,0 0 24px #ed26351a !important;
+}
+.customer-portal-brand,.customer-portal-section {border-color:#594332 !important}
+.customer-portal-brand>span {
+  background:linear-gradient(145deg,#541a20,#211216) !important;
+  border:1px solid #d52a38 !important;color:#ff5b63 !important;
+}
+.customer-portal-brand i {color:#ff414d !important}
+.customer-portal-brand small,.customer-portal-heading small,
+.customer-portal-device small,.customer-portal-timeline small,
+.customer-portal-updated,.customer-portal-card footer {color:#c2b5aa !important}
+.customer-portal-heading p,.customer-portal-section p {color:#ddd0c3 !important}
+.customer-portal-order,.customer-portal-decision {
+  background:linear-gradient(145deg,#2a2021,#171519) !important;
+  border-color:#745136 !important;
+}
+.customer-portal-order>div small {color:#c8b7a7 !important}
+.customer-portal-values span {color:#cbbbaa !important}
+.customer-portal-values b {color:#f0c66f !important}
+.customer-portal-device>svg {color:#f0c66f !important}
+.customer-portal-timeline article>span {
+  background:#ed2635 !important;box-shadow:0 0 0 4px #ed26352e,0 0 12px #ed2635 !important;
+}
+.customer-portal-decision>p {color:#e4d4c6 !important}
+.customer-portal-decision button {
+  border-color:#ff5962 !important;background:linear-gradient(135deg,#ed2635,#a90e1c) !important;
+  color:#fff !important;
+}
+.customer-portal-decision button.customer-portal-decline {
+  border-color:#765536 !important;background:#302326 !important;color:#f0c66f !important;
+}
+.customer-portal-decision-result {
+  background:#183126 !important;color:#b9f1d1 !important;
+}
+.customer-portal-action-error {background:#4a2028 !important;color:#ffe1e4 !important}
+@media(max-width:760px) {
+  .platform-page .platform-header,.tenant-page .tenant-header {background:#111014 !important}
+  .platform-plan-grid {grid-template-columns:1fr !important}
+}
