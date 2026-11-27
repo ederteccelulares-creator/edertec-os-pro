@@ -29,11 +29,11 @@ const money = (n:number) => Number(n||0).toLocaleString('pt-BR',{style:'currency
 
 export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   const [tab,setTab] = useState<'dashboard'|'orders'|'customers'|'inventory'|'suppliers'|'purchases'|'receipts'|'partPurchases'|'cash'|'entries'|'expenseReport'|'accounts'|'creditCards'|'cardInvoices'|'pos'|'backup'|'settings'|'customerPortal'|'support'|'team'|'plans'>('dashboard')
-  // Rola a página para o início sempre que uma nova aba é selecionada.
+  // Rola somente o conteúdo; preserva a posição do menu lateral.
   useEffect(()=>{
-    window.scrollTo({top:0,left:0,behavior:'auto'})
     const main=document.querySelector('.company-main')
     if(main instanceof HTMLElement) main.scrollTo({top:0,left:0,behavior:'auto'})
+    if(window.innerWidth<=760) window.scrollTo({top:0,left:0,behavior:'auto'})
   },[tab])
   const [menuOpen,setMenuOpen] = useState(false)
   const [financeMenuOpen,setFinanceMenuOpen] = useState(false)
