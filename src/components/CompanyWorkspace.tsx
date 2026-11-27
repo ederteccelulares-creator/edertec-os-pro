@@ -15,6 +15,7 @@ import CompanyFinanceDashboardPanel from './CompanyFinanceDashboardPanel'
 import CustomerPortalAdminPanel from './CustomerPortalAdminPanel'
 import CompanySupportPanel from './CompanySupportPanel'
 import CompanyTeamPanel from './CompanyTeamPanel'
+import './CompanyMobileNavigation.css'
 import { recordCompanyServiceOrderPayment, type PaymentMethod } from '../lib/company-service-order-payments'
 import { invoiceServiceOrderNet30, listCustomerOverdueReceivables, type OverdueReceivable } from '../lib/company-financial-entries'
 import { listCompanyBranches, listCompanyCustomers, saveCompanyCustomer, type Company, type CompanyBranch, type CompanyCustomer, type CompanyRole, updateCompanyProfile } from '../lib/company-data'
@@ -351,33 +352,40 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
           {branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
       </div>
-      <nav>
-        <button className={tab==='dashboard'?'active':''} onClick={()=>navigate('dashboard')}><LayoutDashboard size={18}/> Dashboard</button>
-        <button className={tab==='orders'?'active':''} onClick={()=>navigate('orders')}><ClipboardList size={18}/> Ordens de serviço</button>
-        {canManage&&<button className={tab==='pos'?'active':''} onClick={()=>navigate('pos')}><ShoppingCart size={18}/> PDV / Vendas</button>}
-        <button className={tab==='customers'?'active':''} onClick={()=>navigate('customers')}><Users size={18}/> Clientes</button>
-        <button className={tab==='support'?'active':''} onClick={()=>navigate('support')}><LifeBuoy size={18}/> Suporte / Chamados</button>
-        {canManage&&<button className={tab==='customerPortal'?'active':''} onClick={()=>navigate('customerPortal')}><Smartphone size={18}/> Área do Cliente</button>}
-        {canManage&&<button className={tab==='inventory'?'active':''} onClick={()=>navigate('inventory')}><Package size={18}/> Estoque</button>}
-        {canManage&&<button className={tab==='suppliers'?'active':''} onClick={()=>navigate('suppliers')}><Truck size={18}/> Fornecedores</button>}
-        {canManage&&<button className={tab==='purchases'?'active':''} onClick={()=>navigate('purchases')}><ShoppingCart size={18}/> Compras</button>}
-        {canManage&&<button className={tab==='receipts'?'active':''} onClick={()=>navigate('receipts')}><Receipt size={18}/> Recibo simples</button>}
-        {canManage&&<button className={tab==='partPurchases'?'active':''} onClick={()=>navigate('partPurchases')}><ShieldCheck size={18}/> Compra de peças</button>}
-        {canManage&&<button className={tab==='cash'?'active':''} onClick={()=>navigate('cash')}><Wallet size={18}/> Caixa</button>}
-        {canManage&&<div className="company-nav-group">
-          <button type="button" className={tab==='entries'||tab==='expenseReport'||tab==='accounts'||tab==='creditCards'||tab==='cardInvoices'?'active':''} aria-expanded={financeMenuOpen} onClick={()=>setFinanceMenuOpen(open=>!open)}><Wallet size={18}/> Financeiro <span className="company-nav-chevron">{financeMenuOpen?'−':'+'}</span></button>
-          {financeMenuOpen&&<div className="company-nav-submenu">
-            <button type="button" className={tab==='entries'?'active':''} onClick={()=>navigate('entries')}>Contas a pagar/receber</button>
-            <button type="button" className={tab==='expenseReport'?'active':''} onClick={()=>navigate('expenseReport')}>Relatório de despesas</button>
-            <button type="button" className={tab==='accounts'?'active':''} onClick={()=>navigate('accounts')}>Contas bancárias</button>
-            <button type="button" className={tab==='creditCards'?'active':''} onClick={()=>navigate('creditCards')}>Cartões de crédito</button>
-            <button type="button" className={tab==='cardInvoices'?'active':''} onClick={()=>navigate('cardInvoices')}>Faturas e parcelas</button>
-          </div>}
+      <nav className="company-mobile-organized-nav">
+        <div className="company-nav-section">
+          <span className="company-nav-section-label">PRINCIPAL</span>
+          <button className={tab==='dashboard'?'active':''} onClick={()=>navigate('dashboard')}><LayoutDashboard size={18}/> Dashboard</button>
+        </div>
+        <div className="company-nav-section">
+          <span className="company-nav-section-label">GESTÃO</span>
+          <button className={tab==='orders'?'active':''} onClick={()=>navigate('orders')}><ClipboardList size={18}/> Ordens de serviço</button>
+          {canManage&&<button className={tab==='pos'?'active':''} onClick={()=>navigate('pos')}><ShoppingCart size={18}/> PDV / Vendas</button>}
+          <button className={tab==='customers'?'active':''} onClick={()=>navigate('customers')}><Users size={18}/> Clientes</button>
+          {canManage&&<button className={tab==='inventory'?'active':''} onClick={()=>navigate('inventory')}><Package size={18}/> Produtos e estoque</button>}
+          {canManage&&<button className={tab==='suppliers'?'active':''} onClick={()=>navigate('suppliers')}><Truck size={18}/> Fornecedores</button>}
+          {canManage&&<button className={tab==='purchases'?'active':''} onClick={()=>navigate('purchases')}><ShoppingCart size={18}/> Compras</button>}
+          {canManage&&<button className={tab==='receipts'?'active':''} onClick={()=>navigate('receipts')}><Receipt size={18}/> Recibo simples</button>}
+          {canManage&&<button className={tab==='partPurchases'?'active':''} onClick={()=>navigate('partPurchases')}><ShieldCheck size={18}/> Compra de peças</button>}
+          {canManage&&<button className={tab==='customerPortal'?'active':''} onClick={()=>navigate('customerPortal')}><Smartphone size={18}/> Área do Cliente</button>}
+          {canAdmin&&<button className={tab==='team'?'active':''} onClick={()=>navigate('team')}><Users size={18}/> Funcionários e usuários</button>}
+        </div>
+        {canManage&&<div className="company-nav-section">
+          <span className="company-nav-section-label">FINANCEIRO</span>
+          <button className={tab==='cash'?'active':''} onClick={()=>navigate('cash')}><Wallet size={18}/> Caixa</button>
+          <button className={tab==='entries'?'active':''} onClick={()=>navigate('entries')}><Receipt size={18}/> Contas a pagar/receber</button>
+          <button className={tab==='accounts'?'active':''} onClick={()=>navigate('accounts')}><Building2 size={18}/> Contas bancárias</button>
+          <button className={tab==='creditCards'?'active':''} onClick={()=>navigate('creditCards')}><CreditCard size={18}/> Cartões de crédito</button>
+          <button className={tab==='cardInvoices'?'active':''} onClick={()=>navigate('cardInvoices')}><Receipt size={18}/> Faturas e parcelas</button>
+          <button className={tab==='expenseReport'?'active':''} onClick={()=>navigate('expenseReport')}><Wallet size={18}/> Relatório de despesas</button>
         </div>}
-        {canAdmin&&<button className={tab==='team'?'active':''} onClick={()=>navigate('team')}><Users size={18}/> Funcionários e usuários</button>}
-        {canAdmin&&<button className={tab==='backup'?'active':''} onClick={()=>navigate('backup')}><Database size={18}/> Backup e segurança</button>}
-        {canAdmin&&<button className={tab==='plans'?'active':''} onClick={()=>navigate('plans')}><CreditCard size={18}/> Planos e assinatura</button>}
-        {canAdmin&&<button className={tab==='settings'?'active':''} onClick={()=>navigate('settings')}><Settings size={18}/> Configurações</button>}
+        <div className="company-nav-section">
+          <span className="company-nav-section-label">OUTROS MÓDULOS</span>
+          <button className={tab==='support'?'active':''} onClick={()=>navigate('support')}><LifeBuoy size={18}/> Suporte / Chamados</button>
+          {canAdmin&&<button className={tab==='backup'?'active':''} onClick={()=>navigate('backup')}><Database size={18}/> Backup e segurança</button>}
+          {canAdmin&&<button className={tab==='plans'?'active':''} onClick={()=>navigate('plans')}><CreditCard size={18}/> Planos e assinatura</button>}
+          {canAdmin&&<button className={tab==='settings'?'active':''} onClick={()=>navigate('settings')}><Settings size={18}/> Configurações</button>}
+        </div>
       </nav>
       <div className="company-user"><b>{email}</b><small>Perfil: {role}</small><button onClick={onSignOut}><LogOut size={15}/> Sair</button></div>
     </aside>
@@ -385,10 +393,10 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
       <div className="company-mobilebar"><button onClick={()=>setMenuOpen(true)} aria-label="Abrir menu"><Menu/></button><div><b>EDERTEC <i>OS PRO</i></b><small>{companyInfo.name}</small></div><span className="company-mobile-avatar">{(email[0]||'U').toUpperCase()}</span></div>
       <nav className="company-bottom-nav" aria-label="Navegação rápida">
         <button className={tab==='dashboard'?'active':''} onClick={()=>navigate('dashboard')}><LayoutDashboard size={19}/><span>Início</span></button>
-        <button className={tab==='orders'?'active':''} onClick={()=>navigate('orders')}><ClipboardList size={19}/><span>Ordens</span></button>
+        <button className={tab==='orders'?'active':''} onClick={()=>navigate('orders')}><ClipboardList size={19}/><span>OS</span></button>
         {canManage&&<button className={tab==='pos'?'active':''} onClick={()=>navigate('pos')}><ShoppingCart size={19}/><span>PDV</span></button>}
-        <button className={tab==='customers'?'active':''} onClick={()=>navigate('customers')}><Users size={19}/><span>Clientes</span></button>
-        <button onClick={()=>setMenuOpen(true)}><Menu size={19}/><span>Menu</span></button>
+        {canManage&&<button className={['cash','entries','expenseReport','accounts','creditCards','cardInvoices'].includes(tab)?'active':''} onClick={()=>{setFinanceMenuOpen(true);setMenuOpen(true)}}><Wallet size={19}/><span>Financeiro</span></button>}
+        <button onClick={()=>setMenuOpen(true)}><Menu size={19}/><span>Mais</span></button>
       </nav>
       <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='receipts'?'Recibo simples':tab==='partPurchases'?'Registro de compra de peças':tab==='backup'?'Backup de dados':tab==='settings'?'Configurações':tab==='team'?'Funcionários e usuários':tab==='customerPortal'?'Compartilhar Área do Cliente':tab==='support'?'Suporte e chamados':tab==='pos'?'PDV / Vendas':tab==='plans'?'Planos e assinatura':tab==='accounts'?'Contas bancárias':tab==='creditCards'?'Cartões de crédito':tab==='cardInvoices'?'Faturas e parcelas':tab==='cash'?'Caixa':'Financeiro'}</h1></div><div className="company-top-actions"><div className="company-brasilia-clock"><b>{brasiliaTime}</b><span>{brasiliaDate}</span><small>Horário de Brasília</small></div><div className={'company-plan-period '+(planInfo?.subscription_status==='trial'?'is-trial':!planInfo?.subscription_status||planInfo?.subscription_status==='expired'?'is-unsubscribed':'')}>
           <b>{planInfo?.plan_name||(planInfo?.subscription_status==='trial'?'Período de teste':'Nenhum plano contratado')}</b>
