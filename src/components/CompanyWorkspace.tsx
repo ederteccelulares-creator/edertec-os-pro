@@ -372,6 +372,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
           {canManage&&<button className={tab==='partPurchases'?'active':''} onClick={()=>navigate('partPurchases')}><ShieldCheck size={18}/> Compra de peças</button>}
           {canManage&&<button className={tab==='customerPortal'?'active':''} onClick={()=>navigate('customerPortal')}><Smartphone size={18}/> Área do Cliente</button>}
           {canAdmin&&<button className={tab==='team'?'active':''} onClick={()=>navigate('team')}><Users size={18}/> Funcionários e usuários</button>}
+          {canAdmin&&isEpartsCompany&&<button className={tab==='eparts'?'active':''} onClick={()=>navigate('eparts')}><Package size={18}/> Eparts · Marketplace</button>}
         </div>
         {canManage&&<div className="company-nav-section">
           <span className="company-nav-section-label">FINANCEIRO</span>
@@ -417,6 +418,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
       {tab==='customerPortal'&&<CustomerPortalAdminPanel company={company} customers={customers}/>}
       {tab==='support'&&<CompanySupportPanel companyId={company.id} companyName={company.name}/ >}
       {tab==='team'&&canAdmin&&<CompanyTeamPanel companyId={company.id} actorRole={role}/ >}
+      {tab==='eparts'&&canAdmin&&isEpartsCompany&&<EpartsCatalogAdminPanel companyId={company.id}/ >}
       {tab==='eparts'&&canAdmin&&isEpartsCompany&&<EpartsCatalogAdminPanel companyId={company.id}/ >}
       {tab==='plans'&&canAdmin&&<section className="company-panel company-subscription-panel">
         <div className="company-panel-head"><div><b>Meu plano e assinatura</b><small>Planos publicados pelo Super Admin para contratação</small></div><button className="company-secondary" onClick={()=>void loadSubscriptionPlans()} disabled={plansLoading}><RefreshCw size={15}/> {plansLoading?'Carregando...':'Atualizar planos'}</button></div>
