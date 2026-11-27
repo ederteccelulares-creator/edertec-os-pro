@@ -38,11 +38,21 @@ begin
  select * into v_sale from public.eparts_sales
   where id=p_sale_id and company_id=p_company_id for update;
  if not found then raise exception 'Pedido não encontrado.'; end if;
- if v_sale.status='cancelled' and p_status<>'cancelled' then
-  raise exception 'Um pedido cancelado não pode ser reativado.';
+ if v_sale.status='cancelled' then
+  if p_status<>'cancelled' then
+   raise exception 'Um pedido cancelado não pode ser reativado.';
+  end if;
+  if p_payment_status<>v_sale.payment_status then
+   raise exception 'O pagamento de um pedido cancelado não pode ser alterado.';
+  end if;
  end if;
- if p_status='cancelled' and (v_sale.payment_status in('paid','partially_paid') and p_payment_status<>'refunded') then
-  raise exception 'Estorne o pagamento antes de cancelar o pedido.';
+ if p_status='cancelled' then
+  if v_sale.payment_status in('paid','partially_paid') and p_payment_status<>'refunded' then
+   raise exception 'Estorne o pagamento antes de cancelar o pedido.';
+  end if;
+  if v_sale.payment_status in('pending','refunded') and p_payment_status<>v_sale.payment_status then
+   raise exception 'O status de pagamento informado não é válido para este cancelamento.';
+  end if;
  end if;
  if p_status='cancelled' and v_sale.status<>'cancelled' and v_sale.stock_restored_at is null then
   for v_group in
