@@ -1,5 +1,5 @@
 import {useCallback,useEffect,useMemo,useState} from 'react'
-import {Barcode, Minus, Plus, Search, ShoppingCart, Trash2, Printer, RefreshCw, CheckCircle2} from 'lucide-react'
+import {Barcode, Minus, Plus, Search, ShoppingCart, Trash2, Printer, RefreshCw, CheckCircle2, ScanBarcode, CreditCard, Banknote, QrCode, PackageCheck} from 'lucide-react'
 import {supabase} from '../lib/supabase'
 
 type Product={id:string;name:string;sku:string|null;barcode:string|null;sale_price:number;stock_quantity:number;image_url:string|null}
@@ -55,31 +55,101 @@ export default function EpartsPOS({companyId}:Props){
   window.addEventListener('afterprint',cleanup)
   window.print()
  }
- return <section className="company-panel eparts-pos">
+ return <section className="eparts-pos">
   <style>{`
-   .eparts-pos{color:#f7f2e8;min-width:0}.eparts-pos .company-panel-head{gap:12px;align-items:center}.eparts-pos .company-panel-head small{display:block;line-height:1.45;margin-top:5px}.eparts-pos .pos-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);gap:18px;align-items:start}.eparts-pos .pos-search{display:flex;gap:10px;align-items:center;border:1px solid #9c762b;border-radius:13px;padding:10px 13px;background:#171411;min-width:0}.eparts-pos .pos-search input{flex:1;width:100%;border:0!important;outline:none;box-shadow:none!important;background:transparent!important;padding:9px 2px!important;min-width:0}.eparts-pos input,.eparts-pos select{background:#171717;color:#fff;border:1px solid #514324;border-radius:9px;padding:12px;min-width:0;width:100%;box-sizing:border-box}.eparts-pos label:not(.pos-search){display:grid;gap:7px;margin-top:13px;color:#e8d8b9;font-size:13px;font-weight:650}.eparts-pos .pos-products{display:grid;gap:10px;margin-top:14px}.eparts-pos .pos-product,.eparts-pos .pos-line{display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(145deg,#1c1a18,#141313);border:1px solid #44382a;border-radius:13px;padding:14px;min-width:0}.eparts-pos .pos-product>div{min-width:0;overflow-wrap:anywhere}.eparts-pos .pos-product strong{display:block;color:#f1c75b;margin-top:5px;font-size:16px}.eparts-pos button{cursor:pointer;transition:filter .15s ease,transform .15s ease}.eparts-pos button:hover{filter:brightness(1.12)}.eparts-pos button:disabled{opacity:.55;cursor:not-allowed}.eparts-pos .pos-add,.eparts-pos .pos-final{background:linear-gradient(135deg,#e51d35,#a90019);color:white;border:1px solid #f12b42;border-radius:10px;padding:12px 16px;font-weight:750;white-space:nowrap}.eparts-pos .pos-cart{background:linear-gradient(145deg,#191715,#101010);border:1px solid #8d6b27;border-radius:16px;padding:17px;box-shadow:0 12px 32px rgba(0,0,0,.2);min-width:0}.eparts-pos .pos-cart h3{display:flex;align-items:center;gap:8px;margin:0 0 12px;color:#f1d18a}.eparts-pos .pos-line{margin:9px 0;padding:11px}.eparts-pos .pos-line button{display:inline-grid;place-items:center;width:32px;height:32px;border:1px solid #594728;border-radius:8px;background:#211d17;color:#f4d27a;flex:0 0 auto}.eparts-pos .pos-total{font-size:26px;color:#f1c75b;font-weight:850;margin:5px 0 14px}.eparts-pos .pos-muted{color:#b7ada0;font-size:13px;line-height:1.45;overflow-wrap:anywhere}.eparts-pos .pos-pay{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.eparts-pos .pos-pay button{padding:11px 6px;border:1px solid #66532c;border-radius:9px;background:#211d17;color:#f4d27a;font-weight:700}.eparts-pos .pos-pay button.active{background:#a90019;color:white;border-color:#f33;box-shadow:0 0 0 1px rgba(255,50,70,.2)}.eparts-pos .pos-receipt{display:none}.eparts-pos .company-error-banner,.eparts-pos .company-success-banner{margin-bottom:14px}
-   @media(max-width:760px){.eparts-pos .pos-grid{grid-template-columns:minmax(0,1fr);gap:14px}.eparts-pos .pos-cart{order:2}.eparts-pos .pos-pay{grid-template-columns:repeat(3,minmax(0,1fr))}.eparts-pos .pos-line{flex-wrap:wrap}.eparts-pos .pos-product{align-items:flex-start}.eparts-pos .pos-product .pos-add{align-self:center}}
-   @media(max-width:420px){.eparts-pos .company-panel-head{align-items:stretch;flex-wrap:wrap}.eparts-pos .company-panel-head>button{width:100%;justify-content:center}.eparts-pos .pos-product{flex-direction:column;align-items:stretch}.eparts-pos .pos-add{width:100%}.eparts-pos .pos-pay{gap:6px}.eparts-pos .pos-pay button{font-size:13px}.eparts-pos .pos-cart{padding:13px}}
+   .eparts-pos{color:#f7f2e8;min-width:0}
+   .eparts-pos .pos-heading{display:flex;align-items:center;gap:15px;margin:0 0 22px}
+   .eparts-pos .pos-heading-icon{width:54px;height:54px;display:grid;place-items:center;flex:none;color:#edc66f}
+   .eparts-pos .pos-heading h2{margin:0;color:#f2d28e;font-size:clamp(25px,3vw,38px);letter-spacing:-1px}
+   .eparts-pos .pos-heading p{margin:2px 0 0;color:#b8b0a4;font-size:14px}
+   .eparts-pos .pos-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+   .eparts-pos .pos-search{display:flex;align-items:center;gap:12px;flex:1;min-width:0;min-height:58px;padding:0 16px;border:1px solid #b58b39;border-radius:13px;background:linear-gradient(100deg,#171411,#111)}
+   .eparts-pos .pos-search>svg{color:#e9c36f;flex:none}
+   .eparts-pos .pos-search input{width:100%;min-width:0;padding:12px 0!important;border:0!important;outline:none!important;box-shadow:none!important;background:transparent!important;color:#fff;font-size:16px}
+   .eparts-pos .pos-scan{width:58px;height:58px;display:grid;place-items:center;border:1px solid #b58b39;border-radius:13px;background:#19140e;color:#f1ce7b}
+   .eparts-pos .pos-products{display:grid;gap:9px;margin-bottom:20px}
+   .eparts-pos .pos-product{display:grid;grid-template-columns:116px minmax(0,1fr) auto;align-items:center;gap:16px;min-width:0;padding:12px;border:1px solid #414141;border-radius:15px;background:linear-gradient(110deg,#202020,#141414);box-shadow:0 6px 16px #0004}
+   .eparts-pos .pos-product-image{width:116px;height:108px;display:grid;place-items:center;overflow:hidden;border-radius:12px;background:#0d0d0d;border:1px solid #2b2b2b}
+   .eparts-pos .pos-product-image img{width:100%;height:100%;object-fit:contain}
+   .eparts-pos .pos-product-image span{color:#8c806b}
+   .eparts-pos .pos-product-info{min-width:0}
+   .eparts-pos .pos-product-info b{display:block;color:#fff;font-size:17px;line-height:1.25;overflow-wrap:anywhere}
+   .eparts-pos .pos-product-info small{display:block;margin-top:5px;color:#b8b8b8;font-size:13px}
+   .eparts-pos .pos-product-info strong{display:block;margin-top:4px;color:#efc65f;font-size:21px}
+   .eparts-pos .pos-product-controls{display:flex;align-items:center;gap:8px}
+   .eparts-pos .pos-qty{display:flex;align-items:center;overflow:hidden;border:1px solid #9d0719;border-radius:9px;background:#101010}
+   .eparts-pos .pos-qty button,.eparts-pos .pos-qty span{width:40px;height:43px;display:grid;place-items:center;border:0;color:white;font-size:19px;font-weight:800}
+   .eparts-pos .pos-qty button{background:linear-gradient(#ed142c,#a90019);cursor:pointer}
+   .eparts-pos .pos-qty span{background:#171717}
+   .eparts-pos .pos-add{width:54px;height:48px;display:grid;place-items:center;border:1px solid #f22;border-radius:11px;background:linear-gradient(145deg,#fa182e,#a90019);color:white;cursor:pointer;box-shadow:0 5px 13px #c00a2438}
+   .eparts-pos .pos-cart{padding:17px 19px;margin:18px 0;border:1px solid #6f603f;border-radius:15px;background:linear-gradient(140deg,#1b1b1b,#111);box-shadow:0 8px 25px #0005}
+   .eparts-pos .pos-cart-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:13px;border-bottom:1px solid #484848}
+   .eparts-pos .pos-cart-head h3{display:flex;align-items:center;gap:10px;margin:0;color:#f1d18a;font-size:20px}
+   .eparts-pos .pos-clear{display:flex;align-items:center;gap:6px;border:0;background:none;color:#f13a4a;font-weight:700;cursor:pointer}
+   .eparts-pos .pos-cart-lines{display:grid;gap:0}
+   .eparts-pos .pos-line{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 2px;border-bottom:1px solid #363636}
+   .eparts-pos .pos-line-name{min-width:0;color:#f3f3f3;font-size:14px}
+   .eparts-pos .pos-line-tools{display:flex;align-items:center;gap:7px;flex:none}
+   .eparts-pos .pos-line-tools button{width:27px;height:27px;display:grid;place-items:center;border:1px solid #5b4828;border-radius:7px;background:#211b12;color:#f2d083}
+   .eparts-pos .pos-line-tools b{min-width:20px;text-align:center}
+   .eparts-pos .pos-line-price{min-width:84px;text-align:right;color:#f4f0e8}
+   .eparts-pos .pos-summary{display:grid;gap:8px;padding-top:12px}
+   .eparts-pos .pos-summary-row{display:flex;justify-content:space-between;gap:10px;color:#e7e2d9;font-size:15px}
+   .eparts-pos .pos-summary-row.total{padding-top:9px;border-top:1px solid #555;font-size:25px;font-weight:800}
+   .eparts-pos .pos-summary-row.total strong{color:#f0cb72;font-size:31px}
+   .eparts-pos .pos-field{display:grid;gap:6px;margin:12px 0;color:#d9cba9;font-size:12px}
+   .eparts-pos .pos-field input{width:100%;padding:10px 12px;border:1px solid #514324;border-radius:8px;background:#101010;color:white}
+   .eparts-pos .pos-payment-title{display:flex;align-items:center;gap:10px;margin:22px 0 10px;color:#f0e7d7;font-size:17px;font-weight:750}
+   .eparts-pos .pos-pay{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+   .eparts-pos .pos-pay button{min-height:68px;display:flex;align-items:center;justify-content:center;gap:9px;padding:10px;border:1px solid #555;border-radius:13px;background:linear-gradient(#222,#171717);color:#eee;font-size:16px;font-weight:750;cursor:pointer}
+   .eparts-pos .pos-pay button svg{color:#edc56e}
+   .eparts-pos .pos-pay button.active{border:2px solid #edc56e;background:linear-gradient(120deg,#b50920,#71000e);color:#fff;box-shadow:0 0 0 2px #edc56e25}
+   .eparts-pos .pos-final{width:100%;min-height:76px;display:flex;align-items:center;justify-content:center;gap:14px;margin-top:18px;border:1px solid #ff3347;border-radius:14px;background:linear-gradient(100deg,#ed142c,#a90019);color:#fff;font-size:25px;font-weight:850;box-shadow:0 8px 22px #d00b2530;cursor:pointer}
+   .eparts-pos .pos-final:disabled{opacity:.55;cursor:not-allowed}
+   .eparts-pos .pos-stock-note{display:flex;align-items:center;gap:14px;margin-top:16px;padding:14px 16px;border:2px solid #79d96a;border-radius:15px;background:linear-gradient(100deg,#07160b,#0b120d);color:#e6f4e5;font-size:15px;line-height:1.35}
+   .eparts-pos .pos-stock-note svg{flex:none;color:#70df55}
+   .eparts-pos .pos-stock-note b{color:#fff}
+   .eparts-pos .pos-message{padding:12px 14px;margin-bottom:13px;border-radius:9px;background:#392126;color:#ffb5b5;font-size:13px}
+   .eparts-pos .pos-message.success{display:flex;align-items:center;gap:8px;background:#102515;border:1px solid #438d46;color:#b7efb3}
+   .eparts-pos .pos-muted{color:#aaa;font-size:13px}
+   .eparts-pos .pos-empty{padding:22px;text-align:center;color:#999;border:1px dashed #49402f;border-radius:12px}
+   .eparts-pos .pos-receipt{display:none}
+   @media(max-width:900px){.eparts-pos .pos-product{grid-template-columns:88px minmax(0,1fr);gap:12px}.eparts-pos .pos-product-image{width:88px;height:88px}.eparts-pos .pos-product-controls{grid-column:2;justify-content:flex-start}}
+   @media(max-width:560px){
+    .eparts-pos .pos-heading{gap:8px;margin-bottom:16px}.eparts-pos .pos-heading-icon{width:40px;height:40px}.eparts-pos .pos-heading h2{font-size:25px}.eparts-pos .pos-heading p{font-size:12px}
+    .eparts-pos .pos-toolbar{gap:7px}.eparts-pos .pos-search{min-height:51px;padding:0 10px}.eparts-pos .pos-search input{font-size:13px}.eparts-pos .pos-scan{width:50px;height:51px}
+    .eparts-pos .pos-product{grid-template-columns:76px minmax(0,1fr);gap:10px;padding:9px}.eparts-pos .pos-product-image{width:76px;height:76px}.eparts-pos .pos-product-info b{font-size:14px}.eparts-pos .pos-product-info small{font-size:11px}.eparts-pos .pos-product-info strong{font-size:18px}
+    .eparts-pos .pos-product-controls{grid-column:1/-1;justify-content:flex-end}.eparts-pos .pos-qty button,.eparts-pos .pos-qty span{width:35px;height:37px}.eparts-pos .pos-add{width:45px;height:40px}
+    .eparts-pos .pos-cart{padding:13px;margin:13px 0}.eparts-pos .pos-cart-head h3{font-size:16px}.eparts-pos .pos-line{align-items:flex-start;flex-wrap:wrap}.eparts-pos .pos-line-name{flex:1 1 55%}.eparts-pos .pos-line-tools{order:3}.eparts-pos .pos-line-price{margin-left:auto}
+    .eparts-pos .pos-summary-row.total{font-size:20px}.eparts-pos .pos-summary-row.total strong{font-size:25px}
+    .eparts-pos .pos-pay{gap:7px}.eparts-pos .pos-pay button{min-height:59px;flex-direction:column;gap:4px;font-size:12px}
+    .eparts-pos .pos-final{min-height:63px;font-size:20px}.eparts-pos .pos-stock-note{padding:11px;font-size:12px}
+   }
    @media print{body[data-eparts-print] *{visibility:hidden!important}body[data-eparts-print] .eparts-pos .pos-receipt,body[data-eparts-print] .eparts-pos .pos-receipt *{visibility:visible!important}body[data-eparts-print] .eparts-pos .pos-receipt{display:block!important;position:absolute;left:0;top:0;width:100%;color:#000;background:#fff;padding:8px;font:12px monospace}body[data-eparts-print=thermal] .eparts-pos .pos-receipt{width:72mm}body[data-eparts-print=a4] .eparts-pos .pos-receipt{width:190mm;padding:15mm;font:14px Arial}@page{margin:5mm}}
   `}</style>
-  <div className="company-panel-head"><div><b>PDV · Ponto de venda</b><small>Venda presencial · baixa imediata do estoque ao finalizar</small></div><button className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar estoque</button></div>
-  {error&&<div className="company-error-banner">{error}</div>}{notice&&<div className="company-success-banner"><CheckCircle2 size={16}/> {notice}</div>}
-  <div className="pos-grid">
-   <div>
-    <label className="pos-search"><Search size={18}/><input aria-label="Buscar produto" placeholder="Buscar por nome, SKU ou código de barras (leitor USB/BT)" value={search} onChange={e=>setSearch(e.target.value)}/><Barcode size={22}/></label>
-    <div className="pos-products">{loading?<p className="company-empty">Carregando produtos...</p>:search.trim()?filtered.map(p=><article className="pos-product" key={p.id}><div><b>{p.name}</b><div className="pos-muted">{p.sku||'Sem SKU'} · Barras: {p.barcode||'—'} · Estoque: {p.stock_quantity}</div><strong>{money(p.sale_price)}</strong></div><button className="pos-add" onClick={()=>add(p)} disabled={p.stock_quantity<=0}>Adicionar</button></article>):<p className="company-empty">Digite o nome ou código para localizar produtos.</p>}{!loading&&search.trim()&&!filtered.length&&<p className="company-empty">Nenhum produto encontrado.</p>}</div>
-   </div>
-   <div className="pos-cart">
-    <h3><ShoppingCart size={18}/> Carrinho ({cart.reduce((n,x)=>n+x.quantity,0)} unidades)</h3>
-    {cart.map(line=><div className="pos-line" key={line.product.id}><div style={{flex:1}}><b>{line.product.name}</b><div className="pos-muted">{money(line.product.sale_price)} cada</div></div><button onClick={()=>change(line.product.id,-1)} aria-label="Diminuir"><Minus size={16}/></button><b>{line.quantity}</b><button onClick={()=>change(line.product.id,1)} aria-label="Aumentar"><Plus size={16}/></button><b>{money(line.product.sale_price*line.quantity)}</b><button onClick={()=>change(line.product.id,-line.quantity)} aria-label="Remover"><Trash2 size={16}/></button></div>)}
-    <label>Cliente (opcional)<input value={customer} onChange={e=>setCustomer(e.target.value)} placeholder="Consumidor final"/></label>
-    <label>Desconto (R$)<input type="number" min="0" step="0.01" value={discount} onChange={e=>setDiscount(e.target.value)}/></label>
-    <div className="pos-muted">Subtotal: {money(subtotal)}</div><div className="pos-total">Total: {money(total)}</div>
-    <p><b>Forma de pagamento</b></p><div className="pos-pay">{[['pix','PIX'],['cash','Dinheiro'],['card','Cartão']].map(([v,l])=><button key={v} className={payment===v?'active':''} onClick={()=>setPayment(v)}>{l}</button>)}</div>
-    <button className="pos-final" style={{width:'100%',marginTop:14}} disabled={busy||!cart.length} onClick={()=>void finish()}>{busy?'Finalizando...':'Finalizar venda'}</button>
-    {lastSale&&<div style={{marginTop:12}}><b>Venda #{lastSale.number} · {money(lastSale.total)}</b><div className="pos-muted">Comprovante</div><div style={{display:'flex',gap:8,marginTop:8}}><button className="company-secondary" onClick={()=>printReceipt('thermal')}><Printer size={15}/> Térmica</button><button className="company-secondary" onClick={()=>printReceipt('a4')}><Printer size={15}/> A4</button></div></div>}
-   </div>
+  <div className="pos-heading"><span className="pos-heading-icon"><ShoppingCart size={48}/></span><div><h2>PDV <span style={{color:'#d8d0c5',fontWeight:450}}>– Ponto de Venda</span></h2><p>Venda rápida · controle de estoque em tempo real</p></div></div>
+  {error&&<div className="pos-message">{error}</div>}{notice&&<div className="pos-message success"><CheckCircle2 size={18}/>{notice}</div>}
+  <div className="pos-toolbar">
+   <label className="pos-search"><Search size={23}/><input aria-label="Buscar produto" placeholder="Buscar produto, código ou código de barras" value={search} onChange={e=>setSearch(e.target.value)}/></label>
+   <button className="pos-scan" type="button" title="Leitor de código de barras USB ou Bluetooth"><ScanBarcode size={30}/></button>
   </div>
+  <div className="pos-products">{loading?<p className="pos-empty">Carregando produtos...</p>:search.trim()?filtered.map(p=>{const line=cart.find(x=>x.product.id===p.id);return <article className="pos-product" key={p.id}>
+    <div className="pos-product-image">{p.image_url?<img src={p.image_url} alt={p.name}/>:<PackageCheck size={35}/>}</div>
+    <div className="pos-product-info"><b>{p.name}</b><small>Estoque: {p.stock_quantity} un{p.sku?' · SKU '+p.sku:''}</small><strong>{money(p.sale_price)}</strong></div>
+    <div className="pos-product-controls"><div className="pos-qty"><button onClick={()=>change(p.id,-1)} disabled={!line} aria-label="Diminuir quantidade"><Minus size={18}/></button><span>{line?.quantity||0}</span><button onClick={()=>add(p)} disabled={p.stock_quantity<= (line?.quantity||0)} aria-label="Aumentar quantidade"><Plus size={18}/></button></div><button className="pos-add" onClick={()=>add(p)} disabled={p.stock_quantity<= (line?.quantity||0)} aria-label="Adicionar ao carrinho"><Plus size={26}/></button></div>
+   </article>}) : <p className="pos-empty">Digite o nome ou código para localizar produtos.</p>}{!loading&&search.trim()&&!filtered.length&&<p className="pos-empty">Nenhum produto encontrado.</p>}</div>
+  <div className="pos-cart">
+   <div className="pos-cart-head"><h3><ShoppingCart size={25}/> Carrinho ({cart.reduce((n,x)=>n+x.quantity,0)} itens)</h3><button className="pos-clear" onClick={()=>setCart([])} disabled={!cart.length}><Trash2 size={18}/> Limpar</button></div>
+   <div className="pos-cart-lines">{cart.map(line=><div className="pos-line" key={line.product.id}><span className="pos-line-name">{line.quantity}x&nbsp; {line.product.name}</span><div className="pos-line-tools"><button onClick={()=>change(line.product.id,-1)} aria-label="Diminuir"><Minus size={14}/></button><b>{line.quantity}</b><button onClick={()=>change(line.product.id,1)} aria-label="Aumentar"><Plus size={14}/></button><button onClick={()=>change(line.product.id,-line.quantity)} aria-label="Remover"><Trash2 size={14}/></button></div><b className="pos-line-price">{money(line.product.sale_price*line.quantity)}</b></div>)}</div>
+   <label className="pos-field">Cliente (opcional)<input value={customer} onChange={e=>setCustomer(e.target.value)} placeholder="Consumidor final"/></label>
+   <label className="pos-field">Desconto (R$)<input type="number" min="0" step="0.01" value={discount} onChange={e=>setDiscount(e.target.value)}/></label>
+   <div className="pos-summary"><div className="pos-summary-row"><span>Subtotal</span><b>{money(subtotal)}</b></div>{discountValue>0&&<div className="pos-summary-row"><span>Desconto</span><b>- {money(discountValue)}</b></div>}<div className="pos-summary-row total"><span>Total</span><strong>{money(total)}</strong></div></div>
+  </div>
+  <div className="pos-payment-title"><CreditCard size={24}/> Forma de Pagamento</div>
+  <div className="pos-pay"><button className={payment==='pix'?'active':''} onClick={()=>setPayment('pix')}><QrCode size={25}/> PIX</button><button className={payment==='cash'?'active':''} onClick={()=>setPayment('cash')}><Banknote size={25}/> Dinheiro</button><button className={payment==='card'?'active':''} onClick={()=>setPayment('card')}><CreditCard size={25}/> Cartão</button></div>
+  <button className="pos-final" disabled={busy||!cart.length} onClick={()=>void finish()}><ShoppingCart size={32}/>{busy?'Finalizando venda...':'Finalizar Venda'}</button>
+  <div className="pos-stock-note"><CheckCircle2 size={34}/><span><b>Baixa automática de estoque.</b><br/>Ao finalizar a venda, o sistema atualiza o estoque e registra toda a movimentação.</span><PackageCheck size={35}/></div>
+  {lastSale&&<div style={{display:'flex',gap:9,flexWrap:'wrap',marginTop:14}}><b>Venda #{lastSale.number} · {money(lastSale.total)}</b><button className="company-secondary" onClick={()=>printReceipt('thermal')}><Printer size={15}/> Térmica</button><button className="company-secondary" onClick={()=>printReceipt('a4')}><Printer size={15}/> A4</button></div>}
   {lastSale&&<div className="pos-receipt"><center><b>EPARTS · COMPROVANTE DE VENDA</b><br/>Venda #{lastSale.number}</center><hr/>{lastSale.items.map(x=><p key={x.product.id}>{x.quantity}x {x.product.name} — {money(x.product.sale_price*x.quantity)}</p>)}<p>Cliente: {lastSale.customer}</p><p>Pagamento: {lastSale.payment.toUpperCase()}</p><hr/><b>Total: {money(lastSale.total)}</b><p>Obrigado pela preferência!</p></div>}
  </section>
 }
