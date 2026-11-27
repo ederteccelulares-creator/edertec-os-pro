@@ -223,6 +223,28 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
       }
 
 
+      /* Mobile hamburger as a true floating drawer */
+      @media(max-width:760px){
+        .eparts-workspace>.company-sidebar nav:not(.eparts-nav-closed){
+          position:fixed!important;top:72px!important;left:12px!important;right:12px!important;z-index:120!important;
+          display:grid!important;gap:13px!important;max-height:calc(100dvh - 92px)!important;overflow-y:auto!important;
+          padding:16px!important;border:1px solid #70562e!important;border-radius:16px!important;
+          background:linear-gradient(155deg,#171410 0%,#0d0c0b 72%)!important;
+          box-shadow:0 22px 65px #000e,0 0 0 100vmax #0009!important;
+          overscroll-behavior:contain!important;
+        }
+        .eparts-workspace>.company-sidebar nav:not(.eparts-nav-closed) .company-nav-section{gap:5px!important}
+        .eparts-workspace>.company-sidebar nav:not(.eparts-nav-closed) .company-nav-section-label{
+          padding:8px 9px 4px!important;color:#d2ad68!important;font-size:9px!important;letter-spacing:1.35px!important
+        }
+        .eparts-workspace>.company-sidebar nav:not(.eparts-nav-closed) button,
+        .eparts-workspace>.company-sidebar nav:not(.eparts-nav-closed) .eparts-nav-link{
+          min-height:43px!important;border-radius:9px!important;padding:9px 11px!important
+        }
+        .eparts-workspace>.company-sidebar nav:not(.eparts-nav-closed) .company-nav-section+.company-nav-section{
+          padding-top:8px!important;border-top:1px solid #3b3020!important
+        }
+      }
       /* Dashboard final visual layout */
       .eparts-workspace .eparts-dashboard{display:grid!important;gap:16px!important}
       .eparts-workspace .eparts-overview-panel{margin:0!important}
