@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, useMemo, type FormEvent } from 'react'
 import { Building2, ShieldCheck, CreditCard, Package, RefreshCw, LogOut, Plus, LifeBuoy, Menu, MessageCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import PlatformSupportPanel from './PlatformSupportPanel'
@@ -6,7 +6,7 @@ import PlatformWhatsAppPanel from './PlatformWhatsAppPanel'
 
 type CompanyRow = { id:string; name:string; tax_id:string|null; status:string; created_at:string }
 type PlanRow = { id:string; code:string; name:string; description:string|null; price:number; billing_interval:string; max_branches:number|null; max_users:number|null; is_active:boolean }
-type SubscriptionRow = { id:string; company_id:string; plan_id:string; status:string; starts_at:string; ends_at:string|null; trial_ends_at?:string|null; companies?:{name:string}|{name:string}[]|null; subscription_plans?:{name:string}|{name:string}[]|null }
+type SubscriptionRow = { id:string; company_id:string; plan_id:string; status:string; starts_at:string; ends_at:string|null; created_at:string; trial_ends_at?:string|null; companies?:{name:string}|{name:string}[]|null; subscription_plans?:{name:string}|{name:string}[]|null }
 
 type Props = { email:string; onSignOut:()=>void }
 const money=(value:number)=>Number(value||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
@@ -41,7 +41,7 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
       const [c,p,s,t]=await Promise.all([
         supabase.from('companies').select('id,name,tax_id,status,created_at').order('created_at',{ascending:false}).limit(500),
         supabase.from('subscription_plans').select('id,code,name,description,price,billing_interval,max_branches,max_users,is_active').order('price'),
-        supabase.from('company_subscriptions').select('id,company_id,plan_id,status,starts_at,ends_at,trial_ends_at,companies(name),subscription_plans(name)').order('created_at',{ascending:false}).limit(500),
+        supabase.from('company_subscriptions').select('id,company_id,plan_id,status,starts_at,ends_at,created_at,trial_ends_at,companies(name),subscription_plans(name)').order('created_at',{ascending:false}).limit(500),
         supabase.from('support_tickets').select('id',{count:'exact',head:true}).eq('status','open'),
       ])
       if(c.error)throw c.error;if(p.error)throw p.error;if(s.error)throw s.error;if(t.error)throw t.error
@@ -221,13 +221,22 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
     finally{setBusy(false)}
   }
 
+  const monthlyStarts=useMemo(()=>{const now=new Date();return Array.from({length:12},(_,index)=>{const date=new Date(now.getFullYear(),now.getMonth()-11+index,1);const next=new Date(date.getFullYear(),date.getMonth()+1,1);const count=subscriptions.filter(item=>{const started=new Date(item.starts_at);return started>=date&&started<next}).length;return {label:date.toLocaleDateString('pt-BR',{month:'short'}).replace('.',''),count}})},[subscriptions])
+  const maxMonthly=Math.max(1,...monthlyStarts.map(item=>item.count))
+  const recentActivity=useMemo(()=>[
+    ...companies.map(item=>({id:'company-'+item.id,title:'Empresa cadastrada: '+item.name,when:item.created_at,kind:'company'})),
+    ...subscriptions.map(item=>({id:'subscription-'+item.id,title:'Assinatura '+({active:'ativada',trial:'em teste',past_due:'em atraso',cancelled:'cancelada',expired:'expirada'}[item.status]||'atualizada')+' · '+(Array.isArray(item.companies)?item.companies[0]?.name:item.companies?.name||'Empresa'),when:item.created_at||item.starts_at,kind:'subscription'})),
+  ].sort((a,b)=>new Date(b.when).getTime()-new Date(a.when).getTime()).slice(0,5),[companies,subscriptions])
   return <main className="platform-admin">
     <header className="platform-head"><div className="platform-brand"><ShieldCheck/><span><b>EDERTEC OS PRO</b><small>SUPER ADMIN · PAINEL DA PLATAFORMA</small></span></div><div className="platform-head-actions"><button type="button" className="platform-menu-toggle" aria-expanded={menuOpen} aria-controls="platform-menu-options" onClick={()=>setMenuOpen(v=>!v)}><Menu size={19}/><span>Menu</span></button><div className="platform-user"><span>{email}</span><button onClick={onSignOut}><LogOut size={15}/> Sair</button></div></div><nav id="platform-menu-options" className={menuOpen?'platform-tabs platform-tabs-open':'platform-tabs'} hidden={!menuOpen}><button className={tab==='companies'?'active':''} onClick={()=>{setTab('companies');setMenuOpen(false)}}>Empresas</button><button className={tab==='plans'?'active':''} onClick={()=>{setTab('plans');setMenuOpen(false)}}>Planos</button><button className={tab==='subscriptions'?'active':''} onClick={()=>{setTab('subscriptions');setMenuOpen(false)}}>Assinaturas</button><button className={tab==='support'?'active':''} onClick={()=>{setTab('support');setMenuOpen(false)}}><LifeBuoy size={15}/> Chamados</button><button className={tab==='billing'?'active':''} onClick={()=>{setTab('billing');setMenuOpen(false)}}><CreditCard size={15}/> Mercado Pago</button><button className={tab==='whatsapp'?'active':''} onClick={()=>{setTab('whatsapp');setMenuOpen(false)}}><MessageCircle size={15}/> WhatsApp</button></nav></header>
     <section className="platform-content">
       <div className="platform-title"><div><small>CONTROLE CENTRAL</small><h1>Super Admin</h1><p>Gerencie empresas, planos e assinaturas da plataforma.</p></div><button className="platform-refresh" onClick={()=>void load()}><RefreshCw size={15}/> Atualizar</button></div>
       {error&&<div className="platform-error">{error}</div>}{notice&&<div className="platform-notice">{notice}</div>}
       <div className="platform-stats"><article><Building2/><small>Empresas cadastradas</small><b>{companies.length}</b></article><article><Package/><small>Planos disponíveis</small><b>{plans.filter(p=>p.is_active).length}</b></article><article><CreditCard/><small>Assinaturas</small><b>{subscriptions.length}</b></article><button type="button" className="platform-stat-action" onClick={()=>setTab('support')} aria-label={openTickets+' chamados abertos. Abrir central de suporte'}><LifeBuoy/><small>Chamados abertos</small><b>{openTickets}</b><span>Ver chamados →</span></button></div>
-      
+      {!loading&&<><section className="platform-dashboard-chart platform-panel"><div className="platform-dashboard-section-head"><div><h2>Evolução de assinaturas</h2><p>Novas ativações por mês · últimos 12 meses</p></div><span className="platform-chart-legend"><i/> Assinaturas</span></div><div className="platform-chart-bars" role="img" aria-label="Novas assinaturas por mês nos últimos 12 meses">{monthlyStarts.map(item=><div className="platform-chart-column" key={item.label}><b>{item.count}</b><span style={{height:`\${Math.max(5,item.count/maxMonthly*100)}%\`}}/><small>{item.label}</small></div>)}</div>{subscriptions.length===0&&<p className="platform-dashboard-empty">Ainda não há assinaturas para montar o histórico.</p>}</section>
+      <section className="platform-dashboard-quick platform-panel"><h2>Ações rápidas</h2><div className="platform-quick-grid"><button className="quick-red" onClick={()=>{setTab('companies');setShowCompany(true);setMenuOpen(false)}}><Building2/><b>Cadastrar empresa</b></button><button className="quick-purple" onClick={()=>{setTab('plans');setShowPlan(true);setEditingPlanId(null);setMenuOpen(false)}}><Package/><b>Novo plano</b></button><button className="quick-green" onClick={()=>{setTab('subscriptions');setMenuOpen(false)}}><CreditCard/><b>Ativar assinatura</b></button><button className="quick-blue" onClick={()=>{setTab('support');setMenuOpen(false)}}><LifeBuoy/><b>Ver chamados</b></button></div></section>
+      <section className="platform-dashboard-activity platform-panel"><div className="platform-dashboard-section-head"><h2>Atividade recente</h2><button onClick={()=>setTab('subscriptions')}>Ver assinaturas →</button></div>{recentActivity.length?recentActivity.map(item=><div className="platform-activity-row" key={item.id}><span className={item.kind==='company'?'activity-company':'activity-subscription'}>{item.kind==='company'?<Building2 size={18}/>:<CreditCard size={18}/>}</span><b>{item.title}</b><time>{new Date(item.when).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</time></div>):<p className="platform-dashboard-empty">Nenhuma atividade encontrada nos registros disponíveis.</p>}</section></>}
+      <nav className="platform-bottom-nav" aria-label="Navegação rápida"><button className={tab==='companies'?'active':''} onClick={()=>setTab('companies')}><Building2/><span>Empresas</span></button><button className={tab==='plans'?'active':''} onClick={()=>setTab('plans')}><Package/><span>Planos</span></button><button className={tab==='subscriptions'?'active':''} onClick={()=>setTab('subscriptions')}><CreditCard/><span>Assinaturas</span></button><button className={tab==='support'?'active':''} onClick={()=>setTab('support')}><LifeBuoy/><span>Suporte</span></button><button className={tab==='whatsapp'||tab==='billing'?'active':''} onClick={()=>setMenuOpen(v=>!v)}><Menu/><span>Mais</span></button></nav>
       {loading?<p className="platform-empty">Carregando dados da plataforma...</p>:<>
         {tab==='support'&&<PlatformSupportPanel/>}
         {tab==='whatsapp'&&<PlatformWhatsAppPanel/>}
