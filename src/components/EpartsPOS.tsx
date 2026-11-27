@@ -2,7 +2,7 @@ import {useCallback,useEffect,useMemo,useState} from 'react'
 import {Barcode, Minus, Plus, Search, ShoppingCart, Trash2, Printer, RefreshCw, CheckCircle2} from 'lucide-react'
 import {supabase} from '../lib/supabase'
 
-type Product={id:string;name:string;sku:string|null;sale_price:number;stock_quantity:number;image_url:string|null}
+type Product={id:string;name:string;sku:string|null;barcode:string|null;sale_price:number;stock_quantity:number;image_url:string|null}
 type CartLine={product:Product;quantity:number}
 type Props={companyId:string}
 const money=(v:number)=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
@@ -22,12 +22,12 @@ export default function EpartsPOS({companyId}:Props){
  const load=useCallback(async()=>{
   if(!supabase)return
   setLoading(true);setError('')
-  const {data,error}=await supabase.from('eparts_products').select('id,name,sku,sale_price,stock_quantity,image_url').eq('company_id',companyId).eq('is_active',true).order('name')
+  const {data,error}=await supabase.from('eparts_products').select('id,name,sku,barcode,sale_price,stock_quantity,image_url').eq('company_id',companyId).eq('is_active',true).order('name')
   if(error)setError(error.message);else setProducts((data||[]) as Product[])
   setLoading(false)
  },[companyId])
  useEffect(()=>{void load()},[load])
- const filtered=useMemo(()=>{const q=search.trim().toLocaleLowerCase('pt-BR');return q?products.filter(p=>p.name.toLocaleLowerCase('pt-BR').includes(q)||(p.sku||'').toLocaleLowerCase('pt-BR').includes(q)):[]},[products,search])
+ const filtered=useMemo(()=>{const q=search.trim().toLocaleLowerCase('pt-BR');return q?products.filter(p=>p.name.toLocaleLowerCase('pt-BR').includes(q)||(p.sku||'').toLocaleLowerCase('pt-BR').includes(q)||(p.barcode||'').toLocaleLowerCase('pt-BR').includes(q)):[]},[products,search])
  const subtotal=cart.reduce((s,l)=>s+l.product.sale_price*l.quantity,0)
  const discountValue=Math.max(0,Number(discount)||0)
  const total=Math.max(0,subtotal-discountValue)
@@ -65,8 +65,8 @@ export default function EpartsPOS({companyId}:Props){
   {error&&<div className="company-error-banner">{error}</div>}{notice&&<div className="company-success-banner"><CheckCircle2 size={16}/> {notice}</div>}
   <div className="pos-grid">
    <div>
-    <label className="pos-search"><Search size={18}/><input aria-label="Buscar produto" placeholder="Buscar produto, SKU ou código de barras" value={search} onChange={e=>setSearch(e.target.value)}/><Barcode size={22}/></label>
-    <div className="pos-products">{loading?<p className="company-empty">Carregando produtos...</p>:search.trim()?filtered.map(p=><article className="pos-product" key={p.id}><div><b>{p.name}</b><div className="pos-muted">{p.sku||'Sem código'} · Estoque: {p.stock_quantity}</div><strong>{money(p.sale_price)}</strong></div><button className="pos-add" onClick={()=>add(p)} disabled={p.stock_quantity<=0}>Adicionar</button></article>):<p className="company-empty">Digite o nome ou código para localizar produtos.</p>}{!loading&&search.trim()&&!filtered.length&&<p className="company-empty">Nenhum produto encontrado.</p>}</div>
+    <label className="pos-search"><Search size={18}/><input aria-label="Buscar produto" placeholder="Buscar por nome, SKU ou código de barras (leitor USB/BT)" value={search} onChange={e=>setSearch(e.target.value)}/><Barcode size={22}/></label>
+    <div className="pos-products">{loading?<p className="company-empty">Carregando produtos...</p>:search.trim()?filtered.map(p=><article className="pos-product" key={p.id}><div><b>{p.name}</b><div className="pos-muted">{p.sku||'Sem SKU'} · Barras: {p.barcode||'—'} · Estoque: {p.stock_quantity}</div><strong>{money(p.sale_price)}</strong></div><button className="pos-add" onClick={()=>add(p)} disabled={p.stock_quantity<=0}>Adicionar</button></article>):<p className="company-empty">Digite o nome ou código para localizar produtos.</p>}{!loading&&search.trim()&&!filtered.length&&<p className="company-empty">Nenhum produto encontrado.</p>}</div>
    </div>
    <div className="pos-cart">
     <h3><ShoppingCart size={18}/> Carrinho ({cart.reduce((n,x)=>n+x.quantity,0)} unidades)</h3>
