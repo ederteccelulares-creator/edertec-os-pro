@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useState } from 'react'
-import { LayoutDashboard, Package, Tags, Truck, ShoppingCart, Wallet, LogOut, RefreshCw, ExternalLink } from 'lucide-react'
+import { LayoutDashboard, Package, Tags, Truck, ShoppingCart, Wallet, LogOut, RefreshCw, ExternalLink, Menu, X, ChevronRight, Store } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import EpartsCatalogAdminPanel from './EpartsCatalogAdminPanel'
 import EpartsPOS from './EpartsPOS'
 
 type Props = { companyId:string; companyName:string; email:string; role:string; onSignOut:()=>void }
+type Tab = 'dashboard'|'products'|'brands'|'suppliers'|'sales'|'payouts'|'pos'
 const money=(n:number)=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 
 export default function EpartsWorkspace({companyId,companyName,email,role,onSignOut}:Props) {
-  const [tab,setTab]=useState<'dashboard'|'products'|'brands'|'suppliers'|'sales'|'payouts'|'pos'>('dashboard')
+  const [tab,setTab]=useState<Tab>('dashboard')
+  const [menuOpen,setMenuOpen]=useState(false)
   const [stats,setStats]=useState({products:0,suppliers:0,orders:0,revenue:0,commission:0,stock:0})
   const [loading,setLoading]=useState(true)
   const [error,setError]=useState('')
@@ -28,64 +30,126 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
     finally {setLoading(false)}
   },[companyId])
   useEffect(()=>{void load()},[load])
-  const nav=(value:'dashboard'|'products'|'brands'|'suppliers'|'sales'|'payouts'|'pos')=>setTab(value)
+  useEffect(()=>{
+    const main=document.querySelector('.eparts-workspace .company-main')
+    if(main instanceof HTMLElement)main.scrollTo({top:0,left:0,behavior:'auto'})
+    if(window.innerWidth<=760)window.scrollTo({top:0,left:0,behavior:'auto'})
+    setMenuOpen(false)
+  },[tab])
+  const nav=(value:Tab)=>setTab(value)
+  const title=tab==='dashboard'?'Visão geral':tab==='products'?'Produtos e estoque':tab==='brands'?'Marcas':tab==='suppliers'?'Fornecedores':tab==='sales'?'Vendas e pedidos':tab==='pos'?'Ponto de venda':'Comissões e repasses'
+  const navItems=[
+    {section:'VISÃO GERAL',items:[{id:'dashboard' as Tab,label:'Dashboard',icon:LayoutDashboard}]},
+    {section:'GESTÃO COMERCIAL',items:[{id:'pos' as Tab,label:'PDV · Ponto de venda',icon:ShoppingCart},{id:'products' as Tab,label:'Produtos e estoque',icon:Package},{id:'sales' as Tab,label:'Vendas e pedidos',icon:ShoppingCart}]},
+    {section:'CADASTROS',items:[{id:'brands' as Tab,label:'Marcas',icon:Tags},{id:'suppliers' as Tab,label:'Fornecedores',icon:Truck},{id:'payouts' as Tab,label:'Comissões e repasses',icon:Wallet}]}
+  ]
   return <div className="company-app eparts-workspace">
     <style>{`
-      .eparts-workspace .company-sidebar{background:linear-gradient(180deg,#17130f 0%,#101010 55%,#151010 100%);border-right:1px solid rgba(204,158,73,.25)}
-      .eparts-workspace .company-logo{gap:12px}
-      .eparts-workspace .company-logo>span{background:linear-gradient(145deg,#d5ad58,#8d641f);color:#17120b;border-radius:12px;box-shadow:0 5px 18px rgba(190,143,54,.2)}
-      .eparts-workspace .company-logo b{letter-spacing:2px;color:#f3d18a}
-      .eparts-workspace .company-current{border:1px solid rgba(206,164,85,.24);background:rgba(206,164,85,.06);border-radius:10px;padding:11px 13px}
-      .eparts-workspace .company-nav-section-label{color:#b99a60;letter-spacing:1.2px;font-size:10px;font-weight:800}
-      .eparts-workspace .company-sidebar nav button{border-radius:10px;transition:background .15s ease,color .15s ease}
-      .eparts-workspace .company-sidebar nav button.active{background:linear-gradient(90deg,rgba(193,145,54,.22),rgba(193,145,54,.07));color:#f4d38e;border-left:3px solid #d4a84d}
-      .eparts-workspace .company-top{gap:14px;align-items:center}
-      .eparts-workspace .company-top h1{letter-spacing:-.5px}
-      .eparts-workspace .company-panel{border:1px solid rgba(203,158,77,.22);box-shadow:0 12px 34px rgba(0,0,0,.14)}
-      .eparts-workspace .company-stats-grid{gap:13px}
-      .eparts-workspace .company-stat-card{border:1px solid rgba(204,163,88,.22);background:linear-gradient(145deg,rgba(42,34,23,.75),rgba(20,19,18,.95));border-radius:14px;padding:17px;min-width:0}
-      .eparts-workspace .company-stat-card span{color:#c5b79e;line-height:1.4}
-      .eparts-workspace .company-stat-card strong{color:#f2d18a;font-size:clamp(21px,2.2vw,28px);overflow-wrap:anywhere}
-      .eparts-workspace .company-footer{color:#9f927e}
-      @media(max-width:900px){.eparts-workspace .company-top{align-items:flex-start;flex-wrap:wrap}.eparts-workspace .company-top>div:last-child{width:100%;justify-content:space-between!important}}
-      @media(max-width:640px){.eparts-workspace .company-top h1{font-size:clamp(22px,6vw,29px)}.eparts-workspace .company-panel{padding:14px}.eparts-workspace .company-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.eparts-workspace .company-stat-card{padding:13px}.eparts-workspace .company-stat-card strong{font-size:21px}}
+      .eparts-workspace{--ep-gold:#d8b36a;--ep-gold-light:#f3d99f;--ep-muted:#9c927f;background:#0b0b0c;color:#f4f0e8;min-height:100vh}
+      .eparts-workspace .company-sidebar{position:sticky;top:0;height:100vh;overflow-y:auto;width:278px;padding:25px 18px 18px;background:linear-gradient(180deg,#171411 0%,#100f0e 48%,#0c0c0c 100%);border-right:1px solid rgba(216,179,106,.2);box-shadow:12px 0 35px rgba(0,0,0,.18)}
+      .eparts-workspace .eparts-brand-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px}
+      .eparts-workspace .company-logo{gap:12px;padding:0 5px}
+      .eparts-workspace .company-logo>span{width:44px;height:44px;background:linear-gradient(145deg,#f1d28d,#a9782b);color:#17120a;border-radius:13px;box-shadow:0 8px 24px rgba(190,143,54,.2)}
+      .eparts-workspace .company-logo b{font-size:19px;letter-spacing:2.5px;color:#f4d99e}
+      .eparts-workspace .company-logo small{font-size:8px;letter-spacing:1.3px;color:#a99a7e}
+      .eparts-workspace .eparts-company-chip{display:flex;align-items:center;gap:9px;padding:12px 13px;margin-bottom:25px;border:1px solid rgba(216,179,106,.2);background:rgba(216,179,106,.055);border-radius:12px;color:#e7d4ad;font-size:12px;line-height:1.4}
+      .eparts-workspace .eparts-company-chip svg{color:var(--ep-gold);flex:none}
+      .eparts-workspace .company-sidebar nav{display:grid;gap:20px;margin:0}
+      .eparts-workspace .company-nav-section{display:grid;gap:6px}
+      .eparts-workspace .company-nav-section-label{padding:0 11px 5px;color:#827764;letter-spacing:1.5px;font-size:9px;font-weight:800}
+      .eparts-workspace .company-sidebar nav button{width:100%;min-height:44px;padding:10px 12px;gap:12px;border:1px solid transparent;border-radius:10px;color:#b8b0a3;font-size:12px;font-weight:550;transition:all .18s ease}
+      .eparts-workspace .company-sidebar nav button svg{color:#9c8c6c;flex:none}
+      .eparts-workspace .company-sidebar nav button:hover{background:rgba(255,255,255,.045);color:#fff}
+      .eparts-workspace .company-sidebar nav button.active{background:linear-gradient(100deg,rgba(216,179,106,.19),rgba(216,179,106,.055));border-color:rgba(216,179,106,.2);color:#f4d99e;box-shadow:inset 3px 0 #d8b36a}
+      .eparts-workspace .company-sidebar nav button.active svg{color:#e5c47f}
+      .eparts-workspace .eparts-nav-arrow{margin-left:auto;opacity:.7}
+      .eparts-workspace .company-user{margin-top:auto;padding:16px 5px 0;border-top:1px solid rgba(216,179,106,.15)}
+      .eparts-workspace .eparts-user-meta{display:flex;align-items:center;gap:10px;min-width:0}
+      .eparts-workspace .eparts-user-avatar{width:34px;height:34px;display:grid;place-items:center;flex:none;border-radius:50%;background:#292117;color:#e4c47e;border:1px solid rgba(216,179,106,.25)}
+      .eparts-workspace .company-user b{font-size:11px;color:#e9e1d2;overflow-wrap:anywhere}
+      .eparts-workspace .company-user small{font-size:10px;color:#8f8779}
+      .eparts-workspace .company-user button{margin:13px 0 0;padding:8px 4px;color:#b5a995;font-size:11px}
+      .eparts-workspace .company-user button:hover{color:#f1c6c6}
+      .eparts-workspace .company-main{padding:32px clamp(18px,3vw,42px);max-width:none;width:auto;min-height:100vh;background:radial-gradient(ellipse at 85% 0%,rgba(142,103,39,.075),transparent 34%),#0b0b0c}
+      .eparts-workspace .company-top{padding:0 0 22px;margin-bottom:25px;border-bottom:1px solid rgba(216,179,106,.14)}
+      .eparts-workspace .company-top small{color:#a08d68;letter-spacing:1.8px;font-size:9px;font-weight:800}
+      .eparts-workspace .company-top h1{margin:7px 0 0;color:#f5efe4;font-size:clamp(24px,2.3vw,31px);letter-spacing:-.8px;font-weight:700}
+      .eparts-workspace .eparts-header-actions{display:flex;align-items:center;gap:9px}
+      .eparts-workspace .company-secondary{border-color:rgba(216,179,106,.25);background:rgba(216,179,106,.045);color:#e5d3ad;border-radius:10px;font-size:11px}
+      .eparts-workspace .company-icon-button{border-color:rgba(216,179,106,.22);background:#191612;color:#e6c77f;border-radius:10px}
+      .eparts-workspace .company-panel{border:1px solid rgba(216,179,106,.16);background:linear-gradient(145deg,rgba(27,24,20,.96),rgba(17,16,15,.98));border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.2)}
+      .eparts-workspace .company-panel-head b{color:#f0e7d7}
+      .eparts-workspace .company-panel-head small{color:#9e9587}
+      .eparts-workspace .company-stats-grid{gap:14px}
+      .eparts-workspace .company-stat-card{min-width:0;padding:19px;border:1px solid rgba(216,179,106,.16);border-radius:14px;background:linear-gradient(145deg,rgba(43,35,25,.72),rgba(21,19,17,.98));transition:transform .18s ease,border-color .18s ease}
+      .eparts-workspace .company-stat-card:hover{transform:translateY(-2px);border-color:rgba(216,179,106,.35)}
+      .eparts-workspace .company-stat-card span{color:#b9ad98;font-size:11px;line-height:1.45}
+      .eparts-workspace .company-stat-card strong{display:block;margin-top:8px;color:#f0d18c;font-size:clamp(22px,2.2vw,29px);letter-spacing:-.5px;overflow-wrap:anywhere}
+      .eparts-workspace .company-footer{padding:22px 3px;color:#746d61;font-size:10px}
+      .eparts-workspace .eparts-mobile-menu-button{display:none}
+      @media(max-width:900px){.eparts-workspace .company-sidebar{width:250px}.eparts-workspace .company-main{padding:25px 20px}}
+      @media(max-width:760px){
+        .eparts-workspace{display:block}
+        .eparts-workspace .company-sidebar{position:relative;z-index:20;top:auto;width:100%;height:auto;overflow:visible;padding:13px 15px 0;border-right:0;border-bottom:1px solid rgba(216,179,106,.2);box-shadow:0 8px 28px rgba(0,0,0,.28)}
+        .eparts-workspace .eparts-brand-row{margin:0;padding-bottom:12px}
+        .eparts-workspace .company-logo{padding:0}
+        .eparts-workspace .company-logo>span{width:38px;height:38px}
+        .eparts-workspace .company-logo b{font-size:16px}
+        .eparts-workspace .company-logo small{font-size:7px}
+        .eparts-workspace .eparts-mobile-menu-button{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border:1px solid rgba(216,179,106,.24);border-radius:10px;background:#211b12;color:#e9cb88}
+        .eparts-workspace .eparts-company-chip{display:none}
+        .eparts-workspace .company-sidebar nav{display:grid;gap:14px;margin:0;padding:4px 0 15px}
+        .eparts-workspace .eparts-nav-closed{display:none!important}
+        .eparts-workspace .company-sidebar nav button{min-height:42px;font-size:12px}
+        .eparts-workspace .company-user{display:flex;align-items:center;justify-content:space-between;margin:0;padding:11px 2px;border-top:1px solid rgba(216,179,106,.13)}
+        .eparts-workspace .eparts-user-meta{min-width:0}
+        .eparts-workspace .company-user b{max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .eparts-workspace .company-user small{display:block}
+        .eparts-workspace .company-user button{margin:0;padding:8px}
+        .eparts-workspace .company-main{min-height:calc(100vh - 90px);padding:22px 14px;background:#0b0b0c}
+        .eparts-workspace .company-top{align-items:flex-start;flex-direction:column;gap:14px;padding-bottom:17px;margin-bottom:18px}
+        .eparts-workspace .company-top h1{font-size:24px}
+        .eparts-workspace .eparts-header-actions{width:100%;justify-content:space-between}
+        .eparts-workspace .company-panel{padding:15px}
+        .eparts-workspace .company-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+        .eparts-workspace .company-stat-card{padding:13px}
+        .eparts-workspace .company-stat-card strong{font-size:21px}
+      }
       @media(max-width:380px){.eparts-workspace .company-stats-grid{grid-template-columns:minmax(0,1fr)}}
     `}</style>
     <aside className="company-sidebar">
-      <div className="company-logo"><span><ShoppingCart/></span><div><b>EPARTS</b><small>COMÉRCIO E MARKETPLACE</small></div></div>
-      <div className="company-current">{companyName}</div>
-      <nav className="company-mobile-organized-nav">
-        <div className="company-nav-section"><span className="company-nav-section-label">PRINCIPAL</span>
-          <button className={tab==='dashboard'?'active':''} onClick={()=>nav('dashboard')}><LayoutDashboard size={18}/> Dashboard Eparts</button>
-        </div>
-        <div className="company-nav-section"><span className="company-nav-section-label">OPERAÇÃO</span>
-          <button className={tab==='products'?'active':''} onClick={()=>nav('products')}><Package size={18}/> Produtos e estoque</button>
-          <button className={tab==='pos'?'active':''} onClick={()=>nav('pos')}><ShoppingCart size={18}/> PDV · Ponto de venda</button>
-          <button className={tab==='brands'?'active':''} onClick={()=>nav('brands')}><Tags size={18}/> Marcas</button>
-          <button className={tab==='suppliers'?'active':''} onClick={()=>nav('suppliers')}><Truck size={18}/> Fornecedores</button>
-          <button className={tab==='sales'?'active':''} onClick={()=>nav('sales')}><ShoppingCart size={18}/> Vendas e pedidos</button>
-          <button className={tab==='payouts'?'active':''} onClick={()=>nav('payouts')}><Wallet size={18}/> Comissões e repasses</button>
-        </div>
+      <div className="eparts-brand-row">
+        <div className="company-logo"><span><ShoppingCart/></span><div><b>EPARTS</b><small>COMÉRCIO E MARKETPLACE</small></div></div>
+        <button className="eparts-mobile-menu-button" onClick={()=>setMenuOpen(v=>!v)} aria-label={menuOpen?'Fechar menu':'Abrir menu'}>{menuOpen?<X size={19}/>:<Menu size={19}/>}</button>
+      </div>
+      <div className="eparts-company-chip"><Store size={17}/><span>{companyName}</span></div>
+      <nav className={menuOpen?'':'eparts-nav-closed'}>
+        {navItems.map(group=><div className="company-nav-section" key={group.section}>
+          <span className="company-nav-section-label">{group.section}</span>
+          {group.items.map(item=><button key={item.id} className={tab===item.id?'active':''} onClick={()=>nav(item.id)}><item.icon size={17}/><span>{item.label}</span>{tab===item.id&&<ChevronRight className="eparts-nav-arrow" size={15}/>}</button>)}
+        </div>)}
       </nav>
-      <div className="company-user"><b>{email}</b><small>Perfil: {role}</small><button onClick={onSignOut}><LogOut size={15}/> Sair</button></div>
+      <div className="company-user">
+        <div className="eparts-user-meta"><span className="eparts-user-avatar"><Store size={16}/></span><div><b>{email}</b><small>Perfil: {role}</small></div></div>
+        <button onClick={onSignOut}><LogOut size={15}/> Sair da conta</button>
+      </div>
     </aside>
     <main className="company-main">
-      <div className="company-mobilebar"><div><b>EPARTS</b><small>{companyName}</small></div></div>
-      <header className="company-top"><div><small>PLATAFORMA DE COMÉRCIO</small><h1>{tab==='dashboard'?'Dashboard Eparts':tab==='products'?'Produtos e estoque':tab==='brands'?'Marcas':tab==='suppliers'?'Fornecedores':tab==='sales'?'Vendas e pedidos':tab==='pos'?'PDV · Ponto de venda':'Comissões e repasses'}</h1></div><div style={{display:'flex',gap:10,alignItems:'center'}}><a href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer" className="company-secondary" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7}}><ExternalLink size={15}/> Abrir catálogo online</a><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
+      <header className="company-top"><div><small>EPARTS / PAINEL DE GESTÃO</small><h1>{title}</h1></div><div className="eparts-header-actions"><a href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer" className="company-secondary" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7}}><ExternalLink size={15}/> Catálogo online</a><button className="company-icon-button" onClick={()=>void load()} title="Atualizar dados" aria-label="Atualizar dados"><RefreshCw size={16}/></button></div></header>
       {error&&<div className="company-error-banner">{error}</div>}
       {tab==='pos'?<EpartsPOS companyId={companyId}/>:tab==='dashboard'?<section className="company-panel">
-        <div className="company-panel-head"><div><b>Visão geral da operação</b><small>Indicadores da Eparts, sem módulos de assistência técnica</small></div><button className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar</button></div>
+        <div className="company-panel-head"><div><b>Resumo da operação</b><small>Indicadores comerciais e de estoque da Eparts</small></div><button className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar</button></div>
         {loading?<p className="company-empty">Carregando indicadores...</p>:<div className="company-stats-grid">
           <article className="company-stat-card"><span>Produtos cadastrados</span><strong>{stats.products}</strong></article>
           <article className="company-stat-card"><span>Unidades em estoque</span><strong>{stats.stock}</strong></article>
           <article className="company-stat-card"><span>Fornecedores</span><strong>{stats.suppliers}</strong></article>
-          <article className="company-stat-card"><span>Pedidos</span><strong>{stats.orders}</strong></article>
-          <article className="company-stat-card"><span>Valor dos pedidos ativos</span><strong>{money(stats.revenue)}</strong></article>
-          <article className="company-stat-card"><span>Comissão prevista em pedidos ativos</span><strong>{money(stats.commission)}</strong></article>
+          <article className="company-stat-card"><span>Pedidos e vendas</span><strong>{stats.orders}</strong></article>
+          <article className="company-stat-card"><span>Valor em pedidos ativos</span><strong>{money(stats.revenue)}</strong></article>
+          <article className="company-stat-card"><span>Comissão prevista</span><strong>{money(stats.commission)}</strong></article>
         </div>}
-        <div className="company-inline-actions"><button className="company-primary" onClick={()=>nav('products')}><Package size={16}/> Abrir gestão comercial</button></div>
+        <div className="company-inline-actions"><button className="company-primary" onClick={()=>nav('products')}><Package size={16}/> Abrir produtos e estoque</button></div>
       </section>:<EpartsCatalogAdminPanel key={tab} companyId={companyId} initialTab={tab}/>}
-      <footer className="company-footer">Painel exclusivo Eparts · acesso isolado por empresa</footer>
+      <footer className="company-footer">EPARTS · Painel comercial exclusivo · Acesso protegido por empresa</footer>
     </main>
   </div>
 }
