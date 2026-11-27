@@ -3,7 +3,7 @@ import { AlertTriangle, Database, FileImage, HardDrive, RefreshCw } from 'lucide
 import { supabase } from '../lib/supabase'
 
 type CompanyUsage = { company_id:string; company_name:string; files:number; bytes:number; photos:number }
-type Usage = { total_files:number; total_bytes:number; total_photos:number; buckets:{id:string;name:string;is_public:boolean;file_size_limit:number|null}[]; companies:CompanyUsage[]; scanned_at:string; truncated:boolean }
+type Usage = { total_files:number; total_bytes:number; total_photos:number; files_without_size:number; buckets:{id:string;name:string;is_public:boolean;file_size_limit:number|null}[]; companies:CompanyUsage[]; scanned_at:string; truncated:boolean }
 const STORAGE_LIMIT_BYTES = 1024 * 1024 * 1024
 const formatBytes = (bytes:number) => {
   if (!bytes) return '0 B'
@@ -75,7 +75,7 @@ export default function PlatformStoragePanel() {
         <h3 style={{marginTop:0}}>Buckets de armazenamento</h3>
         {usage.buckets.map(bucket=><div key={bucket.id} style={styles.row}><div><b>{bucket.name}</b><div style={styles.muted}>{bucket.is_public?'Público':'Privado'}</div></div><span style={styles.muted}>Máx. por arquivo: {bucket.file_size_limit?formatBytes(bucket.file_size_limit):'Não definido'}</span></div>)}
       </section>
-      <p className="platform-hint" style={{marginTop:14}}>Última consulta: {new Date(usage.scanned_at).toLocaleString('pt-BR')}. O limite de 1 GB é uma referência do plano Free, não uma leitura automática da franquia contratada. {usage.truncated?'A leitura atingiu o limite de 100 mil arquivos e pode estar incompleta.':''}</p>
+      <p className="platform-hint" style={{marginTop:14}}>Última consulta: {new Date(usage.scanned_at).toLocaleString('pt-BR')}. {usage.files_without_size>0?`${usage.files_without_size} arquivo(s) sem tamanho nos metadados; o total em bytes pode estar subestimado. `:''}O limite de 1 GB é uma referência do plano Free, não uma leitura automática da franquia contratada. {usage.truncated?'A leitura atingiu o limite de 100 mil arquivos e pode estar incompleta.':''}</p>
     </>}
   </section>
 }
