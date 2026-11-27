@@ -6,7 +6,7 @@ type Customer = { id:string; name:string; email:string|null; phone:string|null; 
 type Brand = { id:string; name:string }
 type Supplier = { id:string; name:string; contact_name:string|null; document:string|null; email:string|null; phone:string|null; notes:string|null; user_id?:string|null; is_active:boolean }
 type Product = { id:string; name:string; sku:string|null; barcode:string|null; sale_price:number; cost_price:number; stock_quantity:number; is_active:boolean; show_in_catalog:boolean; eparts_brands?:{name:string}[]|null; eparts_suppliers?:{name:string}[]|null }
-type Props = { companyId:string; initialTab?:Tab }
+type Props = { companyId:string; initialTab?:Tab; initialCreate?:boolean }
 type Sale = { id:string; order_number:number; status:string; payment_status:string; total_amount:number; eparts_commission_amount:number; supplier_amount:number; customer_name:string|null; customer_phone:string|null; customer_email?:string|null; customer_address?:Record<string,unknown>|null; notes?:string|null; source?:string; created_at:string };
 type SaleItem = {id:string;product_name:string;sku:string|null;quantity:number;unit_price:number;line_total:number;eparts_commission_amount:number;supplier_amount:number};
 type SaleEvent = {id:string;old_status:string|null;new_status:string;old_payment_status:string|null;new_payment_status:string;created_at:string};
@@ -15,7 +15,7 @@ type SupplierBalance = {supplier_id:string;supplier_name:string;eligible_amount:
 type Tab = 'products'|'suppliers'|'brands'|'sales'|'payouts'|'customers'
 const money=(value:number)=>Number(value||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 
-export default function EpartsCatalogAdminPanel({companyId,initialTab='products'}:Props) {
+export default function EpartsCatalogAdminPanel({companyId,initialTab='products',initialCreate=false}:Props) {
   const [tab,setTab]=useState<Tab>(initialTab)
   const [products,setProducts]=useState<Product[]>([])
   const [customers,setCustomers]=useState<Customer[]>([])
@@ -39,7 +39,7 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
   const [saleItems,setSaleItems]=useState<SaleItem[]>([])
   const [saleEvents,setSaleEvents]=useState<SaleEvent[]>([])
   const [detailLoading,setDetailLoading]=useState(false)
-  const [showForm,setShowForm]=useState(false)
+  const [showForm,setShowForm]=useState(initialCreate)
   const [productForm,setProductForm]=useState({name:'',sku:'',barcode:'',description:'',brandId:'',supplierId:'',costPrice:'0',salePrice:'0',stock:'0',showInCatalog:true})
   const [supplierForm,setSupplierForm]=useState({name:'',contactName:'',document:'',email:'',phone:'',notes:'',userId:''})
   const [brandName,setBrandName]=useState('')
