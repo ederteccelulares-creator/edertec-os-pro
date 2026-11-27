@@ -4180,3 +4180,129 @@ td b { font-weight:650; }
   .company-app .company-sidebar {background:linear-gradient(180deg,#171216,#0e0d11 80%) !important}
   .company-app .company-top h1 {color:#f5d18a !important}
 }
+
+
+/* Final theme override: remove remaining legacy light form and card surfaces */
+.company-app .company-main {
+  background:#09090c !important;
+  color:#f7f1e9 !important;
+}
+.company-app .company-form,
+.company-app .company-panel,
+.company-app .company-dashboard-recent,
+.company-app .company-pos-products,
+.company-app .company-pos-cart,
+.company-app .company-payment-modal,
+.company-app .company-modal,
+.company-app .company-history-modal,
+.company-app .company-subscription-current,
+.company-app .company-subscription-grid article {
+  background:linear-gradient(145deg,#211f23,#151519 72%,#211518) !important;
+  border:1px solid #594735 !important;
+  color:#f7f1e9 !important;
+  box-shadow:0 8px 22px #0006,inset 0 1px #ffffff08 !important;
+}
+.company-app .company-form label,
+.company-app .company-panel label,
+.company-app .company-pos-checkout label,
+.company-app .company-payment-modal label {
+  color:#d8cabc !important;
+}
+.company-app .company-form input,
+.company-app .company-form select,
+.company-app .company-form textarea,
+.company-app .company-main input,
+.company-app .company-main select,
+.company-app .company-main textarea,
+.company-app .company-order-search input,
+.company-app .company-pos-tools input,
+.company-app .company-pos-tools select,
+.company-app .company-pos-checkout input,
+.company-app .company-pos-checkout select {
+  background:#111115 !important;
+  border:1px solid #654a35 !important;
+  color:#f7f1e9 !important;
+  color-scheme:dark;
+}
+.company-app .company-main input::placeholder,
+.company-app .company-main textarea::placeholder {
+  color:#a99b8e !important;
+  opacity:1 !important;
+}
+.company-app .company-form input:focus,
+.company-app .company-form select:focus,
+.company-app .company-form textarea:focus,
+.company-app .company-main input:focus,
+.company-app .company-main select:focus,
+.company-app .company-main textarea:focus {
+  border-color:#e6b957 !important;
+  box-shadow:0 0 0 3px #ed263526 !important;
+  outline:0 !important;
+}
+.company-app .company-dashboard-quick>button,
+.company-app .company-pos-product,
+.company-app .company-pos-checkout,
+.company-app .company-pos-grand {
+  background:linear-gradient(145deg,#211f23,#151519 72%,#211518) !important;
+  border:1px solid #594735 !important;
+  color:#f7f1e9 !important;
+}
+.company-app .company-dashboard-quick>button>span {
+  background:#3a2025 !important;
+  color:#f06a70 !important;
+}
+.company-app .company-dashboard-quick>button>b,
+.company-app .company-panel-head b,
+.company-app .company-panel h2,
+.company-app .company-panel h3,
+.company-app .company-form h3 {
+  color:#f0cf8a !important;
+}
+.company-app .company-dashboard-quick>button>small,
+.company-app .company-panel-head small,
+.company-app .company-dashboard-subtitle {
+  color:#b9ada4 !important;
+}
+.company-app .company-pos-product strong,
+.company-app .company-pos-grand strong,
+.company-app .company-pos-total b {
+  color:#f0c66f !important;
+}
+.company-app .company-table-wrap table th {
+  background:#30201d !important;
+  color:#f0c66f !important;
+}
+.company-app .company-table-wrap table td {
+  background:#19171b !important;
+  color:#e8ded3 !important;
+  border-color:#44352d !important;
+}
+.company-app .company-bottom-nav {
+  background:#151216 !important;
+  border-top:1px solid #765333 !important;
+}
+.company-app .company-bottom-nav button {color:#c8b9a8 !important}
+.company-app .company-bottom-nav button.active {
+  background:#4b1b20 !important;
+  color:#fff0d1 !important;
+}
+@media(max-width:760px) {
+  .company-app .company-form,
+  .company-app .company-panel,
+  .company-app .company-pos-products,
+  .company-app .company-pos-cart,
+  .company-app .company-payment-modal {
+    background:linear-gradient(145deg,#211f23,#151519 72%,#211518) !important;
+    color:#f7f1e9 !important;
+  }
+  .company-app .company-form input,
+  .company-app .company-form select,
+  .company-app .company-form textarea,
+  .company-app .company-main input,
+  .company-app .company-main select,
+  .company-app .company-main textarea {
+    background:#111115 !important;
+    color:#f7f1e9 !important;
+    border-color:#654a35 !important;
+  }
+}
