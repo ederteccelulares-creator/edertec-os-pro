@@ -133,6 +133,63 @@ export default function EpartsPOS({companyId}:Props){
     .eparts-pos .pos-final{min-height:63px;font-size:20px}.eparts-pos .pos-stock-note{padding:11px;font-size:12px}
    }
    @media print{body[data-eparts-print] *{visibility:hidden!important}body[data-eparts-print] .eparts-pos .pos-receipt,body[data-eparts-print] .eparts-pos .pos-receipt *{visibility:visible!important}body[data-eparts-print] .eparts-pos .pos-receipt{display:block!important;position:absolute;left:0;top:0;width:100%;color:#000;background:#fff;padding:8px;font:12px monospace}body[data-eparts-print=thermal] .eparts-pos .pos-receipt{width:72mm}body[data-eparts-print=a4] .eparts-pos .pos-receipt{width:190mm;padding:15mm;font:14px Arial}@page{margin:5mm}}
+
+   /* EPARTS POS visual refinement: consistent matte black, subtle gold and controlled red */
+   .eparts-pos{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+   .eparts-pos .pos-heading-icon{width:48px!important;height:48px!important;border:1px solid #57462b!important;border-radius:13px!important;background:linear-gradient(145deg,#211b12,#111)!important;color:#dfba70!important}
+   .eparts-pos .pos-heading h2{font-size:clamp(23px,2.5vw,31px)!important;letter-spacing:-.045em!important;color:#f0d49a!important}
+   .eparts-pos .pos-heading p{font-size:12px!important;color:#a9a092!important}
+   .eparts-pos .pos-search{min-height:52px!important;border-color:#57472d!important;border-radius:11px!important;background:#131210!important}
+   .eparts-pos .pos-scan{width:52px!important;height:52px!important;border-color:#57472d!important;border-radius:11px!important;background:#171511!important;color:#e2c17e!important}
+   .eparts-pos .pos-product{grid-template-columns:92px minmax(0,1fr) auto!important;gap:13px!important;padding:11px!important;border-color:#39342b!important;border-radius:12px!important;background:linear-gradient(110deg,#191816,#111)!important;box-shadow:none!important}
+   .eparts-pos .pos-product-image{width:92px!important;height:88px!important;border-color:#373128!important;border-radius:9px!important;background:#0b0b0a!important;color:#9e8b66!important}
+   .eparts-pos .pos-product-info b{font-size:14px!important;font-weight:650!important;color:#eee6d9!important}
+   .eparts-pos .pos-product-info small{font-size:11px!important;color:#9f988b!important}
+   .eparts-pos .pos-product-info strong{font-size:18px!important;color:#e5c27b!important}
+   .eparts-pos .pos-qty{border-color:#55452d!important;border-radius:8px!important;background:#111!important}
+   .eparts-pos .pos-qty button{background:#292116!important;color:#e6c47f!important}
+   .eparts-pos .pos-qty button:hover{background:#3a2c18!important}
+   .eparts-pos .pos-qty span{background:#111!important;color:#f4ead8!important}
+   .eparts-pos .pos-add{width:43px!important;height:42px!important;border-color:#8f202b!important;border-radius:9px!important;background:linear-gradient(145deg,#b52331,#75131e)!important;box-shadow:none!important}
+   .eparts-pos .pos-cart{padding:17px!important;border-color:#51432d!important;border-radius:13px!important;background:#151412!important;box-shadow:none!important}
+   .eparts-pos .pos-cart-head{border-color:#383128!important}
+   .eparts-pos .pos-cart-head h3{font-size:17px!important;color:#e8ce98!important}
+   .eparts-pos .pos-clear{font-size:11px!important}
+   .eparts-pos .pos-line{border-color:#302d27!important}
+   .eparts-pos .pos-line-name{font-size:12px!important;color:#e6dfd3!important}
+   .eparts-pos .pos-line-tools button{border-color:#51432d!important;background:#211b12!important;color:#e4c17b!important}
+   .eparts-pos .pos-line-price{font-size:12px!important}
+   .eparts-pos .pos-field{color:#cbb98f!important;font-weight:650!important}
+   .eparts-pos .pos-field input,.eparts-pos .pos-field select{min-height:41px!important;border-color:#494033!important;border-radius:8px!important;background:#0c0c0b!important;color:#f4efe6!important;padding:9px 11px!important}
+   .eparts-pos .pos-summary-row{font-size:13px!important;color:#cfc7b8!important}
+   .eparts-pos .pos-summary-row.total{font-size:20px!important}
+   .eparts-pos .pos-summary-row.total strong{font-size:25px!important;color:#e9c879!important}
+   .eparts-pos .pos-payment-title{font-size:15px!important;color:#e8ddc8!important}
+   .eparts-pos .pos-pay{gap:9px!important}
+   .eparts-pos .pos-pay button{min-height:58px!important;border-color:#494033!important;border-radius:10px!important;background:#171614!important;color:#ddd4c4!important;font-size:13px!important}
+   .eparts-pos .pos-pay button svg{color:#d9b56d!important}
+   .eparts-pos .pos-pay button.active{border:1px solid #c49b52!important;background:linear-gradient(120deg,#392b16,#21180d)!important;color:#ffe4a4!important;box-shadow:inset 0 0 0 1px #c49b5230!important}
+   .eparts-pos .pos-final{min-height:58px!important;margin-top:14px!important;border:1px solid #9f2632!important;border-radius:10px!important;background:linear-gradient(100deg,#bd2736,#851722)!important;font-size:17px!important;box-shadow:0 6px 16px #8f15242b!important}
+   .eparts-pos .pos-stock-note{border:1px solid #4c6946!important;border-radius:10px!important;background:#111a11!important;color:#c7d9c2!important;font-size:12px!important}
+   .eparts-pos .pos-stock-note svg{color:#9bc48e!important}
+   .eparts-pos .pos-empty{border-color:#494033!important;border-radius:10px!important;color:#aaa092!important;background:#131210!important}
+   @media(max-width:900px){
+     .eparts-pos .pos-product{grid-template-columns:76px minmax(0,1fr)!important}
+     .eparts-pos .pos-product-image{width:76px!important;height:76px!important}
+     .eparts-pos .pos-product-controls{grid-column:1/-1!important;justify-content:flex-end!important}
+   }
+   @media(max-width:560px){
+     .eparts-pos .pos-heading{align-items:center!important}
+     .eparts-pos .pos-heading-icon{width:40px!important;height:40px!important}
+     .eparts-pos .pos-heading-icon svg{width:25px!important;height:25px!important}
+     .eparts-pos .pos-heading h2{font-size:23px!important}
+     .eparts-pos .pos-product{grid-template-columns:66px minmax(0,1fr)!important;padding:9px!important}
+     .eparts-pos .pos-product-image{width:66px!important;height:66px!important}
+     .eparts-pos .pos-product-controls{grid-column:1/-1!important}
+     .eparts-pos .pos-pay button{min-height:55px!important;font-size:11px!important}
+     .eparts-pos .pos-final{min-height:54px!important;font-size:16px!important}
+   }
+
   `}</style>
   <div className="pos-heading"><span className="pos-heading-icon"><ShoppingCart size={48}/></span><div><h2>PDV <span style={{color:'#d8d0c5',fontWeight:450}}>– Ponto de Venda</span></h2><p>Venda rápida · controle de estoque em tempo real</p></div></div>
   {error&&<div className="pos-message">{error}</div>}{notice&&<div className="pos-message success"><CheckCircle2 size={18}/>{notice}</div>}
