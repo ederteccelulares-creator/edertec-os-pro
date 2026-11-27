@@ -4409,3 +4409,78 @@ td b { font-weight:650; }
     min-width: 0 !important;
   }
 }
+
+
+/* EDERTEC OS PRO — mobile-only premium form finish (desktop intentionally untouched) */
+@media screen and (max-width: 760px) {
+  html body .company-app .company-main {
+    background: #09090c !important;
+    color: #f7f1e9 !important;
+  }
+  html body .company-app .company-main form,
+  html body .company-app .company-main .company-form,
+  html body .company-app .company-main .company-order-customer-form,
+  html body .company-app .company-main .company-payment-modal,
+  html body .company-app .company-main .company-modal,
+  html body .company-app .company-main .company-history-modal,
+  html body .company-app .company-main .company-panel form {
+    background: linear-gradient(145deg,#211f23 0%,#151519 72%,#211518 100%) !important;
+    color: #f7f1e9 !important;
+    border: 1px solid #654a35 !important;
+    border-radius: 14px !important;
+    box-shadow: 0 8px 22px #0006 !important;
+    min-width: 0 !important;
+  }
+  html body .company-app .company-main form label,
+  html body .company-app .company-main .company-form label,
+  html body .company-app .company-main .company-panel label {
+    color: #e1d3c3 !important;
+  }
+  html body .company-app .company-main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  html body .company-app .company-main select,
+  html body .company-app .company-main textarea {
+    background: #111115 !important;
+    color: #f7f1e9 !important;
+    border: 1px solid #654a35 !important;
+    border-radius: 9px !important;
+    color-scheme: dark !important;
+    -webkit-text-fill-color: #f7f1e9 !important;
+    max-width: 100% !important;
+  }
+  html body .company-app .company-main input::placeholder,
+  html body .company-app .company-main textarea::placeholder {
+    color: #a99b8e !important;
+    opacity: 1 !important;
+    -webkit-text-fill-color: #a99b8e !important;
+  }
+  html body .company-app .company-main select option {
+    background: #171418 !important;
+    color: #f7f1e9 !important;
+  }
+  html body .company-app .company-main input:focus,
+  html body .company-app .company-main select:focus,
+  html body .company-app .company-main textarea:focus {
+    border-color: #f0c66f !important;
+    box-shadow: 0 0 0 3px #ed263526 !important;
+    outline: 0 !important;
+  }
+  html body .company-app .company-main .company-primary,
+  html body .company-app .company-main button.company-primary {
+    background: linear-gradient(135deg,#ff3947,#b90e20) !important;
+    border: 1px solid #ff5962 !important;
+    color: #fff !important;
+  }
+  html body .company-app .company-main .company-secondary,
+  html body .company-app .company-main .company-icon-button {
+    background: #211b1d !important;
+    border: 1px solid #765536 !important;
+    color: #f0c66f !important;
+  }
+  html body .company-app .company-main .company-form-grid,
+  html body .company-app .company-main .company-order-form-grid {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  html body .company-app .company-main form button {
+    max-width: 100%;
+  }
+}
