@@ -1,3 +1,4 @@
+import './CompanyAuthLogin.css'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { Building2, CreditCard, ExternalLink, LoaderCircle, LogOut, Mail, ShieldCheck, Smartphone } from 'lucide-react'
