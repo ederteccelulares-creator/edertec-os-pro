@@ -3752,3 +3752,30 @@ td b { font-weight:650; }
   .platform-page .platform-header,.tenant-page .tenant-header {background:#111014 !important}
   .platform-plan-grid {grid-template-columns:1fr !important}
 }
+
+
+/* Keep desktop navigation anchored while the selected module scrolls independently */
+@media (min-width:761px) {
+  .company-app { align-items:flex-start !important; min-height:100vh; }
+  .company-sidebar {
+    position:sticky !important;
+    top:0 !important;
+    align-self:flex-start !important;
+    height:100vh !important;
+    max-height:100vh !important;
+    overflow-y:auto !important;
+    overscroll-behavior:contain;
+    scrollbar-gutter:stable;
+  }
+  .company-main {
+    height:100vh !important;
+    min-height:0 !important;
+    overflow-y:auto !important;
+    overscroll-behavior:contain;
+    scroll-behavior:auto;
+  }
+}
+@media (max-width:760px) {
+  .company-sidebar { position:relative !important; height:auto !important; max-height:none !important; overflow:visible !important; }
+  .company-main { height:auto !important; min-height:0 !important; overflow:visible !important; }
+}
