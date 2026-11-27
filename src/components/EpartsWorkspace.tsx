@@ -36,11 +36,11 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
           <button className={tab==='dashboard'?'active':''} onClick={()=>nav('dashboard')}><LayoutDashboard size={18}/> Dashboard Eparts</button>
         </div>
         <div className="company-nav-section"><span className="company-nav-section-label">OPERAÇÃO</span>
-          <button className={tab!=='dashboard'?'active':''} onClick={()=>nav('commerce')}><Package size={18}/> Produtos e estoque</button>
-          <button className={tab==='commerce'?'':' '} onClick={()=>nav('commerce')}><Tags size={18}/> Marcas</button>
-          <button className={tab==='commerce'?'':' '} onClick={()=>nav('commerce')}><Truck size={18}/> Fornecedores</button>
-          <button className={tab==='commerce'?'':' '} onClick={()=>nav('commerce')}><ShoppingCart size={18}/> Vendas e pedidos</button>
-          <button className={tab==='commerce'?'':' '} onClick={()=>nav('commerce')}><Wallet size={18}/> Comissões e repasses</button>
+          <button className={tab!=='dashboard'?'active':''} onClick={()=>nav('products')}><Package size={18}/> Produtos e estoque</button>
+          <button className={tab==='brands'?'active':''} onClick={()=>nav('brands')}><Tags size={18}/> Marcas</button>
+          <button className={tab==='suppliers'?'active':''} onClick={()=>nav('suppliers')}><Truck size={18}/> Fornecedores</button>
+          <button className={tab==='sales'?'active':''} onClick={()=>nav('sales')}><ShoppingCart size={18}/> Vendas e pedidos</button>
+          <button className={tab==='payouts'?'active':''} onClick={()=>nav('payouts')}><Wallet size={18}/> Comissões e repasses</button>
         </div>
       </nav>
       <div className="company-user"><b>{email}</b><small>Perfil: {role}</small><button onClick={onSignOut}><LogOut size={15}/> Sair</button></div>
@@ -59,7 +59,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
           <article className="company-stat-card"><span>Vendas registradas</span><strong>{money(stats.revenue)}</strong></article>
           <article className="company-stat-card"><span>Comissão Eparts</span><strong>{money(stats.commission)}</strong></article>
         </div>}
-        <div className="company-inline-actions"><button className="company-primary" onClick={()=>nav('commerce')}><Package size={16}/> Abrir gestão comercial</button></div>
+        <div className="company-inline-actions"><button className="company-primary" onClick={()=>nav('products')}><Package size={16}/> Abrir gestão comercial</button></div>
       </section>:<EpartsCatalogAdminPanel key={tab} companyId={companyId} initialTab={tab}/>}
       <footer className="company-footer">Painel exclusivo Eparts · acesso isolado por empresa</footer>
     </main>
