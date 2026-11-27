@@ -2803,3 +2803,80 @@ td b { font-weight:650; }
     color:#f2dfbb !important;
   }
 }
+
+
+/* Refinamento premium: microinteracoes, hierarquia e legibilidade (desktop) */
+@media (min-width: 761px) {
+  .company-main .company-dashboard-quick > button,
+  .company-main .company-dashboard-stats article,
+  .company-main .company-panel,
+  .company-main .company-form,
+  .company-main .company-table-wrap {
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease, background-color .2s ease !important;
+  }
+  .company-main .company-dashboard-quick > button:hover,
+  .company-main .company-dashboard-stats article:hover {
+    transform: translateY(-2px);
+    border-color:#a77a48 !important;
+    box-shadow:0 12px 30px #0008, 0 0 17px #df293522 !important;
+  }
+  .company-main .company-panel-head {
+    border-bottom:1px solid #51402f !important;
+    padding-bottom:10px;
+  }
+  .company-main .company-panel-head b,
+  .company-main .company-section-title,
+  .company-main h2,
+  .company-main h3 {
+    color:#fff5e6 !important;
+    letter-spacing:.01em;
+  }
+  .company-main .company-table-wrap {
+    overflow:hidden;
+  }
+  .company-main .company-table-wrap tbody tr:nth-child(even) td {
+    background:#ffffff06 !important;
+  }
+  .company-main .company-table-wrap tbody tr:hover td {
+    background:#a9273218 !important;
+  }
+  .company-main input:focus,
+  .company-main select:focus,
+  .company-main textarea:focus {
+    outline:2px solid #c58d4c !important;
+    outline-offset:1px;
+    border-color:#e33a43 !important;
+    box-shadow:0 0 0 3px #df293522 !important;
+  }
+  .company-main button:focus-visible,
+  .company-app aside button:focus-visible {
+    outline:2px solid #e6c77f !important;
+    outline-offset:2px;
+  }
+  .company-main .company-secondary:hover,
+  .company-main .company-icon-button:hover {
+    background:#30262a !important;
+    border-color:#c23a42 !important;
+  }
+  .company-main .company-error-banner,
+  .company-main .company-notice-banner {
+    border-radius:10px !important;
+  }
+  .company-main ::placeholder {
+    color:#9299a4 !important;
+    opacity:1 !important;
+  }
+  .company-app aside nav > button,
+  .company-app aside nav .company-nav-group > button,
+  .company-app aside nav .company-nav-submenu > button {
+    transition:background .18s ease, color .18s ease, border-color .18s ease !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .company-main *,
+  .company-app aside * {
+    scroll-behavior:auto !important;
+    transition:none !important;
+    animation:none !important;
+  }
+}
