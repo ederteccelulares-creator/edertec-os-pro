@@ -16,6 +16,7 @@ import CustomerPortalAdminPanel from './CustomerPortalAdminPanel'
 import CompanySupportPanel from './CompanySupportPanel'
 import CompanyTeamPanel from './CompanyTeamPanel'
 import EpartsCatalogAdminPanel from './EpartsCatalogAdminPanel'
+import EpartsSupplierPanel from './EpartsSupplierPanel'
 import './CompanyMobileNavigation.css'
 import { recordCompanyServiceOrderPayment, type PaymentMethod } from '../lib/company-service-order-payments'
 import { invoiceServiceOrderNet30, listCustomerOverdueReceivables, type OverdueReceivable } from '../lib/company-financial-entries'
@@ -30,7 +31,7 @@ const statusFlow = ['received','diagnosis','waiting_approval','approved','waitin
 const money = (n:number) => Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 
 export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
-  const [tab,setTab] = useState<'dashboard'|'orders'|'customers'|'inventory'|'suppliers'|'purchases'|'receipts'|'partPurchases'|'cash'|'entries'|'expenseReport'|'accounts'|'creditCards'|'cardInvoices'|'pos'|'backup'|'settings'|'customerPortal'|'support'|'team'|'plans'|'eparts'>('dashboard')
+  const [tab,setTab] = useState<'dashboard'|'orders'|'customers'|'inventory'|'suppliers'|'purchases'|'receipts'|'partPurchases'|'cash'|'entries'|'expenseReport'|'accounts'|'creditCards'|'cardInvoices'|'pos'|'backup'|'settings'|'customerPortal'|'support'|'team'|'plans'|'eparts'|'epartsSupplier'>('dashboard')
   // Rola somente o conteúdo; preserva a posição do menu lateral.
   useEffect(()=>{
     const main=document.querySelector('.company-main')
@@ -336,6 +337,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
   const navigate = (next: typeof tab) => {
     if(next==='plans'&&!canAdmin)return
     if(next==='eparts'&&(!canAdmin||!isEpartsCompany))return
+    if(next==='epartsSupplier'&&!isEpartsCompany)return
     const managementTabs = ['pos','customerPortal','inventory','suppliers','purchases','cash','entries','accounts']
     if (managementTabs.includes(next) && !canManage) return
     if ((next==='settings'||next==='backup'||next==='team') && !canAdmin) return
@@ -372,7 +374,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
           {canManage&&<button className={tab==='partPurchases'?'active':''} onClick={()=>navigate('partPurchases')}><ShieldCheck size={18}/> Compra de peças</button>}
           {canManage&&<button className={tab==='customerPortal'?'active':''} onClick={()=>navigate('customerPortal')}><Smartphone size={18}/> Área do Cliente</button>}
           {canAdmin&&<button className={tab==='team'?'active':''} onClick={()=>navigate('team')}><Users size={18}/> Funcionários e usuários</button>}
-          {canAdmin&&isEpartsCompany&&<button className={tab==='eparts'?'active':''} onClick={()=>navigate('eparts')}><Package size={18}/> Eparts · Marketplace</button>}
+          {isEpartsCompany&&<><button className={tab==='eparts'?'active':''} onClick={()=>navigate('eparts')}><Package size={18}/> Eparts · Marketplace</button><button className={tab==='epartsSupplier'?'active':''} onClick={()=>navigate('epartsSupplier')}><Truck size={18}/> Área do fornecedor</button></>}
         </div>
         {canManage&&<div className="company-nav-section">
           <span className="company-nav-section-label">FINANCEIRO</span>
@@ -402,7 +404,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
         {canManage&&<button className={['cash','entries','expenseReport','accounts','creditCards','cardInvoices'].includes(tab)?'active':''} onClick={()=>{setFinanceMenuOpen(true);setMenuOpen(true)}}><Wallet size={19}/><span>Financeiro</span></button>}
         <button onClick={()=>setMenuOpen(true)}><Menu size={19}/><span>Mais</span></button>
       </nav>
-      <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='receipts'?'Recibo simples':tab==='partPurchases'?'Registro de compra de peças':tab==='backup'?'Backup de dados':tab==='settings'?'Configurações':tab==='team'?'Funcionários e usuários':tab==='customerPortal'?'Compartilhar Área do Cliente':tab==='support'?'Suporte e chamados':tab==='pos'?'PDV / Vendas':tab==='plans'?'Planos e assinatura':tab==='eparts'?'Eparts · Marketplace':tab==='accounts'?'Contas bancárias':tab==='creditCards'?'Cartões de crédito':tab==='cardInvoices'?'Faturas e parcelas':tab==='cash'?'Caixa':'Financeiro'}</h1></div><div className="company-top-actions"><div className="company-brasilia-clock"><b>{brasiliaTime}</b><span>{brasiliaDate}</span><small>Horário de Brasília</small></div><div className={'company-plan-period '+(planInfo?.subscription_status==='trial'?'is-trial':!planInfo?.subscription_status||planInfo?.subscription_status==='expired'?'is-unsubscribed':'')}>
+      <header className="company-top"><div><small>PAINEL DA ASSISTÊNCIA</small><h1>{tab==='dashboard'?'Dashboard':tab==='orders'?'Ordens de serviço':tab==='customers'?'Clientes':tab==='inventory'?'Estoque e produtos':tab==='suppliers'?'Fornecedores':tab==='purchases'?'Compras e recebimento':tab==='receipts'?'Recibo simples':tab==='partPurchases'?'Registro de compra de peças':tab==='backup'?'Backup de dados':tab==='settings'?'Configurações':tab==='team'?'Funcionários e usuários':tab==='customerPortal'?'Compartilhar Área do Cliente':tab==='support'?'Suporte e chamados':tab==='pos'?'PDV / Vendas':tab==='plans'?'Planos e assinatura':tab==='eparts'?'Eparts · Marketplace':tab==='epartsSupplier'?'Área do fornecedor':tab==='accounts'?'Contas bancárias':tab==='creditCards'?'Cartões de crédito':tab==='cardInvoices'?'Faturas e parcelas':tab==='cash'?'Caixa':'Financeiro'}</h1></div><div className="company-top-actions"><div className="company-brasilia-clock"><b>{brasiliaTime}</b><span>{brasiliaDate}</span><small>Horário de Brasília</small></div><div className={'company-plan-period '+(planInfo?.subscription_status==='trial'?'is-trial':!planInfo?.subscription_status||planInfo?.subscription_status==='expired'?'is-unsubscribed':'')}>
           <b>{planInfo?.plan_name||(planInfo?.subscription_status==='trial'?'Período de teste':'Nenhum plano contratado')}</b>
           {planInfo?.subscription_status==='trial'?<>
             <span>Você está no período de teste</span>
@@ -419,6 +421,7 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
       {tab==='support'&&<CompanySupportPanel companyId={company.id} companyName={company.name}/ >}
       {tab==='team'&&canAdmin&&<CompanyTeamPanel companyId={company.id} actorRole={role}/ >}
       {tab==='eparts'&&canAdmin&&isEpartsCompany&&<EpartsCatalogAdminPanel companyId={company.id}/ >}
+      {tab==='epartsSupplier'&&isEpartsCompany&&<EpartsSupplierPanel companyId={company.id}/ >}
       {tab==='plans'&&canAdmin&&<section className="company-panel company-subscription-panel">
         <div className="company-panel-head"><div><b>Meu plano e assinatura</b><small>Planos publicados pelo Super Admin para contratação</small></div><button className="company-secondary" onClick={()=>void loadSubscriptionPlans()} disabled={plansLoading}><RefreshCw size={15}/> {plansLoading?'Carregando...':'Atualizar planos'}</button></div>
         <div className="company-subscription-current"><div><small>PLANO ATUAL</small><h2>{planInfo?.plan_name||'Nenhum plano contratado'}</h2><p>{planStatusLabel} · {planEndDate?'Válido até '+new Date(planEndDate).toLocaleDateString('pt-BR'):'Vencimento não informado'}</p></div><span>{planInfo?.subscription_status==='active'||planInfo?.subscription_status==='trial'?'Em dia':'Verificar assinatura'}</span></div>
