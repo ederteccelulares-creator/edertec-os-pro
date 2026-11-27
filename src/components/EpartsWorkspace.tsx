@@ -36,7 +36,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
           <button className={tab==='dashboard'?'active':''} onClick={()=>nav('dashboard')}><LayoutDashboard size={18}/> Dashboard Eparts</button>
         </div>
         <div className="company-nav-section"><span className="company-nav-section-label">OPERAÇÃO</span>
-          <button className={tab!=='dashboard'?'active':''} onClick={()=>nav('products')}><Package size={18}/> Produtos e estoque</button>
+          <button className={tab==='products'?'active':''} onClick={()=>nav('products')}><Package size={18}/> Produtos e estoque</button>
           <button className={tab==='brands'?'active':''} onClick={()=>nav('brands')}><Tags size={18}/> Marcas</button>
           <button className={tab==='suppliers'?'active':''} onClick={()=>nav('suppliers')}><Truck size={18}/> Fornecedores</button>
           <button className={tab==='sales'?'active':''} onClick={()=>nav('sales')}><ShoppingCart size={18}/> Vendas e pedidos</button>
