@@ -4742,3 +4742,55 @@ td b { font-weight:650; }
     padding-bottom: calc(94px + env(safe-area-inset-bottom)) !important;
   }
 }
+
+
+/* Caixa: fluxo de abertura e fechamento simplificado */
+.company-cash-register-simple{display:grid;gap:14px}
+.company-cash-branch-row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.company-cash-branch-row>div,.company-cash-status-head>div{display:grid;gap:4px}
+.company-cash-branch-row>div>b{color:#f0d08d}
+.company-cash-branch-row>div>small,.company-cash-status-card p,.company-cash-session-meta{color:#b9ada4;font-size:12px}
+.company-cash-branch-row>label{display:grid;gap:5px;min-width:180px}
+.company-cash-status-card{padding:18px;border:1px solid #765536;border-radius:16px;background:linear-gradient(145deg,#211f23,#151519 72%,#211518);box-shadow:0 8px 22px #0006}
+.company-cash-status-card.is-open{border-color:#477b57}
+.company-cash-status-head{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#f0d08d;font-size:11px;font-weight:800;letter-spacing:.8px}
+.company-cash-status-head>div{display:flex;align-items:center;gap:8px}
+.company-cash-status-head>small{color:#b9ada4;font-size:11px;font-weight:500;letter-spacing:0}
+.company-cash-status-dot{width:9px;height:9px;border-radius:50%;background:#d35b60;box-shadow:0 0 10px #d35b6077}
+.is-open .company-cash-status-dot{background:#56c77a;box-shadow:0 0 10px #56c77a88}
+.company-cash-balance{display:grid;gap:4px;margin:18px 0 8px}
+.company-cash-balance small{color:#b9ada4;font-size:12px}
+.company-cash-balance b{color:#fff2dc;font-size:30px;font-variant-numeric:tabular-nums}
+.company-cash-primary-actions{display:flex;justify-content:flex-end;margin-top:16px}
+.company-cash-primary-actions button{min-height:44px;min-width:160px}
+.company-cash-other-open{display:grid;gap:7px}
+.company-cash-other-open>b{font-size:12px;color:#cdbb9f}
+.company-cash-other-open>button{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid #594735;border-radius:10px;background:#171519;color:#eee0cc;text-align:left}
+.company-cash-other-open>button small{color:#b9ada4}
+.company-cash-session-history{margin-top:4px}
+.company-cash-session-history summary{cursor:pointer;color:#d8bd8b;font-size:12px;padding:8px 0}
+.company-cash-dialog-backdrop{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;background:#050407d9;backdrop-filter:blur(8px)}
+.company-cash-dialog{width:min(100%,460px);max-height:min(88dvh,720px);overflow:auto;display:grid;gap:14px;padding:20px;border:1px solid #8d6a3e;border-radius:18px;background:linear-gradient(145deg,#211f23,#121115 78%,#211518);box-shadow:0 24px 80px #000c}
+.company-cash-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.company-cash-dialog-head>div{display:grid;gap:4px}
+.company-cash-dialog-head small{color:#c6a76e;font-size:11px}
+.company-cash-dialog h3{margin:0;color:#f0d08d;font-size:20px}
+.company-cash-dialog p{margin:0;color:#c9bdb0;font-size:13px;line-height:1.5}
+.company-cash-dialog label{display:grid;gap:6px;color:#e8d8c3;font-size:12px}
+.company-cash-dialog input,.company-cash-dialog textarea{width:100%;min-height:44px;padding:10px 12px;border:1px solid #66503b;border-radius:10px;background:#100f12;color:#fff}
+.company-cash-dialog textarea{min-height:72px;resize:vertical}
+.company-cash-close-info{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;padding:12px;border:1px solid #594735;border-radius:12px;background:#151317}
+.company-cash-close-info span{color:#b9ada4;font-size:11px}
+.company-cash-close-info b{color:#f1dfc9;font-size:12px}
+.company-cash-dialog .company-form-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:4px}
+@media(max-width:760px){
+ .company-cash-branch-row{align-items:stretch;flex-direction:column}
+ .company-cash-branch-row>label{min-width:0;width:100%}
+ .company-cash-status-card{padding:15px}
+ .company-cash-balance b{font-size:27px}
+ .company-cash-primary-actions button{width:100%;min-height:48px}
+ .company-cash-dialog-backdrop{align-items:center;padding:12px}
+ .company-cash-dialog{max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));padding:17px}
+ .company-cash-dialog .company-form-actions{position:sticky;bottom:-17px;padding:12px 0 max(0px,env(safe-area-inset-bottom));background:linear-gradient(180deg,#151317ee,#151317)}
+ .company-cash-dialog .company-form-actions button{flex:1;min-height:46px}
+}
