@@ -18,7 +18,7 @@ export default function EpartsPOS({companyId}:Props){
  const [busy,setBusy]=useState(false)
  const [error,setError]=useState('')
  const [notice,setNotice]=useState('')
- const [lastSale,setLastSale]=useState<{id:string;number:number;total:number}|null>(null)
+ const [lastSale,setLastSale]=useState<{id:string;number:number;total:number;items:CartLine[];customer:string;payment:string}|null>(null)
  const load=useCallback(async()=>{
   if(!supabase)return
   setLoading(true);setError('')
@@ -43,7 +43,7 @@ export default function EpartsPOS({companyId}:Props){
    if(error)throw error
    const saleId=String(data)
    const {data:sale}=await supabase.from('eparts_sales').select('id,order_number,total_amount').eq('company_id',companyId).eq('id',saleId).single()
-   setLastSale({id:saleId,number:Number(sale?.order_number||0),total:Number(sale?.total_amount||total)})
+   setLastSale({id:saleId,number:Number(sale?.order_number||0),total:Number(sale?.total_amount||total),items:cart,customer:customer.trim()||'Consumidor final',payment})
    setNotice('Venda finalizada! O estoque foi baixado automaticamente.')
    setCart([]);setCustomer('');setDiscount('0');await load()
   }catch(e){setError(e instanceof Error?e.message:'Não foi possível finalizar a venda.')}
@@ -78,6 +78,6 @@ export default function EpartsPOS({companyId}:Props){
     {lastSale&&<div style={{marginTop:12}}><b>Venda #{lastSale.number} · {money(lastSale.total)}</b><div className="pos-muted">Comprovante</div><div style={{display:'flex',gap:8,marginTop:8}}><button className="company-secondary" onClick={()=>printReceipt('thermal')}><Printer size={15}/> Térmica</button><button className="company-secondary" onClick={()=>printReceipt('a4')}><Printer size={15}/> A4</button></div></div>}
    </div>
   </div>
-  {lastSale&&<div className="pos-receipt"><center><b>EPARTS · COMPROVANTE DE VENDA</b><br/>Venda #{lastSale.number}</center><hr/>{cart.map(x=><p>{x.quantity}x {x.product.name} — {money(x.product.sale_price*x.quantity)}</p>)}<hr/><b>Total: {money(lastSale.total)}</b><p>Obrigado pela preferência!</p></div>}
+  {lastSale&&<div className="pos-receipt"><center><b>EPARTS · COMPROVANTE DE VENDA</b><br/>Venda #{lastSale.number}</center><hr/>{lastSale.items.map(x=><p key={x.product.id}>{x.quantity}x {x.product.name} — {money(x.product.sale_price*x.quantity)}</p>)}<p>Cliente: {lastSale.customer}</p><p>Pagamento: {lastSale.payment.toUpperCase()}</p><hr/><b>Total: {money(lastSale.total)}</b><p>Obrigado pela preferência!</p></div>}
  </section>
 }
