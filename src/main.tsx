@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import CompanyAuthGate from './components/CompanyAuthGate';
 import CustomerOrderTracking from './components/CustomerOrderTracking';
 import CustomerPortal from './components/CustomerPortal';
+import EpartsPublicCatalog from './components/EpartsPublicCatalog';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import PWAUpdatePrompt from './components/PWAUpdatePrompt';
 import './styles.css';
@@ -19,11 +20,12 @@ if ('serviceWorker' in navigator) {
 const params = new URLSearchParams(window.location.search);
 const trackingToken = params.get('acompanhar');
 const customerPortalToken = params.get('area-cliente');
+const epartsCompanyId = params.get('eparts-catalog');
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <PWAInstallPrompt />
     <PWAUpdatePrompt />
-    {customerPortalToken ? <CustomerPortal token={customerPortalToken} /> : trackingToken ? <CustomerOrderTracking token={trackingToken} /> : <CompanyAuthGate />}
+    {epartsCompanyId ? <EpartsPublicCatalog companyId={epartsCompanyId} /> : customerPortalToken ? <CustomerPortal token={customerPortalToken} /> : trackingToken ? <CustomerOrderTracking token={trackingToken} /> : <CompanyAuthGate />}
   </React.StrictMode>
 );
