@@ -162,15 +162,61 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
         overflow-wrap: anywhere !important;
         box-sizing: border-box !important;
       }
+      .eparts-admin-panel .eparts-tabs > button {
+        min-height: 46px !important;
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+        gap: 9px !important;
+      }
+      .eparts-admin-panel .company-panel-head {
+        gap: 14px;
+      }
+      .eparts-admin-panel .company-panel-head small {
+        display: block;
+        line-height: 1.45;
+        margin-top: 5px;
+      }
+      .eparts-admin-panel .company-form {
+        border: 1px solid rgba(214,166,92,.28);
+        border-radius: 16px;
+        padding: clamp(14px, 2.5vw, 22px);
+        background: rgba(255,255,255,.025);
+        margin: 16px 0;
+      }
+      .eparts-admin-panel .company-form-grid {
+        gap: 14px;
+      }
+      .eparts-admin-panel .company-form label {
+        min-width: 0;
+      }
+      .eparts-admin-panel .company-form input,
+      .eparts-admin-panel .company-form select,
+      .eparts-admin-panel .company-form textarea {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+      .eparts-admin-panel .company-table-wrap {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 12px;
+      }
+      .eparts-admin-panel table {
+        min-width: 720px;
+      }
       @media (max-width: 640px) {
         .eparts-admin-panel .eparts-tabs {
-          grid-template-columns: minmax(0, 1fr) !important;
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          gap: 8px !important;
         }
         .eparts-admin-panel .eparts-tabs > button {
-          justify-content: flex-start !important;
-          text-align: left !important;
+          justify-content: center !important;
+          text-align: center !important;
           min-height: 48px !important;
-          padding: 13px 16px !important;
+          padding: 10px 8px !important;
+          font-size: 13px !important;
+          overflow-wrap: anywhere !important;
         }
       }
       @media (max-width: 600px) {
@@ -178,6 +224,14 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
           min-width: 0;
           max-width: 100%;
           box-sizing: border-box;
+        }
+        .eparts-admin-panel .company-panel-head {
+          align-items: stretch;
+          flex-wrap: wrap;
+        }
+        .eparts-admin-panel .company-panel-head > button {
+          width: 100%;
+          justify-content: center;
         }
         .eparts-admin-panel .eparts-list-head {
           align-items: stretch;
@@ -187,6 +241,11 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
         .eparts-admin-panel .eparts-list-head > button {
           width: 100%;
           justify-content: center;
+        }
+        .eparts-admin-panel .company-form-actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
         }
       }
     `}</style>
