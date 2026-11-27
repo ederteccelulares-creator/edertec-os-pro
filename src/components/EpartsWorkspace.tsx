@@ -181,6 +181,33 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         .eparts-workspace>.company-sidebar{display:flex!important;flex-direction:column!important;flex:none!important}
         .eparts-workspace>.company-main{flex:1!important;min-width:0!important}
       }
+
+      /* Header mobile EPARTS: compact, aligned and independent from legacy layout rules */
+      @media(max-width:760px){
+        .eparts-workspace{margin:0!important;padding:0!important;overflow-x:clip!important}
+        .eparts-workspace>.company-sidebar{margin:0!important;inset:auto!important;transform:none!important}
+        .eparts-workspace>.company-main{margin:0!important;padding-top:14px!important}
+        .eparts-workspace .company-top{
+          display:flex!important;flex-direction:column!important;align-items:stretch!important;
+          justify-content:flex-start!important;gap:11px!important;
+          padding:0 0 14px!important;margin:0 0 14px!important;
+        }
+        .eparts-workspace .company-top>div:first-child{width:100%!important}
+        .eparts-workspace .company-top small{display:block!important;margin:0 0 5px!important}
+        .eparts-workspace .company-top h1{margin:0!important;font-size:25px!important;line-height:1.12!important}
+        .eparts-workspace .eparts-header-actions{
+          width:100%!important;justify-content:flex-start!important;align-self:flex-start!important;
+          gap:8px!important;margin:0!important;
+        }
+        .eparts-workspace .eparts-header-actions>a{
+          min-height:39px!important;padding:8px 12px!important;border-radius:10px!important;
+          font-size:11px!important;white-space:nowrap!important;
+        }
+        .eparts-workspace .eparts-header-actions>.company-icon-button{
+          width:39px!important;height:39px!important;min-width:39px!important;
+        }
+      }
+
     `}</style>
     <aside className="company-sidebar">
       <div className="eparts-brand-row">
