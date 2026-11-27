@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
 
   try {
     const [{ data: buckets, error: bucketsError }, { data: companies, error: companiesError }] = await Promise.all([
-      admin.from("buckets").select("id,name,public,file_size_limit").order("name"),
+      admin.schema("storage").from("buckets").select("id,name,public,file_size_limit").order("name"),
       admin.from("companies").select("id,name").limit(2000),
     ]);
     if (bucketsError) throw bucketsError;
@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
     let truncated = false;
 
     while (true) {
-      const { data: objects, error } = await admin.from("objects")
+      const { data: objects, error } = await admin.schema("storage").from("objects")
         .select("bucket_id,name,metadata")
         .order("id", { ascending: true })
         .range(offset, offset + pageSize - 1);
