@@ -10,6 +10,7 @@ type Sale = { id:string; order_number:number; status:string; payment_status:stri
 type SaleItem = {id:string;product_name:string;sku:string|null;quantity:number;unit_price:number;line_total:number;eparts_commission_amount:number;supplier_amount:number};
 type SaleEvent = {id:string;old_status:string|null;new_status:string;old_payment_status:string|null;new_payment_status:string;created_at:string};
 type Payout = {id:string;supplier_id:string;sale_id:string|null;amount:number;payment_method:string;paid_at:string;reference:string|null;notes:string|null;eparts_suppliers?:{name:string}[]|null};
+type SupplierBalance = {supplier_id:string;supplier_name:string;eligible_amount:number;paid_amount:number;pending_amount:number};
 type Tab = 'products'|'suppliers'|'brands'|'sales'|'payouts'
 const money=(value:number)=>Number(value||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 
@@ -20,6 +21,7 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
   const [brands,setBrands]=useState<Brand[]>([])
   const [sales,setSales]=useState<Sale[]>([])
   const [payouts,setPayouts]=useState<Payout[]>([])
+  const [supplierBalances,setSupplierBalances]=useState<SupplierBalance[]>([])
   const [payoutForm,setPayoutForm]=useState({supplierId:'',amount:'',paymentMethod:'pix',reference:'',notes:''})
   const [loading,setLoading]=useState(true)
   const [busy,setBusy]=useState(false)
@@ -39,15 +41,16 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
     if(!supabase)return
     setLoading(true);setError('')
     try{
-      const [p,s,b,o,po]=await Promise.all([
+      const [p,s,b,o,po,balances]=await Promise.all([
         supabase.from('eparts_products').select('id,name,sku,sale_price,cost_price,stock_quantity,is_active,show_in_catalog,eparts_brands(name),eparts_suppliers(name)').eq('company_id',companyId).order('name'),
         supabase.from('eparts_suppliers').select('id,name,email,phone,is_active').eq('company_id',companyId).order('name'),
         supabase.from('eparts_brands').select('id,name').eq('company_id',companyId).order('name'),
         supabase.from('eparts_sales').select('id,order_number,status,payment_status,total_amount,eparts_commission_amount,supplier_amount,customer_name,customer_phone,created_at').eq('company_id',companyId).order('created_at',{ascending:false}).limit(100),
         supabase.from('eparts_supplier_payouts').select('id,supplier_id,sale_id,amount,payment_method,paid_at,reference,notes,eparts_suppliers(name)').eq('company_id',companyId).order('paid_at',{ascending:false}).limit(200),
+        supabase.rpc('eparts_supplier_balances',{p_company_id:companyId}),
       ])
-      if(p.error)throw p.error;if(s.error)throw s.error;if(b.error)throw b.error;if(o.error)throw o.error;if(po.error)throw po.error
-      setProducts((p.data||[]) as Product[]);setSuppliers((s.data||[]) as Supplier[]);setBrands((b.data||[]) as Brand[]);setSales((o.data||[]) as Sale[]);setPayouts((po.data||[]) as Payout[])
+      if(p.error)throw p.error;if(s.error)throw s.error;if(b.error)throw b.error;if(o.error)throw o.error;if(po.error)throw po.error;if(balances.error)throw balances.error
+      setProducts((p.data||[]) as Product[]);setSuppliers((s.data||[]) as Supplier[]);setBrands((b.data||[]) as Brand[]);setSales((o.data||[]) as Sale[]);setPayouts((po.data||[]) as Payout[]);setSupplierBalances((balances.data||[]) as SupplierBalance[])
     }catch(e){setError(e instanceof Error?e.message:'Não foi possível carregar os dados do Eparts.')}
     finally{setLoading(false)}
   },[companyId])
@@ -87,7 +90,7 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
     if(!payoutForm.supplierId||!Number.isFinite(amount)||amount<=0){setError('Selecione o fornecedor e informe um valor válido.');return}
     setBusy(true);setError('');setNotice('')
     try{
-      const {error}=await supabase.from('eparts_supplier_payouts').insert({company_id:companyId,supplier_id:payoutForm.supplierId,amount,payment_method:payoutForm.paymentMethod,reference:payoutForm.reference.trim()||null,notes:payoutForm.notes.trim()||null})
+      const {error}=await supabase.rpc('eparts_register_supplier_payout',{p_company_id:companyId,p_supplier_id:payoutForm.supplierId,p_amount:amount,p_payment_method:payoutForm.paymentMethod,p_reference:payoutForm.reference.trim()||null,p_notes:payoutForm.notes.trim()||null})
       if(error)throw error
       setPayoutForm({supplierId:'',amount:'',paymentMethod:'pix',reference:'',notes:''})
       setNotice('Repasse registrado com sucesso.');await load()
@@ -138,6 +141,10 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
     </form>}
     {showForm&&tab==='suppliers'&&<form className="company-form" onSubmit={saveSupplier}><div className="company-form-grid"><label>Nome do fornecedor<input required value={supplierForm.name} onChange={e=>setSupplierForm(v=>({...v,name:e.target.value}))}/></label><label>E-mail<input type="email" value={supplierForm.email} onChange={e=>setSupplierForm(v=>({...v,email:e.target.value}))}/></label><label>Telefone / WhatsApp<input value={supplierForm.phone} onChange={e=>setSupplierForm(v=>({...v,phone:e.target.value}))}/></label><label>ID do usuário cadastrado no sistema<input value={supplierForm.userId} onChange={e=>setSupplierForm(v=>({...v,userId:e.target.value}))} placeholder="UUID da conta do fornecedor"/><small>Vincule a conta existente para liberar a área do fornecedor.</small></label></div><div className="company-form-actions"><button type="button" className="company-secondary" onClick={()=>setShowForm(false)}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Salvando...':'Salvar fornecedor'}</button></div></form>}
     {showForm&&tab==='brands'&&<form className="company-form" onSubmit={saveBrand}><label>Nome da marca<input required value={brandName} onChange={e=>setBrandName(e.target.value)}/></label><div className="company-form-actions"><button type="button" className="company-secondary" onClick={()=>setShowForm(false)}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Salvando...':'Salvar marca'}</button></div></form>}
+    {tab==='payouts'&&<>
+      <div className="company-panel-head"><div><b>Saldo por fornecedor</b><small>Somente pedidos não cancelados e totalmente pagos liberam valores para repasse</small></div></div>
+      <div className="company-table-wrap"><table><thead><tr><th>FORNECEDOR</th><th>VALOR LIBERADO</th><th>JÁ REPASSADO</th><th>SALDO PENDENTE</th></tr></thead><tbody>{supplierBalances.map(balance=><tr key={balance.supplier_id}><td><b>{balance.supplier_name}</b></td><td>{money(Number(balance.eligible_amount))}</td><td>{money(Number(balance.paid_amount))}</td><td><b>{money(Number(balance.pending_amount))}</b></td></tr>)}{supplierBalances.length===0&&<tr><td colSpan={4}>Nenhum fornecedor cadastrado.</td></tr>}</tbody></table></div>
+    </>}
     {tab==='payouts'&&<form className="company-form" onSubmit={savePayout}>
       <div className="company-form-grid">
         <label>Fornecedor<select required value={payoutForm.supplierId} onChange={e=>setPayoutForm(v=>({...v,supplierId:e.target.value}))}><option value="">Selecione</option>{suppliers.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
