@@ -29,7 +29,28 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
   },[companyId])
   useEffect(()=>{void load()},[load])
   const nav=(value:'dashboard'|'products'|'brands'|'suppliers'|'sales'|'payouts'|'pos')=>setTab(value)
-  return <div className="company-app">
+  return <div className="company-app eparts-workspace">
+    <style>{`
+      .eparts-workspace .company-sidebar{background:linear-gradient(180deg,#17130f 0%,#101010 55%,#151010 100%);border-right:1px solid rgba(204,158,73,.25)}
+      .eparts-workspace .company-logo{gap:12px}
+      .eparts-workspace .company-logo>span{background:linear-gradient(145deg,#d5ad58,#8d641f);color:#17120b;border-radius:12px;box-shadow:0 5px 18px rgba(190,143,54,.2)}
+      .eparts-workspace .company-logo b{letter-spacing:2px;color:#f3d18a}
+      .eparts-workspace .company-current{border:1px solid rgba(206,164,85,.24);background:rgba(206,164,85,.06);border-radius:10px;padding:11px 13px}
+      .eparts-workspace .company-nav-section-label{color:#b99a60;letter-spacing:1.2px;font-size:10px;font-weight:800}
+      .eparts-workspace .company-sidebar nav button{border-radius:10px;transition:background .15s ease,color .15s ease}
+      .eparts-workspace .company-sidebar nav button.active{background:linear-gradient(90deg,rgba(193,145,54,.22),rgba(193,145,54,.07));color:#f4d38e;border-left:3px solid #d4a84d}
+      .eparts-workspace .company-top{gap:14px;align-items:center}
+      .eparts-workspace .company-top h1{letter-spacing:-.5px}
+      .eparts-workspace .company-panel{border:1px solid rgba(203,158,77,.22);box-shadow:0 12px 34px rgba(0,0,0,.14)}
+      .eparts-workspace .company-stats-grid{gap:13px}
+      .eparts-workspace .company-stat-card{border:1px solid rgba(204,163,88,.22);background:linear-gradient(145deg,rgba(42,34,23,.75),rgba(20,19,18,.95));border-radius:14px;padding:17px;min-width:0}
+      .eparts-workspace .company-stat-card span{color:#c5b79e;line-height:1.4}
+      .eparts-workspace .company-stat-card strong{color:#f2d18a;font-size:clamp(21px,2.2vw,28px);overflow-wrap:anywhere}
+      .eparts-workspace .company-footer{color:#9f927e}
+      @media(max-width:900px){.eparts-workspace .company-top{align-items:flex-start;flex-wrap:wrap}.eparts-workspace .company-top>div:last-child{width:100%;justify-content:space-between!important}}
+      @media(max-width:640px){.eparts-workspace .company-top h1{font-size:clamp(22px,6vw,29px)}.eparts-workspace .company-panel{padding:14px}.eparts-workspace .company-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.eparts-workspace .company-stat-card{padding:13px}.eparts-workspace .company-stat-card strong{font-size:21px}}
+      @media(max-width:380px){.eparts-workspace .company-stats-grid{grid-template-columns:minmax(0,1fr)}}
+    `}</style>
     <aside className="company-sidebar">
       <div className="company-logo"><span><ShoppingCart/></span><div><b>EPARTS</b><small>COMÉRCIO E MARKETPLACE</small></div></div>
       <div className="company-current">{companyName}</div>
