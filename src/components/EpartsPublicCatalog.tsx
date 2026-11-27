@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useState,type FormEvent} from 'react'
+import {useEffect,useMemo,useState,type FormEvent,type CSSProperties} from 'react'
 import {Search,ShoppingBag,Plus,Minus,ArrowLeft,RefreshCw,Store} from 'lucide-react'
 import {supabase} from '../lib/supabase'
 
@@ -67,4 +67,4 @@ export default function EpartsPublicCatalog(){
   </div>}
  </main>
 }
-const field:React.CSSProperties={width:'100%',boxSizing:'border-box',background:'#1d1d1d',border:'1px solid #383838',borderRadius:9,padding:13,color:'#fff',outline:'none'}
+const field:CSSProperties={width:'100%',boxSizing:'border-box',background:'#1d1d1d',border:'1px solid #383838',borderRadius:9,padding:13,color:'#fff',outline:'none'}
