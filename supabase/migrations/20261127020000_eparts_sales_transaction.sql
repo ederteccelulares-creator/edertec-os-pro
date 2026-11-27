@@ -41,7 +41,7 @@ begin
   ) then
     raise exception 'Sem permissão para criar pedidos nesta empresa.';
   end if;
-  if jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items)=0 then
+  if p_items is null or jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items)=0 then
     raise exception 'O pedido precisa conter pelo menos um produto.';
   end if;
   if v_shipping<0 or v_discount<0 then
@@ -74,7 +74,7 @@ begin
   end loop;
 
   v_total := v_subtotal-v_discount+v_shipping;
-  if v_total<0 then raise exception 'Desconto maior que o subtotal.'; end if;
+  if v_discount>v_subtotal or v_total<0 then raise exception 'Desconto maior que o subtotal.'; end if;
 
   insert into public.eparts_sales(
     company_id,customer_id,source,status,payment_status,payment_method,
