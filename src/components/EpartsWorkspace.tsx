@@ -115,7 +115,63 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         .eparts-workspace .company-stat-card{padding:13px}
         .eparts-workspace .company-stat-card strong{font-size:21px}
       }
-      @media(max-width:380px){.eparts-workspace .company-stats-grid{grid-template-columns:minmax(0,1fr)}}
+      /* EPARTS mobile shell: header and drawer must remain visible above legacy company CSS */
+      @media(max-width:760px){
+        .eparts-workspace{display:block!important;min-height:100dvh!important;background:#090909!important}
+        .eparts-workspace>.company-sidebar{display:block!important;position:sticky!important;top:0!important;z-index:80!important;width:100%!important;height:auto!important;max-height:none!important;overflow:visible!important;padding:10px 14px 0!important;background:linear-gradient(105deg,#090909,#17120d 55%,#090909)!important;border:0!important;border-bottom:1px solid #b68b3c!important;box-shadow:0 8px 25px #000b!important;transform:none!important}
+        .eparts-workspace .eparts-brand-row{display:flex!important;min-height:54px!important;align-items:center!important;justify-content:space-between!important;margin:0!important;padding:0 0 9px!important}
+        .eparts-workspace .company-logo{display:flex!important;align-items:center!important;gap:10px!important}
+        .eparts-workspace .company-logo>span{display:grid!important;place-items:center!important;width:42px!important;height:42px!important;border:1px solid #d9ad58!important;background:linear-gradient(145deg,#1b1710,#090909)!important;color:#e8c56e!important;border-radius:11px!important}
+        .eparts-workspace .company-logo b{font-size:18px!important;letter-spacing:2px!important;color:#f2d18b!important}
+        .eparts-workspace .company-logo small{font-size:8px!important;letter-spacing:1px!important;color:#dfbd77!important}
+        .eparts-workspace .eparts-mobile-menu-button{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:42px!important;height:42px!important;border:1px solid #b58b39!important;border-radius:10px!important;background:#17130d!important;color:#f0cf7d!important}
+        .eparts-workspace .eparts-company-chip{display:none!important}
+        .eparts-workspace>.company-sidebar nav{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;padding:9px 0 13px!important;margin:0!important;max-height: min(62dvh,480px)!important;overflow:auto!important}
+        .eparts-workspace>.company-sidebar nav.eparts-nav-closed{display:none!important}
+        .eparts-workspace .company-nav-section{display:contents!important}
+        .eparts-workspace .company-nav-section-label{display:none!important}
+        .eparts-workspace>.company-sidebar nav button{display:flex!important;align-items:center!important;justify-content:flex-start!important;min-width:0!important;min-height:46px!important;padding:9px 10px!important;border:1px solid #383027!important;border-radius:10px!important;background:linear-gradient(120deg,#1b1916,#111)!important;color:#e6dfd2!important;font-size:12px!important;white-space:normal!important}
+        .eparts-workspace>.company-sidebar nav button.active{border-color:#d6ad60!important;background:linear-gradient(110deg,#5c4217,#21180c)!important;color:#ffe3a4!important;box-shadow:inset 3px 0 #edc66f!important}
+        .eparts-workspace .company-user{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;margin:0!important;padding:9px 2px!important;border-top:1px solid #3c3020!important}
+        .eparts-workspace .eparts-user-meta{display:flex!important;min-width:0!important}
+        .eparts-workspace .company-user b{display:block!important;max-width:210px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+        .eparts-workspace .company-user small{display:block!important}
+        .eparts-workspace .company-user button{display:flex!important;align-items:center!important;gap:5px!important;margin:0!important;padding:7px!important;font-size:10px!important}
+        .eparts-workspace>.company-main{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;min-height:calc(100dvh - 70px)!important;padding:18px 13px calc(28px + env(safe-area-inset-bottom))!important;background:radial-gradient(ellipse at 50% 0%,#4c351322,transparent 40%),#090909!important}
+        .eparts-workspace .company-top{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;padding:4px 1px 15px!important;margin:0 0 15px!important;border-bottom:1px solid #44351e!important}
+        .eparts-workspace .company-top>div:first-child{min-width:0!important}
+        .eparts-workspace .company-top small{font-size:8px!important;letter-spacing:1.5px!important;color:#c3a267!important}
+        .eparts-workspace .company-top h1{font-size:clamp(21px,6vw,27px)!important;line-height:1.15!important;color:#f4d797!important}
+        .eparts-workspace .eparts-header-actions{display:flex!important;align-items:center!important;gap:7px!important;width:auto!important;flex:none!important}
+        .eparts-workspace .eparts-header-actions>a{padding:9px!important;font-size:10px!important}
+        .eparts-workspace .company-icon-button{width:40px!important;height:40px!important;min-width:40px!important}
+        .eparts-workspace .company-panel{padding:14px!important;margin:0 0 14px!important;border:1px solid #59462b!important;border-radius:14px!important;background:linear-gradient(145deg,#1a1816,#101010)!important}
+        .eparts-workspace .company-panel-head{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:9px!important;flex-wrap:wrap!important;padding-bottom:12px!important;margin-bottom:13px!important;border-bottom:1px solid #443a2c!important}
+        .eparts-workspace .company-panel-head>div{min-width:0!important}
+        .eparts-workspace .company-panel-head b{font-size:15px!important;color:#f2d797!important}
+        .eparts-workspace .company-panel-head small{display:block!important;margin-top:4px!important;font-size:11px!important;line-height:1.4!important;color:#b8afa2!important}
+        .eparts-workspace .company-panel-head>button{min-height:40px!important;padding:8px 12px!important}
+        .eparts-workspace .company-stats-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+        .eparts-workspace .company-stat-card{display:block!important;min-width:0!important;min-height:104px!important;padding:13px!important;border:1px solid #59472d!important;border-radius:12px!important;background:linear-gradient(145deg,#262017,#141210)!important}
+        .eparts-workspace .company-stat-card span{display:block!important;font-size:11px!important;color:#c4b79e!important}
+        .eparts-workspace .company-stat-card strong{font-size:22px!important;color:#f2cf7b!important}
+        .eparts-workspace .company-inline-actions{display:flex!important;flex-wrap:wrap!important;gap:8px!important;margin-top:14px!important}
+        .eparts-workspace .company-inline-actions button{min-height:43px!important}
+        .eparts-workspace .company-footer{padding:15px 2px!important;font-size:9px!important}
+        .eparts-workspace .eparts-admin-panel .eparts-tabs{display:none!important}
+        .eparts-workspace .eparts-admin-panel .eparts-list-head{display:flex!important;align-items:flex-start!important;gap:10px!important}
+        .eparts-workspace .eparts-admin-panel .eparts-list-head>button{width:100%!important;min-height:46px!important;justify-content:center!important}
+        .eparts-workspace .eparts-admin-panel .company-form{padding:12px!important;margin:12px 0!important;border-color:#6c532d!important;background:#13110e!important}
+        .eparts-workspace .eparts-admin-panel .company-form-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:10px!important}
+        .eparts-workspace .eparts-admin-panel .company-form input,.eparts-workspace .eparts-admin-panel .company-form select,.eparts-workspace .eparts-admin-panel .company-form textarea{min-height:43px!important;background:#090909!important;color:#fff!important;border:1px solid #58472e!important;border-radius:9px!important;font-size:16px!important}
+        .eparts-workspace .eparts-admin-panel .company-table-wrap{max-width:100%!important;overflow-x:auto!important}
+        .eparts-workspace .eparts-admin-panel .company-table-wrap table{min-width:680px!important}
+      }
+      @media(max-width:380px){.eparts-workspace .company-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.eparts-workspace .company-stat-card{padding:10px!important}.eparts-workspace .company-stat-card strong{font-size:19px!important}}
+      @media(min-width:761px){
+        .eparts-workspace>.company-sidebar{display:flex!important;flex-direction:column!important;flex:none!important}
+        .eparts-workspace>.company-main{flex:1!important;min-width:0!important}
+      }
     `}</style>
     <aside className="company-sidebar">
       <div className="eparts-brand-row">
