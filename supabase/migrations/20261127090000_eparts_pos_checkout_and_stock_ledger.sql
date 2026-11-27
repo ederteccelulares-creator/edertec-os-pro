@@ -94,6 +94,7 @@ begin
   v_qty:=(v_item->>'quantity')::numeric;
   select * into v_product from public.eparts_products where id=(v_item->>'product_id')::uuid and company_id=p_company_id for update;
   v_line:=round(v_product.sale_price*v_qty,2);
+  v_line:=v_line-round(v_discount*(v_product.sale_price*v_qty)/nullif(v_subtotal,0),2);
   insert into public.eparts_sale_items(company_id,sale_id,product_id,supplier_id,product_name,sku,quantity,unit_price,line_total,eparts_commission_amount,supplier_amount)
   values(p_company_id,v_sale_id,v_product.id,v_product.supplier_id,v_product.name,v_product.sku,v_qty,v_product.sale_price,v_line,
    round(v_line*0.12,2),v_line-round(v_line*0.12,2));
