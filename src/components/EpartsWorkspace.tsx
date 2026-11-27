@@ -18,10 +18,11 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
       const [p,s,o]=await Promise.all([
         supabase.from('eparts_products').select('id,stock_quantity',{count:'exact'}).eq('company_id',companyId),
         supabase.from('eparts_suppliers').select('id',{count:'exact'}).eq('company_id',companyId),
-        supabase.from('eparts_sales').select('id,total_amount,eparts_commission_amount',{count:'exact'}).eq('company_id',companyId)
+        supabase.from('eparts_sales').select('id,total_amount,eparts_commission_amount,status,payment_status',{count:'exact'}).eq('company_id',companyId)
       ])
       if(p.error)throw p.error;if(s.error)throw s.error;if(o.error)throw o.error
-      setStats({products:p.count||0,suppliers:s.count||0,orders:o.count||0,revenue:(o.data||[]).reduce((n,x)=>n+Number(x.total_amount||0),0),commission:(o.data||[]).reduce((n,x)=>n+Number(x.eparts_commission_amount||0),0),stock:(p.data||[]).reduce((n,x)=>n+Number(x.stock_quantity||0),0)})
+      const activeOrders=(o.data||[]).filter(x=>x.status!=='cancelled'&&x.payment_status!=='refunded')
+      setStats({products:p.count||0,suppliers:s.count||0,orders:activeOrders.length,revenue:activeOrders.reduce((n,x)=>n+Number(x.total_amount||0),0),commission:activeOrders.reduce((n,x)=>n+Number(x.eparts_commission_amount||0),0),stock:(p.data||[]).reduce((n,x)=>n+Number(x.stock_quantity||0),0)})
     } catch(e) {setError(e instanceof Error?e.message:'Não foi possível carregar o resumo da Eparts.')}
     finally {setLoading(false)}
   },[companyId])
@@ -56,8 +57,8 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
           <article className="company-stat-card"><span>Unidades em estoque</span><strong>{stats.stock}</strong></article>
           <article className="company-stat-card"><span>Fornecedores</span><strong>{stats.suppliers}</strong></article>
           <article className="company-stat-card"><span>Pedidos</span><strong>{stats.orders}</strong></article>
-          <article className="company-stat-card"><span>Vendas registradas</span><strong>{money(stats.revenue)}</strong></article>
-          <article className="company-stat-card"><span>Comissão Eparts</span><strong>{money(stats.commission)}</strong></article>
+          <article className="company-stat-card"><span>Valor dos pedidos ativos</span><strong>{money(stats.revenue)}</strong></article>
+          <article className="company-stat-card"><span>Comissão prevista em pedidos ativos</span><strong>{money(stats.commission)}</strong></article>
         </div>}
         <div className="company-inline-actions"><button className="company-primary" onClick={()=>nav('products')}><Package size={16}/> Abrir gestão comercial</button></div>
       </section>:<EpartsCatalogAdminPanel key={tab} companyId={companyId} initialTab={tab}/>}
