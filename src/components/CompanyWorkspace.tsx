@@ -419,7 +419,6 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
       {tab==='support'&&<CompanySupportPanel companyId={company.id} companyName={company.name}/ >}
       {tab==='team'&&canAdmin&&<CompanyTeamPanel companyId={company.id} actorRole={role}/ >}
       {tab==='eparts'&&canAdmin&&isEpartsCompany&&<EpartsCatalogAdminPanel companyId={company.id}/ >}
-      {tab==='eparts'&&canAdmin&&isEpartsCompany&&<EpartsCatalogAdminPanel companyId={company.id}/ >}
       {tab==='plans'&&canAdmin&&<section className="company-panel company-subscription-panel">
         <div className="company-panel-head"><div><b>Meu plano e assinatura</b><small>Planos publicados pelo Super Admin para contratação</small></div><button className="company-secondary" onClick={()=>void loadSubscriptionPlans()} disabled={plansLoading}><RefreshCw size={15}/> {plansLoading?'Carregando...':'Atualizar planos'}</button></div>
         <div className="company-subscription-current"><div><small>PLANO ATUAL</small><h2>{planInfo?.plan_name||'Nenhum plano contratado'}</h2><p>{planStatusLabel} · {planEndDate?'Válido até '+new Date(planEndDate).toLocaleDateString('pt-BR'):'Vencimento não informado'}</p></div><span>{planInfo?.subscription_status==='active'||planInfo?.subscription_status==='trial'?'Em dia':'Verificar assinatura'}</span></div>
