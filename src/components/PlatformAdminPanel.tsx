@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, useMemo, type FormEvent } from 'react'
-import { Building2, ShieldCheck, CreditCard, Package, RefreshCw, LogOut, Plus, LifeBuoy, Menu, MessageCircle, HardDrive } from 'lucide-react'
+import { Building2, ShieldCheck, CreditCard, Package, RefreshCw, LogOut, Plus, LifeBuoy, Menu, MessageCircle, HardDrive, UserPlus, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import PlatformSupportPanel from './PlatformSupportPanel'
 import PlatformWhatsAppPanel from './PlatformWhatsAppPanel'
@@ -34,6 +34,8 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
   const [billingStatus,setBillingStatus]=useState<{access_token_configured?:boolean;webhook_secret_configured?:boolean;updated_at?:string}|null>(null)
   const [billingLoading,setBillingLoading]=useState(false)
   const [activation,setActivation]=useState({companyId:'',planId:'',status:'active',startsAt:new Date().toISOString().slice(0,10),endsAt:''})
+  const [accessCompany,setAccessCompany]=useState<CompanyRow|null>(null)
+  const [accessForm,setAccessForm]=useState({name:'',email:'',username:'admin',pin:''})
 
   const load=useCallback(async()=>{
     if(!supabase)return
@@ -82,6 +84,27 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
       setNotice('Empresa cadastrada com sucesso. O acesso inicial ficou vinculado à conta Super Admin.')
       await load()
     }catch(e){setError(e instanceof Error?e.message:'Falha ao cadastrar empresa.')}
+    finally{setBusy(false)}
+  }
+
+
+  async function createFirstCompanyAdmin(event:FormEvent){
+    event.preventDefault();if(!supabase||!accessCompany)return
+    const name=accessForm.name.trim(),email=accessForm.email.trim().toLowerCase(),username=accessForm.username.trim().toLowerCase(),pin=accessForm.pin
+    if(name.length<2||!/^\S+@\S+\.\S+$/.test(email)||!/^[a-z0-9._-]{3,30}$/.test(username)||!/^\d{6}$/.test(pin)){setError('Confira nome, e-mail, usuário e PIN de 6 números.');return}
+    setBusy(true);setError('');setNotice('')
+    try{
+      const {data:sessionData,error:sessionError}=await supabase.auth.getSession()
+      if(sessionError)throw sessionError
+      const token=sessionData.session?.access_token
+      if(!token)throw new Error('Sessão expirada. Entre novamente como Super Admin.')
+      const {data,error}=await supabase.functions.invoke('platform-company-admin',{body:{company_id:accessCompany.id,name,email,username,pin},headers:{Authorization:'Bearer '+token}})
+      if(error)throw new Error(error.message)
+      if(data?.error)throw new Error(data.error)
+      setAccessCompany(null);setAccessForm({name:'',email:'',username:'admin',pin:''})
+      setNotice('Convite enviado e primeiro administrador vinculado à empresa. O usuário deverá aceitar o convite por e-mail e definir a senha.')
+      await load()
+    }catch(e){setError(e instanceof Error?e.message:'Não foi possível criar o administrador.')}
     finally{setBusy(false)}
   }
 
@@ -259,7 +282,16 @@ export default function PlatformAdminPanel({email,onSignOut}:Props) {
 
         {tab==='companies'&&<section className="platform-panel"><div className="platform-panel-title"><h2>Empresas cadastradas</h2><button onClick={()=>setShowCompany(v=>!v)}><Plus size={15}/> Nova empresa</button></div>
           {showCompany&&<form className="platform-form" onSubmit={createCompany}><label className="platform-wide">Nome da empresa<input required minLength={2} value={companyForm.name} onChange={e=>setCompanyForm(v=>({...v,name:e.target.value}))} placeholder="Ex.: Edertec Assistência Técnica"/></label><label>CNPJ ou CPF<input value={companyForm.taxId} onChange={e=>setCompanyForm(v=>({...v,taxId:e.target.value}))} placeholder="Opcional"/></label><label>Telefone<input value={companyForm.phone} onChange={e=>setCompanyForm(v=>({...v,phone:e.target.value}))} placeholder="(00) 00000-0000"/></label><div className="platform-form-actions"><button type="button" onClick={()=>setShowCompany(false)}>Cancelar</button><button type="submit" disabled={busy}>{busy?'Cadastrando...':'Criar empresa'}</button></div></form>}
-          <div className="platform-table-wrap platform-companies-table-wrap"><table><thead><tr><th>EMPRESA</th><th>PLANO</th><th>DOCUMENTO</th><th>CADASTRO</th><th>SITUAÇÃO</th></tr></thead><tbody>{companies.map(c=>{const sub=subscriptions.find(item=>item.company_id===c.id);const planName=(sub?.plan_id?plans.find(plan=>plan.id===sub.plan_id)?.name:null)||(Array.isArray(sub?.subscription_plans)?sub.subscription_plans[0]?.name:sub?.subscription_plans?.name);const subStatus:Record<string,string>={trial:"Em teste",active:"Ativo",past_due:"Em atraso",cancelled:"Cancelado",expired:"Expirado"};return <tr key={c.id}><td><b>{c.name}</b><small>{c.id}</small></td><td>{planName?<><b>{planName}</b><small>{subStatus[sub?.status||'']||sub?.status||'Status não informado'}</small></>:<span className="platform-muted">Sem plano atribuído</span>}</td><td>{c.tax_id||'—'}</td><td>{new Date(c.created_at).toLocaleDateString('pt-BR')}</td><td><select disabled={busy} value={c.status} onChange={e=>void updateCompanyStatus(c,e.target.value)}><option value="active">Ativa</option><option value="suspended">Suspensa</option><option value="cancelled">Cancelada</option></select></td></tr>})}</tbody></table></div></section>}
+          {accessCompany&&<form className="platform-form" onSubmit={createFirstCompanyAdmin}>
+            <div className="platform-panel-title platform-wide"><h2>Primeiro administrador · {accessCompany.name}</h2><button type="button" className="platform-toggle" onClick={()=>setAccessCompany(null)}><X size={14}/> Fechar</button></div>
+            <p className="platform-hint platform-wide">O convite será enviado ao e-mail informado. O novo usuário ficará restrito a esta empresa e receberá o perfil de administrador.</p>
+            <label>Nome completo<input required minLength={2} value={accessForm.name} onChange={e=>setAccessForm(v=>({...v,name:e.target.value}))} placeholder="Nome do administrador"/></label>
+            <label>E-mail<input required type="email" value={accessForm.email} onChange={e=>setAccessForm(v=>({...v,email:e.target.value}))} placeholder="administrador@empresa.com"/></label>
+            <label>Usuário de acesso<input required minLength={3} maxLength={30} value={accessForm.username} onChange={e=>setAccessForm(v=>({...v,username:e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g,'').slice(0,30)}))}/></label>
+            <label>PIN inicial (6 números)<input required type="password" inputMode="numeric" autoComplete="new-password" minLength={6} maxLength={6} value={accessForm.pin} onChange={e=>setAccessForm(v=>({...v,pin:e.target.value.replace(/\D/g,'').slice(0,6)}))} placeholder="••••••"/></label>
+            <div className="platform-form-actions"><button type="button" onClick={()=>setAccessCompany(null)}>Cancelar</button><button type="submit" disabled={busy}>{busy?'Criando acesso...':'Enviar convite e criar administrador'}</button></div>
+          </form>}
+          <div className="platform-table-wrap platform-companies-table-wrap"><table><thead><tr><th>EMPRESA</th><th>PLANO</th><th>DOCUMENTO</th><th>CADASTRO</th><th>SITUAÇÃO</th><th>ACESSO</th></tr></thead><tbody>{companies.map(c=>{const sub=subscriptions.find(item=>item.company_id===c.id);const planName=(sub?.plan_id?plans.find(plan=>plan.id===sub.plan_id)?.name:null)||(Array.isArray(sub?.subscription_plans)?sub.subscription_plans[0]?.name:sub?.subscription_plans?.name);const subStatus:Record<string,string>={trial:"Em teste",active:"Ativo",past_due:"Em atraso",cancelled:"Cancelado",expired:"Expirado"};return <tr key={c.id}><td><b>{c.name}</b><small>{c.id}</small></td><td>{planName?<><b>{planName}</b><small>{subStatus[sub?.status||'']||sub?.status||'Status não informado'}</small></>:<span className="platform-muted">Sem plano atribuído</span>}</td><td>{c.tax_id||'—'}</td><td>{new Date(c.created_at).toLocaleDateString('pt-BR')}</td><td><select disabled={busy} value={c.status} onChange={e=>void updateCompanyStatus(c,e.target.value)}><option value="active">Ativa</option><option value="suspended">Suspensa</option><option value="cancelled">Cancelada</option></select></td><td><button type="button" className="platform-toggle" disabled={busy} onClick={()=>{setAccessCompany(c);setAccessForm({name:'',email:'',username:'admin',pin:''});setError('');setNotice('')}}><UserPlus size={14}/> Gerenciar acesso</button></td></tr>})}</tbody></table></div></section>}
         {tab==='plans'&&<section className="platform-panel"><div className="platform-panel-title"><h2>Planos e preços</h2><button onClick={()=>{if(showPlan)cancelPlanForm();else{setEditingPlanId(null);setShowPlan(true)}}}><Plus size={15}/> Novo plano</button></div>
           {showPlan&&<form className="platform-form" onSubmit={createPlan}><label>Código<input required value={planForm.code} onChange={e=>setPlanForm({...planForm,code:e.target.value})} placeholder="basico"/></label><label>Nome<input required value={planForm.name} onChange={e=>setPlanForm({...planForm,name:e.target.value})} placeholder="Plano Básico"/></label><label>Preço (R$)<input required type="number" min="0" step="0.01" value={planForm.price} onChange={e=>setPlanForm({...planForm,price:e.target.value})}/></label><label>Periodicidade<select value={planForm.billing_interval} onChange={e=>setPlanForm({...planForm,billing_interval:e.target.value})}><option value="monthly">Mensal</option><option value="six_months">Semestral</option><option value="yearly">Anual</option><option value="lifetime">Vitalício</option></select></label><label>Limite de filiais<input type="number" min="1" value={planForm.max_branches} onChange={e=>setPlanForm({...planForm,max_branches:e.target.value})} placeholder="Sem limite"/></label><label>Limite de usuários<input type="number" min="1" value={planForm.max_users} onChange={e=>setPlanForm({...planForm,max_users:e.target.value})} placeholder="Sem limite"/></label><label className="platform-wide">Descrição<input value={planForm.description} onChange={e=>setPlanForm({...planForm,description:e.target.value})}/></label><div className="platform-form-actions"><button type="button" onClick={cancelPlanForm}>Cancelar</button><button type="submit" disabled={busy}>{busy?'Salvando...':editingPlanId?'Salvar alterações':'Criar plano'}</button></div></form>}
           <div className="platform-table-wrap"><table><thead><tr><th>PLANO</th><th>VALOR</th><th>PERÍODO</th><th>LIMITES</th><th>STATUS</th><th>AÇÕES</th></tr></thead><tbody>{plans.map(p=><tr key={p.id}><td><b>{p.name}</b><small>{p.code}</small></td><td>{money(p.price)}</td><td>{intervalLabels[p.billing_interval]||p.billing_interval}</td><td>{p.max_branches??'∞'} filiais · {p.max_users??'∞'} usuários</td><td><button className="platform-toggle" disabled={busy} onClick={()=>void togglePlan(p)}>{p.is_active?'Ativo':'Inativo'}</button></td><td><button type="button" className="platform-toggle" disabled={busy} onClick={()=>startEditPlan(p)}>Editar</button></td></tr>)}</tbody></table></div>
