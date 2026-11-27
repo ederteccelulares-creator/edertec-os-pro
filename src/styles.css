@@ -4047,3 +4047,136 @@ td b { font-weight:650; }
     background:rgba(0,0,0,.68) !important;
   }
 }
+
+
+/* Unified premium theme for every screen inside the company workspace */
+.company-app {
+  --cw-bg:#09090c;
+  --cw-surface:#19171b;
+  --cw-surface-2:#211b1d;
+  --cw-border:#594332;
+  --cw-gold:#f0c66f;
+  --cw-red:#ed2635;
+  --cw-text:#f7f1e9;
+  --cw-muted:#c0b3a7;
+  background:var(--cw-bg) !important;
+  color:var(--cw-text) !important;
+}
+.company-app .company-sidebar {
+  background:linear-gradient(180deg,#171216,#0e0d11 80%) !important;
+  border-color:var(--cw-border) !important;
+  color:var(--cw-text) !important;
+}
+.company-app .company-logo>span {
+  background:linear-gradient(145deg,#5a1a22,#211216) !important;
+  color:#ff5962 !important;
+  border:1px solid var(--cw-red) !important;
+  box-shadow:0 0 16px #ed26352a !important;
+}
+.company-app .company-logo i,.company-app .company-mobilebar i {color:#ff4652 !important}
+.company-app .company-current,.company-app .company-branch-switch,
+.company-app .company-nav-submenu {
+  background:#151216 !important;
+  border:1px solid var(--cw-border) !important;
+  color:var(--cw-muted) !important;
+}
+.company-app .company-sidebar nav button {
+  background:transparent !important;
+  color:#c8bdb3 !important;
+  border:1px solid transparent !important;
+}
+.company-app .company-sidebar nav button.active,
+.company-app .company-nav-submenu button.active {
+  background:linear-gradient(100deg,#641c24,#291518) !important;
+  color:#ffe0a0 !important;
+  border-color:#a64b3c !important;
+  box-shadow:inset 3px 0 #ed2635 !important;
+}
+.company-app .company-user {border-color:var(--cw-border) !important}
+.company-app .company-user b,.company-app .company-top h1,
+.company-app .company-panel-head b,.company-app .company-panel h2,
+.company-app .company-panel h3 {color:#f5d18a !important}
+.company-app .company-user small,.company-app .company-top small,
+.company-app .company-panel-head small,.company-app .company-panel p,
+.company-app .company-empty {color:var(--cw-muted) !important}
+.company-app .company-main {background:var(--cw-bg) !important;color:var(--cw-text) !important}
+.company-app .company-panel,.company-app .company-form,
+.company-app .company-subscription-current,.company-app .company-subscription-grid article,
+.company-app .company-overdue-alert,.company-app .company-selected-customer,
+.company-app .company-dashboard-quick button,.company-app .company-dashboard-stats article,
+.company-app .company-dashboard-order,.company-app .company-dashboard-recent,
+.company-app .company-payment-modal,.company-app .company-modal,
+.company-app .company-history-modal {
+  background:linear-gradient(145deg,#211f23,#151519 72%,#211518) !important;
+  border:1px solid var(--cw-border) !important;
+  color:var(--cw-text) !important;
+  box-shadow:0 8px 22px #0005,inset 0 1px #ffffff08 !important;
+}
+.company-app input,.company-app select,.company-app textarea {
+  background:#111115 !important;
+  border:1px solid #654a35 !important;
+  color:var(--cw-text) !important;
+  accent-color:var(--cw-red);
+}
+.company-app input::placeholder,.company-app textarea::placeholder {color:#95877c !important}
+.company-app input:focus,.company-app select:focus,.company-app textarea:focus {
+  border-color:var(--cw-gold) !important;
+  box-shadow:0 0 0 3px #ed263526 !important;
+  outline:0 !important;
+}
+.company-app .company-primary,.company-app button.company-primary {
+  background:linear-gradient(135deg,#ff3947,#b90e20) !important;
+  border:1px solid #ff5962 !important;
+  color:#fff !important;
+  box-shadow:0 0 14px #ed26352b !important;
+}
+.company-app .company-secondary,.company-app .company-icon-button,
+.company-app .company-text-link,.company-app .company-small-action {
+  background:#211b1d !important;
+  border:1px solid #765536 !important;
+  color:var(--cw-gold) !important;
+}
+.company-app .company-table-wrap th {
+  background:#30201d !important;
+  color:var(--cw-gold) !important;
+  border-color:#63452f !important;
+}
+.company-app .company-table-wrap td {
+  color:#e8ded4 !important;
+  border-color:#44352d !important;
+}
+.company-app .company-table-wrap tr:hover td {background:#3a2023 !important}
+.company-app .company-error-banner {background:#4a2028 !important;color:#ffe1e4 !important;border:1px solid #853640 !important}
+.company-app .company-notice-banner {background:#183126 !important;color:#b9f1d1 !important;border:1px solid #32684d !important}
+.company-app .company-mobilebar {
+  background:#111014 !important;
+  color:var(--cw-text) !important;
+  border-bottom:1px solid var(--cw-border) !important;
+}
+.company-app .company-bottom-nav {
+  background:#151216 !important;
+  border-top:1px solid #765333 !important;
+}
+.company-app .company-bottom-nav button {color:#c8b9a8 !important}
+.company-app .company-bottom-nav button.active {
+  color:#fff0d1 !important;
+  background:#4b1b20 !important;
+}
+.company-app .company-dashboard-stats article.pink,
+.company-app .company-dashboard-stats article.blue,
+.company-app .company-dashboard-stats article.green,
+.company-app .company-dashboard-stats article.orange {
+  background:linear-gradient(145deg,#211f23,#151519 72%,#211518) !important;
+  border:1px solid var(--cw-border) !important;
+}
+.company-app .company-dashboard-stats article>span {color:var(--cw-gold) !important}
+.company-app .company-dashboard-stats strong {color:var(--cw-gold) !important}
+.company-app .company-plan-period {background:#211b1d !important;border-color:#765536 !important;color:var(--cw-text) !important}
+.company-app .company-plan-period b {color:var(--cw-gold) !important}
+.company-app .company-plan-period span,.company-app .company-plan-period small {color:var(--cw-muted) !important}
+.company-app .company-modal-backdrop {background:#000b !important}
+.company-app .company-payment-modal {border-color:#765536 !important}
+@media(max-width:760px) {
+  .company-app .company-sidebar {background:linear-gradient(180deg,#171216,#0e0d11 80%) !important}
+  .company-app .company-top h1 {color:#f5d18a !important}
+}
