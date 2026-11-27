@@ -4306,3 +4306,40 @@ td b { font-weight:650; }
     border-color:#654a35 !important;
   }
 }
+
+
+/* FIX: padroniza todos os formulários do workspace no tema escuro premium */
+.company-app .company-main .company-form,
+.company-app .company-main .company-order-customer-form {
+  background:linear-gradient(145deg,#211f23 0%,#151519 72%,#211518 100%) !important;
+  border:1px solid #654a35 !important;
+  color:#f7f1e9 !important;
+  box-shadow:0 8px 22px #0006,inset 0 1px #ffffff08 !important;
+}
+.company-app .company-main .company-form label,
+.company-app .company-main .company-form .company-form-grid label {
+  color:#d8cabc !important;
+}
+.company-app .company-main .company-form h3,
+.company-app .company-main .company-form h4 {
+  color:#f0cf8a !important;
+}
+.company-app .company-main .company-form input,
+.company-app .company-main .company-form select,
+.company-app .company-main .company-form textarea {
+  background:#111115 !important;
+  border:1px solid #654a35 !important;
+  color:#f7f1e9 !important;
+  color-scheme:dark;
+}
+.company-app .company-main .company-form input::placeholder,
+.company-app .company-main .company-form textarea::placeholder {
+  color:#938b83 !important;
+}
+@media(max-width:760px) {
+  .company-app .company-main .company-form {
+    padding:12px !important;
+    gap:12px !important;
+    border-radius:14px !important;
+  }
+}
