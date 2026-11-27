@@ -3948,3 +3948,102 @@ td b { font-weight:650; }
     box-shadow:0 -8px 24px rgba(0,0,0,.45) !important;
   }
 }
+
+
+/* Mobile hotfix: sidebar must not push the workspace below the fold */
+@media (max-width:760px) {
+  .company-app {
+    display:block !important;
+    min-height:100svh !important;
+    overflow-x:hidden !important;
+    background:#09090c !important;
+    color:#f7f1e9 !important;
+  }
+  .company-app > .company-sidebar {
+    position:fixed !important;
+    inset:0 auto 0 0 !important;
+    width:min(86vw,320px) !important;
+    height:100dvh !important;
+    max-height:100dvh !important;
+    overflow-y:auto !important;
+    z-index:101 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    background:linear-gradient(180deg,#171216,#0d0d11 78%) !important;
+    border-right:1px solid #765536 !important;
+    border-bottom:0 !important;
+    padding:18px 14px calc(22px + env(safe-area-inset-bottom)) !important;
+    transform:translateX(-105%) !important;
+    transition:transform .22s ease !important;
+    visibility:hidden !important;
+    pointer-events:none !important;
+    box-shadow:12px 0 36px #0009 !important;
+  }
+  .company-app > .company-sidebar.drawer-open {
+    transform:translateX(0) !important;
+    visibility:visible !important;
+    pointer-events:auto !important;
+  }
+  .company-app > .company-main {
+    display:block !important;
+    width:100% !important;
+    max-width:none !important;
+    min-width:0 !important;
+    min-height:100svh !important;
+    height:auto !important;
+    margin:0 !important;
+    padding:0 0 calc(88px + env(safe-area-inset-bottom)) !important;
+    overflow:visible !important;
+    background:#09090c !important;
+    color:#f7f1e9 !important;
+  }
+  .company-mobilebar {
+    display:flex !important;
+    position:sticky !important;
+    top:0 !important;
+    z-index:20 !important;
+    min-height:62px !important;
+    align-items:center !important;
+    background:#111014 !important;
+    border-bottom:1px solid #594332 !important;
+  }
+  .company-top {
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:flex-start !important;
+    gap:12px !important;
+    padding:17px 14px 12px !important;
+    margin:0 !important;
+  }
+  .company-top h1 { color:#f5d18a !important; }
+  .company-top small { color:#c4b7aa !important; }
+  .company-top-actions { width:100% !important; flex-wrap:wrap !important; }
+  .company-dashboard { display:block !important; padding:8px 12px 18px !important; }
+  .company-panel { background:linear-gradient(145deg,#211f23,#141418 75%,#211518) !important; border-color:#5b4635 !important; color:#f5eee5 !important; }
+  .company-panel-head b,.company-panel h2,.company-panel h3 { color:#f5d18a !important; }
+  .company-panel-head small,.company-panel p { color:#c4b7aa !important; }
+  .company-dashboard-stats article,.company-dashboard-quick button,
+  .company-dashboard-recent,.company-dashboard-order {
+    background:linear-gradient(145deg,#211f23,#151519 72%,#211518) !important;
+    border:1px solid #5b4635 !important;
+    color:#f5eee5 !important;
+  }
+  .company-dashboard-stats strong { color:#f0c66f !important; }
+  .company-bottom-nav {
+    position:fixed !important;
+    left:0 !important; right:0 !important; bottom:0 !important;
+    z-index:80 !important;
+    display:grid !important;
+    min-height:66px !important;
+    width:100% !important;
+    padding-bottom:calc(6px + env(safe-area-inset-bottom)) !important;
+    background:#151216 !important;
+    border-top:1px solid #765333 !important;
+  }
+  .company-drawer-scrim.visible {
+    position:fixed !important;
+    inset:0 !important;
+    z-index:100 !important;
+    background:rgba(0,0,0,.68) !important;
+  }
+}
