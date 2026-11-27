@@ -132,7 +132,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
       /* EPARTS mobile shell: header and drawer must remain visible above legacy company CSS */
       @media(max-width:760px){
         .eparts-workspace{display:block!important;min-height:100dvh!important;background:#090909!important}
-        .eparts-workspace>.company-sidebar{display:block!important;position:sticky!important;top:0!important;z-index:80!important;width:100%!important;height:auto!important;max-height:none!important;overflow:visible!important;padding:10px 14px 0!important;background:linear-gradient(105deg,#090909,#17120d 55%,#090909)!important;border:0!important;border-bottom:1px solid #b68b3c!important;box-shadow:0 8px 25px #000b!important;transform:none!important}
+        .eparts-workspace>.company-sidebar{display:block!important;position:sticky!important;top:0!important;z-index:300!important;width:100%!important;height:auto!important;max-height:none!important;overflow:visible!important;padding:10px 14px 0!important;background:linear-gradient(105deg,#090909,#17120d 55%,#090909)!important;border:0!important;border-bottom:1px solid #b68b3c!important;box-shadow:0 8px 25px #000b!important;transform:none!important}
         .eparts-workspace .eparts-brand-row{display:flex!important;min-height:54px!important;align-items:center!important;justify-content:space-between!important;margin:0!important;padding:0 0 9px!important}
         .eparts-workspace .company-logo{display:flex!important;align-items:center!important;gap:10px!important}
         .eparts-workspace .company-logo>span{display:grid!important;place-items:center!important;width:42px!important;height:42px!important;border:1px solid #d9ad58!important;background:linear-gradient(145deg,#1b1710,#090909)!important;color:#e8c56e!important;border-radius:11px!important}
@@ -226,8 +226,8 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
       /* Mobile hamburger as a true floating drawer */
       @media(max-width:760px){
         .eparts-workspace>.company-sidebar nav:not(.eparts-nav-closed){
-          position:fixed!important;top:72px!important;left:12px!important;right:12px!important;z-index:120!important;
-          display:grid!important;gap:13px!important;max-height:calc(100dvh - 92px)!important;overflow-y:auto!important;
+          position:fixed!important;top:76px!important;left:12px!important;right:12px!important;z-index:310!important;
+          display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:13px!important;max-height:calc(100dvh - 96px)!important;overflow-y:auto!important;
           padding:16px!important;border:1px solid #70562e!important;border-radius:16px!important;
           background:linear-gradient(155deg,#171410 0%,#0d0c0b 72%)!important;
           box-shadow:0 22px 65px #000e,0 0 0 100vmax #0009!important;
@@ -327,10 +327,10 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
     <aside className="company-sidebar">
       <div className="eparts-brand-row">
         <div className="company-logo"><span><ShoppingCart/></span><div><b>EPARTS</b><small>COMÉRCIO E MARKETPLACE</small></div></div>
-        <button className="eparts-mobile-menu-button" onClick={()=>setMenuOpen(v=>!v)} aria-label={menuOpen?'Fechar menu':'Abrir menu'}>{menuOpen?<X size={19}/>:<Menu size={19}/>}</button>
+        <button type="button" className="eparts-mobile-menu-button" onClick={()=>setMenuOpen(v=>!v)} aria-expanded={menuOpen} aria-controls="eparts-mobile-drawer" aria-label={menuOpen?'Fechar menu':'Abrir menu'}>{menuOpen?<X size={19}/>:<Menu size={19}/>}</button>
       </div>
       <div className="eparts-company-chip"><Store size={17}/><span>{companyName}</span></div>
-      <nav className={menuOpen?'':'eparts-nav-closed'}>
+      <nav id="eparts-mobile-drawer" className={menuOpen?'eparts-nav-open':'eparts-nav-closed'}>
         {navItems.map(group=><div className="company-nav-section" key={group.section}>
           <span className="company-nav-section-label">{group.section}</span>
           {group.items.map(item=><button key={item.id} className={tab===item.id?'active':''} onClick={()=>nav(item.id)}><item.icon size={17}/><span>{item.label}</span>{tab===item.id&&<ChevronRight className="eparts-nav-arrow" size={15}/>}</button>)}
@@ -353,7 +353,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
       <button className={tab==='products'?'active':''} onClick={()=>nav('products')}><Package size={19}/><span>Produtos</span></button>
       <button className={tab==='pos'?'active':''} onClick={()=>nav('pos')}><ShoppingCart size={21}/><span>PDV</span></button>
       <button className={tab==='sales'?'active':''} onClick={()=>nav('sales')}><BarChart3 size={19}/><span>Vendas</span></button>
-      <button className={menuOpen?'active':''} onClick={()=>{setMenuOpen(v=>!v);window.scrollTo({top:0,behavior:'smooth'})}}><Menu size={19}/><span>Menu</span></button>
+      <button type="button" className={menuOpen?'active':''} aria-expanded={menuOpen} aria-controls="eparts-mobile-drawer" onClick={()=>setMenuOpen(v=>!v)}>{menuOpen?<X size={19}/>:<Menu size={19}/>}<span>Menu</span></button>
     </nav>
     <main className="company-main">
       <header className="company-top"><div><small>EPARTS / PAINEL DE GESTÃO</small><h1>{title}</h1></div><div className="eparts-header-actions"><a href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer" className="company-secondary" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7}}><ExternalLink size={15}/> Catálogo online</a><button className="company-icon-button" onClick={()=>void load()} title="Atualizar dados" aria-label="Atualizar dados"><RefreshCw size={16}/></button></div></header>
