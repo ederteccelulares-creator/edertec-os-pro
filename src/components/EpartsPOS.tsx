@@ -50,15 +50,16 @@ export default function EpartsPOS({companyId}:Props){
   finally{setBusy(false)}
  }
  function printReceipt(mode:'thermal'|'a4'){
+  const cleanup=()=>{delete document.body.dataset.epartsPrint;window.removeEventListener('afterprint',cleanup)}
   document.body.dataset.epartsPrint=mode
+  window.addEventListener('afterprint',cleanup)
   window.print()
-  window.setTimeout(()=>{delete document.body.dataset.epartsPrint},500)
  }
  return <section className="company-panel eparts-pos">
   <style>{`
    .eparts-pos{color:#f7f2e8}.eparts-pos .pos-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(300px,.8fr);gap:18px}.eparts-pos .pos-search{display:flex;gap:8px;align-items:center;border:1px solid #9c762b;border-radius:12px;padding:12px}.eparts-pos input,.eparts-pos select{background:#171717;color:#fff;border:1px solid #514324;border-radius:8px;padding:11px;min-width:0}.eparts-pos .pos-products{display:grid;gap:9px;margin-top:12px}.eparts-pos .pos-product,.eparts-pos .pos-line{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#171717;border:1px solid #38312a;border-radius:12px;padding:12px}.eparts-pos button{cursor:pointer}.eparts-pos .pos-add,.eparts-pos .pos-final{background:#c90020;color:white;border:1px solid #f12b42;border-radius:10px;padding:12px 16px;font-weight:700}.eparts-pos .pos-cart{background:#121212;border:1px solid #8d6b27;border-radius:14px;padding:15px}.eparts-pos .pos-line{margin:8px 0}.eparts-pos .pos-total{font-size:24px;color:#f1c75b;font-weight:800}.eparts-pos .pos-muted{color:#b7ada0;font-size:13px}.eparts-pos .pos-pay{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.eparts-pos .pos-pay button{padding:10px 4px;border:1px solid #66532c;border-radius:8px;background:#211d17;color:#f4d27a}.eparts-pos .pos-pay button.active{background:#a90019;color:white;border-color:#f33}.eparts-pos .pos-receipt{display:none}
    @media(max-width:760px){.eparts-pos .pos-grid{grid-template-columns:minmax(0,1fr)}.eparts-pos .pos-pay{grid-template-columns:1fr}.eparts-pos .pos-line{flex-wrap:wrap}}
-   @media print{body[data-eparts-print] *{visibility:hidden!important}body[data-eparts-print] .eparts-pos .pos-receipt,body[data-eparts-print] .eparts-pos .pos-receipt *{visibility:visible!important}body[data-eparts-print] .eparts-pos .pos-receipt{display:block!important;position:absolute;left:0;top:0;width:100%;color:#000;background:#fff;padding:8px;font:12px monospace}body[data-eparts-print=thermal] .eparts-pos .pos-receipt{width:72mm}body[data-eparts-print=a4] .eparts-pos .pos-receipt{width:190mm;padding:15mm;font:14px Arial}body[data-eparts-print] @page{margin:5mm}}
+   @media print{body[data-eparts-print] *{visibility:hidden!important}body[data-eparts-print] .eparts-pos .pos-receipt,body[data-eparts-print] .eparts-pos .pos-receipt *{visibility:visible!important}body[data-eparts-print] .eparts-pos .pos-receipt{display:block!important;position:absolute;left:0;top:0;width:100%;color:#000;background:#fff;padding:8px;font:12px monospace}body[data-eparts-print=thermal] .eparts-pos .pos-receipt{width:72mm}body[data-eparts-print=a4] .eparts-pos .pos-receipt{width:190mm;padding:15mm;font:14px Arial}@page{margin:5mm}}
   `}</style>
   <div className="company-panel-head"><div><b>PDV · Ponto de venda</b><small>Venda presencial · baixa imediata do estoque ao finalizar</small></div><button className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar estoque</button></div>
   {error&&<div className="company-error-banner">{error}</div>}{notice&&<div className="company-success-banner"><CheckCircle2 size={16}/> {notice}</div>}
