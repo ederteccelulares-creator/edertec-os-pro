@@ -44,7 +44,8 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
   const navItems=[
     {section:'VISÃO GERAL',items:[{id:'dashboard' as Tab,label:'Dashboard',icon:LayoutDashboard}]},
     {section:'GESTÃO COMERCIAL',items:[{id:'pos' as Tab,label:'PDV · Ponto de venda',icon:ShoppingCart},{id:'products' as Tab,label:'Produtos e estoque',icon:Package},{id:'sales' as Tab,label:'Vendas e pedidos',icon:ShoppingCart}]},
-    {section:'CADASTROS',items:[{id:'brands' as Tab,label:'Marcas',icon:Tags},{id:'suppliers' as Tab,label:'Fornecedores',icon:Truck},{id:'customers' as Tab,label:'Clientes',icon:Users},{id:'payouts' as Tab,label:'Comissões e repasses',icon:Wallet}]}
+    {section:'CADASTROS',items:[{id:'brands' as Tab,label:'Marcas',icon:Tags},{id:'suppliers' as Tab,label:'Fornecedores',icon:Truck},{id:'customers' as Tab,label:'Clientes',icon:Users},{id:'payouts' as Tab,label:'Comissões e repasses',icon:Wallet}]},
+    {section:'CADASTRO RÁPIDO',items:[]}
   ]
   return <div className="company-app eparts-workspace">
     <style>{`
@@ -272,6 +273,10 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         {navItems.map(group=><div className="company-nav-section" key={group.section}>
           <span className="company-nav-section-label">{group.section}</span>
           {group.items.map(item=><button key={item.id} className={tab===item.id?'active':''} onClick={()=>nav(item.id)}><item.icon size={17}/><span>{item.label}</span>{tab===item.id&&<ChevronRight className="eparts-nav-arrow" size={15}/>}</button>)}
+          {group.section==='CADASTRO RÁPIDO'&&<>
+            <button type="button" onClick={()=>quickAdd('customers')}><Users size={17}/><span>Cadastrar cliente</span><ChevronRight className="eparts-nav-arrow" size={15}/></button>
+            <button type="button" onClick={()=>quickAdd('suppliers')}><Truck size={17}/><span>Cadastrar fornecedor</span><ChevronRight className="eparts-nav-arrow" size={15}/></button>
+          </>}
         </div>)}
       </nav>
       <div className="company-user">
@@ -287,7 +292,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
       <button className={menuOpen?'active':''} onClick={()=>{setMenuOpen(v=>!v);window.scrollTo({top:0,behavior:'smooth'})}}><Menu size={19}/><span>Menu</span></button>
     </nav>
     <main className="company-main">
-      <header className="company-top"><div><small>EPARTS / PAINEL DE GESTÃO</small><h1>{title}</h1></div><div className="eparts-header-actions"><button className="company-primary" onClick={()=>quickAdd('customers')}><Users size={15}/> Cadastrar cliente</button><button className="company-primary" onClick={()=>quickAdd('suppliers')}><Truck size={15}/> Cadastrar fornecedor</button><a href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer" className="company-secondary" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7}}><ExternalLink size={15}/> Catálogo online</a><button className="company-icon-button" onClick={()=>void load()} title="Atualizar dados" aria-label="Atualizar dados"><RefreshCw size={16}/></button></div></header>
+      <header className="company-top"><div><small>EPARTS / PAINEL DE GESTÃO</small><h1>{title}</h1></div><div className="eparts-header-actions"><a href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer" className="company-secondary" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7}}><ExternalLink size={15}/> Catálogo online</a><button className="company-icon-button" onClick={()=>void load()} title="Atualizar dados" aria-label="Atualizar dados"><RefreshCw size={16}/></button></div></header>
       {error&&<div className="company-error-banner">{error}</div>}
       {tab==='pos'?<EpartsPOS companyId={companyId}/>:tab==='dashboard'?<section className="company-panel">
         <div className="company-panel-head"><div><b>Resumo da operação</b><small>Indicadores comerciais e de estoque da Eparts</small></div><button className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar</button></div>
