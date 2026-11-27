@@ -5096,11 +5096,12 @@ td b { font-weight:650; }
 /* Acesso de empresas: cartões dedicados para telas pequenas */
 .platform-admin .platform-company-mobile-list{display:none}
 @media(max-width:760px){
- .platform-admin .platform-company-mobile-list{display:grid;gap:10px;margin-top:14px}
- .platform-admin .platform-company-mobile-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px;border:1px solid #55303a;border-radius:12px;background:linear-gradient(145deg,#21151b,#121116)}
- .platform-admin .platform-company-mobile-card>div{display:grid;gap:5px;min-width:0}
- .platform-admin .platform-company-mobile-card b{font-size:13px;color:#f4edf0;overflow-wrap:anywhere}
- .platform-admin .platform-company-mobile-card small{font-size:10px;color:#b9a3aa}
- .platform-admin .platform-company-mobile-card button{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:0 0 auto;min-height:40px;padding:8px 10px;border:1px solid #e34a5b;border-radius:8px;background:#401923;color:#fff;font-size:10px;font-weight:700}
+ .platform-admin .platform-company-mobile-list{display:grid;gap:7px;margin-top:10px}
+ .platform-admin .platform-company-mobile-card{min-height:58px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid #55303a;border-radius:9px;background:linear-gradient(145deg,#21151b,#121116)}
+ .platform-admin .platform-company-mobile-card>div{display:grid;gap:3px;min-width:0}
+ .platform-admin .platform-company-mobile-card b{font-size:12px;line-height:1.2;color:#f4edf0;overflow-wrap:anywhere}
+ .platform-admin .platform-company-mobile-card small{font-size:9px;line-height:1.2;color:#b9a3aa}
+ .platform-admin .platform-company-mobile-card button{display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:0 0 auto;min-height:34px;padding:6px 8px;border:1px solid #e34a5b;border-radius:7px;background:#401923;color:#fff;font-size:9px;font-weight:700}
+ .platform-admin .platform-company-mobile-card button svg{width:13px;height:13px}
  .platform-admin .platform-companies-table-wrap{display:none}
 }
