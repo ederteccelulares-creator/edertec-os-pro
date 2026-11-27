@@ -4742,3 +4742,105 @@ td b { font-weight:650; }
     padding-bottom: calc(94px + env(safe-area-inset-bottom)) !important;
   }
 }
+
+
+/* Financeiro: formulário Novo lançamento em modal compacto no celular */
+@media screen and (max-width: 760px) {
+  html body .company-app .company-main .company-financial-entry-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 1200 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: max(14px, env(safe-area-inset-top)) 12px max(14px, env(safe-area-inset-bottom)) !important;
+    background: rgba(0,0,0,.82) !important;
+    -webkit-backdrop-filter: blur(7px) !important;
+    backdrop-filter: blur(7px) !important;
+    overflow: hidden !important;
+  }
+  html body .company-app .company-main .company-financial-entry-modal {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 13px !important;
+    width: min(100%, 560px) !important;
+    max-width: 560px !important;
+    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 28px) !important;
+    margin: 0 !important;
+    padding: 16px !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+    border: 1px solid #9a7444 !important;
+    border-radius: 18px !important;
+    background: linear-gradient(145deg,#211f23 0%,#151519 72%,#241719 100%) !important;
+    box-shadow: 0 24px 70px #000c, 0 0 28px #d6ad6018 !important;
+  }
+  html body .company-app .company-main .company-financial-entry-modal .company-financial-entry-modal-head {
+    position: sticky !important;
+    top: -16px !important;
+    z-index: 2 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    margin: -16px -16px 0 !important;
+    padding: 14px 16px !important;
+    background: #191619 !important;
+    border-bottom: 1px solid #654a35 !important;
+  }
+  html body .company-app .company-main .company-financial-entry-modal-head h3 {
+    margin: 0 !important;
+    color: #f0cf8a !important;
+    font-size: 17px !important;
+  }
+  html body .company-app .company-main .company-financial-entry-close {
+    display: grid !important;
+    place-items: center !important;
+    flex: 0 0 36px !important;
+    width: 36px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    font-size: 24px !important;
+    line-height: 1 !important;
+  }
+  html body .company-app .company-main .company-financial-entry-modal .company-form-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) !important;
+    gap: 12px !important;
+  }
+  html body .company-app .company-main .company-financial-entry-modal label {
+    display: grid !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+  }
+  html body .company-app .company-main .company-financial-entry-modal input,
+  html body .company-app .company-main .company-financial-entry-modal select {
+    width: 100% !important;
+    min-height: 44px !important;
+    box-sizing: border-box !important;
+  }
+  html body .company-app .company-main .company-financial-entry-modal .company-form-actions {
+    position: sticky !important;
+    bottom: -16px !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1.35fr !important;
+    gap: 9px !important;
+    margin: 4px -16px -16px !important;
+    padding: 12px 16px max(12px, env(safe-area-inset-bottom)) !important;
+    background: #191619 !important;
+    border-top: 1px solid #654a35 !important;
+  }
+  html body .company-app .company-main .company-financial-entry-modal .company-form-actions button {
+    min-height: 46px !important;
+    width: 100% !important;
+  }
+}
+
+@media screen and (min-width: 761px) {
+  .company-financial-entry-backdrop { display: contents; }
+  .company-financial-entry-modal { margin: 12px 0 16px; }
+  .company-financial-entry-modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .company-financial-entry-close { display: none !important; }
+}
