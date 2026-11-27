@@ -4343,3 +4343,69 @@ td b { font-weight:650; }
     border-radius:14px !important;
   }
 }
+
+
+/* Mobile-wide form theme guard: overrides legacy light-theme rules in every company tab */
+@media screen {
+  html body .company-app {
+    color-scheme: dark !important;
+  }
+  html body .company-app .company-main form,
+  html body .company-app .company-main .company-form,
+  html body .company-app .company-main .company-order-customer-form,
+  html body .company-app .company-main .company-payment-modal,
+  html body .company-app .company-main .company-modal,
+  html body .company-app .company-main .company-history-modal,
+  html body .company-app .company-main .company-panel form {
+    background: linear-gradient(145deg,#211f23 0%,#151519 72%,#211518 100%) !important;
+    color: #f7f1e9 !important;
+    border-color: #654a35 !important;
+    color-scheme: dark !important;
+  }
+  html body .company-app .company-main form label,
+  html body .company-app .company-main .company-form label,
+  html body .company-app .company-main .company-payment-modal label {
+    color: #d8cabc !important;
+  }
+  html body .company-app .company-main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  html body .company-app .company-main select,
+  html body .company-app .company-main textarea,
+  html body .company-app .company-main form input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  html body .company-app .company-main form select,
+  html body .company-app .company-main form textarea {
+    background-color: #111115 !important;
+    color: #f7f1e9 !important;
+    border-color: #654a35 !important;
+    color-scheme: dark !important;
+    -webkit-text-fill-color: #f7f1e9 !important;
+  }
+  html body .company-app .company-main input::placeholder,
+  html body .company-app .company-main textarea::placeholder {
+    color: #a99b8e !important;
+    opacity: 1 !important;
+    -webkit-text-fill-color: #a99b8e !important;
+  }
+  html body .company-app .company-main input:focus,
+  html body .company-app .company-main select:focus,
+  html body .company-app .company-main textarea:focus {
+    border-color: #e6b957 !important;
+    box-shadow: 0 0 0 3px #ed263526 !important;
+    outline: 0 !important;
+  }
+}
+@media screen and (max-width:760px) {
+  html body .company-app .company-main form,
+  html body .company-app .company-main .company-form,
+  html body .company-app .company-main .company-order-customer-form,
+  html body .company-app .company-main .company-payment-modal,
+  html body .company-app .company-main .company-modal,
+  html body .company-app .company-main .company-history-modal {
+    padding: 12px !important;
+    border-radius: 14px !important;
+    min-width: 0 !important;
+  }
+  html body .company-app .company-main form > label,
+  html body .company-app .company-main .company-form > label {
+    min-width: 0 !important;
+  }
+}
