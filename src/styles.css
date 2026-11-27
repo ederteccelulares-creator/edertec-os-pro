@@ -3779,3 +3779,78 @@ td b { font-weight:650; }
   .company-sidebar { position:relative !important; height:auto !important; max-height:none !important; overflow:visible !important; }
   .company-main { height:auto !important; min-height:0 !important; overflow:visible !important; }
 }
+
+
+/* Mobile recovery: keep workspace content visible above the fixed bottom navigation */
+@media (max-width:760px) {
+  html, body, #root {
+    min-height:100% !important;
+    height:auto !important;
+    overflow-x:hidden !important;
+  }
+  .company-app {
+    display:block !important;
+    position:relative !important;
+    width:100% !important;
+    min-height:100dvh !important;
+    height:auto !important;
+    overflow:visible !important;
+  }
+  .company-app > .company-main {
+    display:block !important;
+    position:relative !important;
+    width:100% !important;
+    max-width:none !important;
+    min-width:0 !important;
+    min-height:calc(100dvh - 66px) !important;
+    height:auto !important;
+    max-height:none !important;
+    overflow:visible !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    transform:none !important;
+    padding:0 0 calc(92px + env(safe-area-inset-bottom)) !important;
+  }
+  .company-main > .company-mobilebar {
+    display:flex !important;
+    position:sticky !important;
+    top:0 !important;
+    width:100% !important;
+    min-height:64px !important;
+    z-index:20 !important;
+  }
+  .company-main > .company-top,
+  .company-main > .company-dashboard,
+  .company-main > .company-panel,
+  .company-main > .company-error-banner,
+  .company-main > .company-notice-banner {
+    display:block !important;
+    position:relative !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    height:auto !important;
+    max-height:none !important;
+    overflow:visible !important;
+    transform:none !important;
+  }
+  .company-main > .company-dashboard { padding:0 14px 18px !important; }
+  .company-main > .company-panel { margin:14px 12px !important; width:auto !important; }
+  .company-main > .company-top { padding:20px 14px 16px !important; }
+  .company-bottom-nav {
+    display:grid !important;
+    position:fixed !important;
+    left:0 !important; right:0 !important; bottom:0 !important;
+    width:100% !important;
+    min-height:66px !important;
+    z-index:100 !important;
+    padding-bottom:calc(6px + env(safe-area-inset-bottom)) !important;
+    background:#151216 !important;
+    border-top:1px solid #765333 !important;
+    box-shadow:0 -8px 24px #0008 !important;
+  }
+  .company-bottom-nav button { color:#c8b9a8 !important; }
+  .company-bottom-nav button.active {
+    color:#fff0d1 !important;
+    background:#4b1b20 !important;
+  }
+}
