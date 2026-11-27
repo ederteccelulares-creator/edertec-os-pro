@@ -3008,3 +3008,79 @@ td b { font-weight:650; }
     color:#f4c35e !important;
   }
 }
+
+
+/* Acabamento final do Dashboard conforme a referencia aprovada */
+@media (min-width: 761px) {
+  .company-logo > span {
+    background:linear-gradient(145deg,#321217,#170d10) !important;
+    border:1px solid #f02d3a !important;
+    color:#ff4a52 !important;
+    box-shadow:0 0 18px #ef263944,inset 0 0 12px #ef263922 !important;
+  }
+  .company-logo > span svg { color:#ff4a52 !important; }
+  .company-logo b { color:#f7f5f2 !important; letter-spacing:.045em !important; }
+  .company-logo b i,
+  .company-mobilebar b i { color:#ff303b !important; font-style:normal !important; }
+  .company-main .company-dashboard-stats:not(.company-finance-kpis) article {
+    box-shadow:0 12px 30px #0009,inset 0 1px #ffffff0c,0 0 16px #e51f2b12 !important;
+  }
+  .company-main .company-dashboard-stats:not(.company-finance-kpis) article:before {
+    height:3px !important;
+    background:linear-gradient(90deg,transparent 0%,#a80e1b 18%,#ff2635 52%,#ff7750 76%,transparent 100%) !important;
+    filter:drop-shadow(0 0 4px #ff2635) drop-shadow(0 0 9px #ed1b2b) !important;
+  }
+  .company-main .company-dashboard-stats:not(.company-finance-kpis) article:after {
+    border-color:#ff394333 !important;
+    box-shadow:0 0 28px #f22b3a24,inset 0 0 22px #f22b3a16 !important;
+  }
+  .company-main .company-finance-kpis article {
+    position:relative !important;
+    overflow:hidden !important;
+    display:flex !important;
+    flex-direction:row !important;
+    align-items:center !important;
+    gap:22px !important;
+    box-shadow:0 12px 30px #0009,inset 0 1px #ffffff10,0 0 18px #e3a72a13 !important;
+  }
+  .company-main .company-finance-kpis article:after {
+    content:"";
+    position:absolute;
+    right:-38px; top:-44px;
+    width:120px; height:120px;
+    border:1px solid #e6b34a33;
+    border-radius:50%;
+    box-shadow:0 0 24px #e6b34a1c;
+    pointer-events:none;
+  }
+  .company-main .company-finance-kpis article > span {
+    flex:0 0 90px !important;
+    width:90px !important; min-width:90px !important;
+    height:90px !important;
+    display:grid !important; place-items:center !important;
+    background:linear-gradient(145deg,#39251e,#1d1215) !important;
+    border:1px solid #b98437 !important;
+    color:#ffd16b !important;
+    box-shadow:0 0 22px #e3a72a2c,inset 0 0 16px #e3a72a12 !important;
+  }
+  .company-main .company-finance-kpis article > span svg {
+    width:42px !important; height:42px !important; stroke-width:2.2 !important;
+  }
+  .company-main .company-finance-kpis article > div { min-width:0 !important; }
+  .company-main .company-finance-kpis article b {
+    color:#fff4df !important;
+    font-size:18px !important;
+  }
+  .company-main .company-finance-kpis article strong {
+    color:#ffc85b !important;
+    font-size:36px !important;
+    font-weight:850 !important;
+    text-shadow:0 0 16px #f1b83b35 !important;
+  }
+  .company-main .company-finance-kpis article small {
+    color:#e0d8ce !important;
+  }
+  .company-main .company-finance-dashboard .company-panel {
+    border-color:#80602e !important;
+  }
+}
