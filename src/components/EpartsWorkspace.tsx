@@ -223,6 +223,35 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
       }
 
 
+      /* Dashboard final visual layout */
+      .eparts-workspace .eparts-dashboard{display:grid!important;gap:16px!important}
+      .eparts-workspace .eparts-overview-panel{margin:0!important}
+      .eparts-workspace .eparts-overview-panel .company-panel-head{align-items:center!important}
+      .eparts-workspace .eparts-overview-panel .company-panel-head>div{min-width:0!important}
+      .eparts-workspace .eparts-overview-panel .company-stats-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;margin-top:18px!important}
+      .eparts-workspace .eparts-overview-panel .company-stat-card{min-height:112px!important;padding:17px!important;border:1px solid #51432e!important;border-radius:13px!important;background:linear-gradient(145deg,#1c1a16,#121110)!important}
+      .eparts-workspace .eparts-overview-panel .company-stat-card span{display:block!important;font-size:12px!important;line-height:1.4!important;color:#bcb09b!important}
+      .eparts-workspace .eparts-overview-panel .company-stat-card strong{display:block!important;margin-top:12px!important;font-size:27px!important;line-height:1.1!important;color:#f0cf83!important;overflow-wrap:anywhere!important}
+      .eparts-workspace .eparts-quick-panel{margin:0!important}
+      .eparts-workspace .eparts-quick-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;margin-top:15px!important}
+      .eparts-workspace .eparts-quick-grid button{display:flex!important;min-width:0!important;min-height:112px!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:7px!important;padding:13px 8px!important;border:1px solid #51432e!important;border-radius:13px!important;background:linear-gradient(145deg,#211c13,#131210)!important;color:#e9d5a9!important}
+      .eparts-workspace .eparts-quick-grid button svg{color:#e1bd73!important}
+      .eparts-workspace .eparts-quick-grid button b{font-size:13px!important;color:#f5ead5!important}
+      .eparts-workspace .eparts-quick-grid button small{font-size:10px!important;color:#a99d89!important;text-align:center!important}
+      .eparts-workspace .eparts-quick-grid button:hover{border-color:#c49b52!important;background:#292115!important}
+      @media(max-width:760px){
+        .eparts-workspace .eparts-dashboard{gap:13px!important}
+        .eparts-workspace .eparts-overview-panel .company-panel-head{align-items:stretch!important;flex-direction:column!important}
+        .eparts-workspace .eparts-overview-panel .company-panel-head>button{width:100%!important;min-height:42px!important;justify-content:center!important}
+        .eparts-workspace .eparts-overview-panel .company-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;margin-top:13px!important}
+        .eparts-workspace .eparts-overview-panel .company-stat-card{min-height:98px!important;padding:13px!important}
+        .eparts-workspace .eparts-overview-panel .company-stat-card span{font-size:11px!important}
+        .eparts-workspace .eparts-overview-panel .company-stat-card strong{font-size:23px!important;margin-top:9px!important}
+        .eparts-workspace .eparts-quick-grid{gap:8px!important}
+        .eparts-workspace .eparts-quick-grid button{min-height:94px!important;padding:10px 5px!important}
+        .eparts-workspace .eparts-quick-grid button svg{width:23px!important;height:23px!important}
+      }
+      @media(max-width:380px){.eparts-workspace .eparts-quick-grid{grid-template-columns:1fr!important}.eparts-workspace .eparts-quick-grid button{min-height:72px!important;flex-direction:row!important;justify-content:flex-start!important;padding:12px 15px!important}.eparts-workspace .eparts-quick-grid button small{margin-left:auto!important}}
       /* EPARTS visual polish: presentation only */
       .eparts-workspace{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:0!important}
       .eparts-workspace .company-main{max-width:1600px!important;margin-inline:auto!important}
@@ -307,18 +336,27 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
     <main className="company-main">
       <header className="company-top"><div><small>EPARTS / PAINEL DE GESTÃO</small><h1>{title}</h1></div><div className="eparts-header-actions"><a href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer" className="company-secondary" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7}}><ExternalLink size={15}/> Catálogo online</a><button className="company-icon-button" onClick={()=>void load()} title="Atualizar dados" aria-label="Atualizar dados"><RefreshCw size={16}/></button></div></header>
       {error&&<div className="company-error-banner">{error}</div>}
-      {tab==='pos'?<EpartsPOS companyId={companyId}/>:tab==='dashboard'?<section className="company-panel">
-        <div className="company-panel-head"><div><b>Resumo da operação</b><small>Indicadores comerciais e de estoque da Eparts</small></div><button className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar</button></div>
-        {loading?<p className="company-empty">Carregando indicadores...</p>:<div className="company-stats-grid">
-          <article className="company-stat-card"><span>Produtos cadastrados</span><strong>{stats.products}</strong></article>
-          <article className="company-stat-card"><span>Unidades em estoque</span><strong>{stats.stock}</strong></article>
-          <article className="company-stat-card"><span>Fornecedores</span><strong>{stats.suppliers}</strong></article>
-          <article className="company-stat-card"><span>Pedidos e vendas</span><strong>{stats.orders}</strong></article>
-          <article className="company-stat-card"><span>Valor em pedidos ativos</span><strong>{money(stats.revenue)}</strong></article>
-          <article className="company-stat-card"><span>Comissão prevista</span><strong>{money(stats.commission)}</strong></article>
-        </div>}
-        <div className="company-inline-actions"><button className="company-primary" onClick={()=>nav('products')}><Package size={16}/> Abrir produtos e estoque</button></div>
-      </section>:<EpartsCatalogAdminPanel key={tab+'-'+createVersion} companyId={companyId} initialTab={tab} initialCreate={quickCreate===tab}/>}
+      {tab==='pos'?<EpartsPOS companyId={companyId}/>:tab==='dashboard'?<div className="eparts-dashboard">
+        <section className="company-panel eparts-overview-panel">
+          <div className="company-panel-head"><div><b>Resumo da operação</b><small>Indicadores comerciais e de estoque da Eparts</small></div><button className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar dados</button></div>
+          {loading?<p className="company-empty">Carregando indicadores...</p>:<div className="company-stats-grid">
+            <article className="company-stat-card"><span>Produtos cadastrados</span><strong>{stats.products}</strong></article>
+            <article className="company-stat-card"><span>Unidades em estoque</span><strong>{stats.stock}</strong></article>
+            <article className="company-stat-card"><span>Fornecedores cadastrados</span><strong>{stats.suppliers}</strong></article>
+            <article className="company-stat-card"><span>Pedidos e vendas</span><strong>{stats.orders}</strong></article>
+            <article className="company-stat-card"><span>Valor em pedidos ativos</span><strong>{money(stats.revenue)}</strong></article>
+            <article className="company-stat-card"><span>Comissão prevista</span><strong>{money(stats.commission)}</strong></article>
+          </div>}
+        </section>
+        <section className="company-panel eparts-quick-panel">
+          <div className="company-panel-head"><div><b>Ações rápidas</b><small>Acesse as áreas mais utilizadas</small></div></div>
+          <div className="eparts-quick-grid">
+            <button type="button" onClick={()=>nav('pos')}><ShoppingCart size={25}/><b>PDV</b><small>Nova venda</small></button>
+            <button type="button" onClick={()=>nav('products')}><Package size={25}/><b>Produtos</b><small>Estoque e cadastro</small></button>
+            <button type="button" onClick={()=>nav('sales')}><BarChart3 size={25}/><b>Vendas</b><small>Pedidos e histórico</small></button>
+          </div>
+        </section>
+      </div>:<EpartsCatalogAdminPanel key={tab+'-'+createVersion} companyId={companyId} initialTab={tab} initialCreate={quickCreate===tab}/>}
       <footer className="company-footer">EPARTS · Painel comercial exclusivo · Acesso protegido por empresa</footer>
     </main>
   </div>
