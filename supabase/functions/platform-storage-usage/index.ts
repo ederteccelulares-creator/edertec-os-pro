@@ -38,6 +38,8 @@ Deno.serve(async (req) => {
     if (bucketsError) throw bucketsError;
     if (companiesError) throw companiesError;
 
+    const names = new Map((companies || []).map((company: { id: string; name: string }) => [company.id, company.name]));
+    const companyIds = new Set(names.keys());
     const totals = new Map<string, { files: number; bytes: number; photos: number }>();
     let totalFiles = 0;
     let totalBytes = 0;
@@ -80,8 +82,6 @@ Deno.serve(async (req) => {
       if (offset >= 100000) { truncated = true; break; }
     }
 
-    const names = new Map((companies || []).map((company: { id: string; name: string }) => [company.id, company.name]));
-    const companyIds = new Set(names.keys());
     const byCompany = Array.from(totals.entries()).map(([companyId, usage]) => ({
       company_id: companyId,
       company_name: names.get(companyId) || "Arquivos sem empresa identificada",
