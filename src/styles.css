@@ -2676,3 +2676,130 @@ td b { font-weight:650; }
     box-shadow:inset 3px 0 0 #38b978;
   }
 }
+
+
+/* Redesign desktop mais perceptível: superfícies, navegação e dashboard */
+@media (min-width: 761px) {
+  .company-app {
+    background:#090b0f !important;
+    color:#f4f0e8 !important;
+  }
+  .company-app > aside {
+    background:linear-gradient(180deg,#090a0d 0%,#171216 58%,#0b0d11 100%) !important;
+    border-right:1px solid #68452d !important;
+    box-shadow:8px 0 30px #0007 !important;
+  }
+  .company-app > aside nav > button,
+  .company-app > aside nav .company-nav-group > button {
+    color:#d9dce2 !important;
+    border:1px solid transparent !important;
+    border-radius:11px !important;
+    transition:background .18s ease,border-color .18s ease,box-shadow .18s ease !important;
+  }
+  .company-app > aside nav > button.active,
+  .company-app > aside nav .company-nav-group > button.active {
+    background:linear-gradient(100deg,#50191e,#241316) !important;
+    border-color:#b52b32 !important;
+    color:#fff !important;
+    box-shadow:inset 3px 0 #ff343b,0 0 20px #d8203030 !important;
+  }
+  .company-app > aside nav > button.active svg,
+  .company-app > aside nav .company-nav-group > button.active svg {
+    color:#f2c66f !important;
+  }
+  .company-main {
+    background:radial-gradient(ellipse at 78% 0%,#30201b 0%,#151419 34%,#0b0e13 78%) !important;
+    color:#f4f0e8 !important;
+  }
+  .company-main .company-top {
+    border-bottom:1px solid #57402e !important;
+  }
+  .company-main .company-top h1 {
+    color:#fff8ed !important;
+    text-shadow:0 2px 18px #e6b95a18;
+  }
+  .company-main .company-dashboard-quick>button,
+  .company-main .company-dashboard-stats article,
+  .company-main .company-panel,
+  .company-main .company-form,
+  .company-main .company-table-wrap {
+    background:linear-gradient(145deg,#242329 0%,#17191f 58%,#21191b 100%) !important;
+    border:1px solid #574637 !important;
+    border-radius:15px !important;
+    box-shadow:0 10px 28px #0005,inset 0 1px #ffffff08 !important;
+    color:#f3eee6 !important;
+  }
+  .company-main .company-dashboard-quick>button {
+    position:relative;
+    overflow:hidden;
+  }
+  .company-main .company-dashboard-quick>button:after {
+    content:"";
+    position:absolute;
+    right:-28px;
+    bottom:-36px;
+    width:110px;
+    height:70px;
+    border-radius:50%;
+    border-bottom:2px solid #e52e3b;
+    filter:drop-shadow(0 0 7px #f22b38);
+    opacity:.75;
+    pointer-events:none;
+  }
+  .company-main .company-dashboard-quick>button:hover,
+  .company-main .company-panel:hover {
+    border-color:#a47a43 !important;
+    box-shadow:0 12px 30px #0007,0 0 18px #d92a3520 !important;
+  }
+  .company-main .company-dashboard-quick>button b,
+  .company-main .company-dashboard-stats article b,
+  .company-main .company-dashboard-stats article strong,
+  .company-main .company-panel-head b {
+    color:#fff8ee !important;
+    opacity:1 !important;
+  }
+  .company-main .company-dashboard-quick>button small,
+  .company-main .company-dashboard-stats article small,
+  .company-main .company-panel small {
+    color:#c5c0ba !important;
+    opacity:1 !important;
+  }
+  .company-main .company-dashboard-stats article > span {
+    background:linear-gradient(145deg,#382a22,#251a1c) !important;
+    color:#f2c66f !important;
+    border:1px solid #8c653d !important;
+  }
+  .company-main .company-dashboard-quick>button>span {
+    background:linear-gradient(145deg,#382a22,#251a1c) !important;
+    color:#f2c66f !important;
+    border:1px solid #8c653d !important;
+  }
+  .company-main .company-table-wrap th {
+    background:#30271f !important;
+    color:#f1ce86 !important;
+  }
+  .company-main .company-table-wrap td {
+    background:transparent !important;
+    color:#e6e0d8 !important;
+    border-color:#403a35 !important;
+  }
+  .company-main input,
+  .company-main select,
+  .company-main textarea {
+    background:#11151c !important;
+    border-color:#51483f !important;
+    color:#fff8ee !important;
+  }
+  .company-main .company-primary {
+    background:linear-gradient(110deg,#a51e29,#e12d39) !important;
+    border:1px solid #ff5158 !important;
+    color:#fff !important;
+    box-shadow:0 5px 18px #e3223438 !important;
+  }
+  .company-main .company-secondary,
+  .company-main .company-icon-button {
+    background:#25242a !important;
+    border-color:#65513d !important;
+    color:#f2dfbb !important;
+  }
+}
