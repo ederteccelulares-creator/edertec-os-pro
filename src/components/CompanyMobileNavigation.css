@@ -54,3 +54,93 @@
     font-size: 10px;
   }
 }
+
+
+/* Navegação desktop organizada — mantém a estrutura mobile independente */
+@media (min-width: 761px) {
+  .company-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  .company-sidebar .company-mobile-organized-nav {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 18px;
+    padding: 4px 3px 16px 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #465064 transparent;
+  }
+
+  .company-sidebar .company-nav-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .company-sidebar .company-nav-section-label {
+    display: block;
+    padding: 0 12px 7px;
+    color: #9299a8;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+  }
+
+  .company-sidebar .company-mobile-organized-nav > .company-nav-section + .company-nav-section {
+    border-top: 1px solid rgba(255,255,255,.09);
+    padding-top: 12px;
+  }
+
+  .company-sidebar .company-mobile-organized-nav button {
+    min-height: 42px;
+    border-radius: 10px;
+    padding: 0 12px;
+    gap: 11px;
+    font-size: 12px;
+    transition: background .18s ease, border-color .18s ease, color .18s ease;
+  }
+
+  .company-sidebar .company-mobile-organized-nav button.active {
+    background: linear-gradient(100deg, rgba(225,35,120,.23), rgba(225,35,120,.07));
+    color: #fff;
+    box-shadow: inset 3px 0 #ed249b;
+  }
+
+  .company-sidebar .company-mobile-organized-nav button.active svg {
+    color: #ff55b8;
+  }
+
+  .company-bottom-nav,
+  .company-mobilebar {
+    display: none !important;
+  }
+}
+
+@media (min-width: 761px) and (max-height: 820px) {
+  .company-sidebar {
+    padding-top: 16px;
+    padding-bottom: 14px;
+  }
+
+  .company-logo {
+    padding-bottom: 16px;
+  }
+
+  .company-sidebar .company-mobile-organized-nav {
+    gap: 10px;
+    margin-top: 13px;
+  }
+
+  .company-sidebar .company-mobile-organized-nav button {
+    min-height: 38px;
+  }
+}
