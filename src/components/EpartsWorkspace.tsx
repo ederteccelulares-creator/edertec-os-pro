@@ -2,12 +2,13 @@ import { useCallback, useEffect, useState } from 'react'
 import { LayoutDashboard, Package, Tags, Truck, ShoppingCart, Wallet, LogOut, RefreshCw, ExternalLink } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import EpartsCatalogAdminPanel from './EpartsCatalogAdminPanel'
+import EpartsPOS from './EpartsPOS'
 
 type Props = { companyId:string; companyName:string; email:string; role:string; onSignOut:()=>void }
 const money=(n:number)=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 
 export default function EpartsWorkspace({companyId,companyName,email,role,onSignOut}:Props) {
-  const [tab,setTab]=useState<'dashboard'|'products'|'brands'|'suppliers'|'sales'|'payouts'>('dashboard')
+  const [tab,setTab]=useState<'dashboard'|'products'|'brands'|'suppliers'|'sales'|'payouts'|'pos'>('dashboard')
   const [stats,setStats]=useState({products:0,suppliers:0,orders:0,revenue:0,commission:0,stock:0})
   const [loading,setLoading]=useState(true)
   const [error,setError]=useState('')
@@ -27,7 +28,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
     finally {setLoading(false)}
   },[companyId])
   useEffect(()=>{void load()},[load])
-  const nav=(value:'dashboard'|'products'|'brands'|'suppliers'|'sales'|'payouts')=>setTab(value)
+  const nav=(value:'dashboard'|'products'|'brands'|'suppliers'|'sales'|'payouts'|'pos')=>setTab(value)
   return <div className="company-app">
     <aside className="company-sidebar">
       <div className="company-logo"><span><ShoppingCart/></span><div><b>EPARTS</b><small>COMÉRCIO E MARKETPLACE</small></div></div>
@@ -38,6 +39,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         </div>
         <div className="company-nav-section"><span className="company-nav-section-label">OPERAÇÃO</span>
           <button className={tab==='products'?'active':''} onClick={()=>nav('products')}><Package size={18}/> Produtos e estoque</button>
+          <button className={tab==='pos'?'active':''} onClick={()=>nav('pos')}><ShoppingCart size={18}/> PDV · Ponto de venda</button>
           <button className={tab==='brands'?'active':''} onClick={()=>nav('brands')}><Tags size={18}/> Marcas</button>
           <button className={tab==='suppliers'?'active':''} onClick={()=>nav('suppliers')}><Truck size={18}/> Fornecedores</button>
           <button className={tab==='sales'?'active':''} onClick={()=>nav('sales')}><ShoppingCart size={18}/> Vendas e pedidos</button>
@@ -48,9 +50,9 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
     </aside>
     <main className="company-main">
       <div className="company-mobilebar"><div><b>EPARTS</b><small>{companyName}</small></div></div>
-      <header className="company-top"><div><small>PLATAFORMA DE COMÉRCIO</small><h1>{tab==='dashboard'?'Dashboard Eparts':tab==='products'?'Produtos e estoque':tab==='brands'?'Marcas':tab==='suppliers'?'Fornecedores':tab==='sales'?'Vendas e pedidos':'Comissões e repasses'}</h1></div><div style={{display:'flex',gap:10,alignItems:'center'}}><a href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer" className="company-secondary" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7}}><ExternalLink size={15}/> Abrir catálogo online</a><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
+      <header className="company-top"><div><small>PLATAFORMA DE COMÉRCIO</small><h1>{tab==='dashboard'?'Dashboard Eparts':tab==='products'?'Produtos e estoque':tab==='brands'?'Marcas':tab==='suppliers'?'Fornecedores':tab==='sales'?'Vendas e pedidos':tab==='pos'?'PDV · Ponto de venda':'Comissões e repasses'}</h1></div><div style={{display:'flex',gap:10,alignItems:'center'}}><a href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer" className="company-secondary" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7}}><ExternalLink size={15}/> Abrir catálogo online</a><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
       {error&&<div className="company-error-banner">{error}</div>}
-      {tab==='dashboard'?<section className="company-panel">
+      {tab==='pos'?<EpartsPOS companyId={companyId}/>:tab==='dashboard'?<section className="company-panel">
         <div className="company-panel-head"><div><b>Visão geral da operação</b><small>Indicadores da Eparts, sem módulos de assistência técnica</small></div><button className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar</button></div>
         {loading?<p className="company-empty">Carregando indicadores...</p>:<div className="company-stats-grid">
           <article className="company-stat-card"><span>Produtos cadastrados</span><strong>{stats.products}</strong></article>
