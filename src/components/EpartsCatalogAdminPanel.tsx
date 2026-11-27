@@ -124,6 +124,42 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
   }
   const startNew=()=>{setShowForm(v=>!v);setError('');setNotice('')}
   return <section className="company-panel eparts-admin-panel">
+    <style>{`
+      .eparts-admin-panel .eparts-tabs {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr));
+        gap: 10px;
+        width: 100%;
+        min-width: 0;
+      }
+      .eparts-admin-panel .eparts-tabs > button {
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+        justify-content: center;
+        white-space: normal;
+        text-align: center;
+        line-height: 1.25;
+        padding: 12px 10px;
+        overflow-wrap: anywhere;
+      }
+      @media (max-width: 600px) {
+        .eparts-admin-panel {
+          min-width: 0;
+          max-width: 100%;
+          box-sizing: border-box;
+        }
+        .eparts-admin-panel .eparts-list-head {
+          align-items: stretch;
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+        .eparts-admin-panel .eparts-list-head > button {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    `}</style>
     <div className="company-panel-head"><div><b>Central Eparts</b><small>Cadastros e catálogo do marketplace · comissão da plataforma: 12%</small></div><button className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar</button></div>
     <div className="company-inline-actions eparts-tabs">
       <button className={tab==='products'?'company-primary':'company-secondary'} onClick={()=>{setTab('products');setShowForm(false)}}><Package size={15}/> Produtos ({products.length})</button>
