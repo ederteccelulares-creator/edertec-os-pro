@@ -42,6 +42,7 @@ Deno.serve(async (req) => {
     let totalFiles = 0;
     let totalBytes = 0;
     let totalPhotos = 0;
+    let filesWithoutSize = 0;
     let offset = 0;
     const pageSize = 1000;
     let truncated = false;
@@ -56,7 +57,9 @@ Deno.serve(async (req) => {
       for (const object of rows) {
         const metadata = object.metadata && typeof object.metadata === "object"
           ? object.metadata as Record<string, unknown> : {};
-        const size = Math.max(0, Number(metadata.size || metadata.contentLength || 0) || 0);
+        const rawSize = metadata.size ?? metadata.contentLength;
+        const size = Math.max(0, Number(rawSize || 0) || 0);
+        if (rawSize === undefined || rawSize === null || !Number.isFinite(Number(rawSize))) filesWithoutSize += 1;
         const mime = String(metadata.mimetype || metadata.contentType || "").toLowerCase();
         const isPhoto = mime.startsWith("image/");
         totalFiles += 1;
@@ -64,7 +67,8 @@ Deno.serve(async (req) => {
         if (isPhoto) totalPhotos += 1;
 
         const pathParts = String(object.name || "").split("/").filter(Boolean);
-        const companyId = pathParts[0] === "companies" ? (pathParts[1] || "sem-identificacao") : (pathParts[0] || "sem-identificacao");
+        const firstFolder = pathParts[0] === "companies" ? pathParts[1] : pathParts[0];
+        const companyId = firstFolder && companyIds.has(firstFolder) ? firstFolder : "sem-identificacao";
         const current = totals.get(companyId) || { files: 0, bytes: 0, photos: 0 };
         current.files += 1;
         current.bytes += size;
@@ -77,9 +81,10 @@ Deno.serve(async (req) => {
     }
 
     const names = new Map((companies || []).map((company: { id: string; name: string }) => [company.id, company.name]));
+    const companyIds = new Set(names.keys());
     const byCompany = Array.from(totals.entries()).map(([companyId, usage]) => ({
       company_id: companyId,
-      company_name: names.get(companyId) || (companyId === "sem-identificacao" ? "Arquivos sem pasta de empresa" : "Empresa não identificada"),
+      company_name: names.get(companyId) || "Arquivos sem empresa identificada",
       ...usage,
     })).sort((a, b) => b.bytes - a.bytes);
 
@@ -87,6 +92,7 @@ Deno.serve(async (req) => {
       total_files: totalFiles,
       total_bytes: totalBytes,
       total_photos: totalPhotos,
+      files_without_size: filesWithoutSize,
       buckets: (buckets || []).map((bucket: { id: string; name: string; public: boolean; file_size_limit: number | null }) => ({
         id: bucket.id, name: bucket.name, is_public: bucket.public, file_size_limit: bucket.file_size_limit,
       })),
