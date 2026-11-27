@@ -10,6 +10,9 @@ const money=(n:number)=>Number(n||0).toLocaleString('pt-BR',{style:'currency',cu
 
 export default function EpartsWorkspace({companyId,companyName,email,role,onSignOut}:Props) {
   const [tab,setTab]=useState<Tab>('dashboard')
+  const [quickCreate,setQuickCreate]=useState<'customers'|'suppliers'|null>(null)
+  const [createVersion,setCreateVersion]=useState(0)
+  const quickAdd=(target:'customers'|'suppliers')=>{setQuickCreate(target);setTab(target);setCreateVersion(v=>v+1)}
   const [menuOpen,setMenuOpen]=useState(false)
   const [stats,setStats]=useState({products:0,suppliers:0,orders:0,revenue:0,commission:0,stock:0})
   const [loading,setLoading]=useState(true)
@@ -36,7 +39,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
     if(window.innerWidth<=760)window.scrollTo({top:0,left:0,behavior:'auto'})
     setMenuOpen(false)
   },[tab])
-  const nav=(value:Tab)=>setTab(value)
+  const nav=(value:Tab)=>{setQuickCreate(null);setTab(value)}
   const title=tab==='dashboard'?'Visão geral':tab==='products'?'Produtos e estoque':tab==='brands'?'Marcas':tab==='suppliers'?'Fornecedores':tab==='customers'?'Clientes':tab==='sales'?'Vendas e pedidos':tab==='pos'?'Ponto de venda':'Comissões e repasses'
   const navItems=[
     {section:'VISÃO GERAL',items:[{id:'dashboard' as Tab,label:'Dashboard',icon:LayoutDashboard}]},
@@ -234,7 +237,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
       <button className={menuOpen?'active':''} onClick={()=>{setMenuOpen(v=>!v);window.scrollTo({top:0,behavior:'smooth'})}}><Menu size={19}/><span>Menu</span></button>
     </nav>
     <main className="company-main">
-      <header className="company-top"><div><small>EPARTS / PAINEL DE GESTÃO</small><h1>{title}</h1></div><div className="eparts-header-actions"><a href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer" className="company-secondary" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7}}><ExternalLink size={15}/> Catálogo online</a><button className="company-icon-button" onClick={()=>void load()} title="Atualizar dados" aria-label="Atualizar dados"><RefreshCw size={16}/></button></div></header>
+      <header className="company-top"><div><small>EPARTS / PAINEL DE GESTÃO</small><h1>{title}</h1></div><div className="eparts-header-actions"><button className="company-primary" onClick={()=>quickAdd('customers')}><Users size={15}/> Cadastrar cliente</button><button className="company-primary" onClick={()=>quickAdd('suppliers')}><Truck size={15}/> Cadastrar fornecedor</button><a href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer" className="company-secondary" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7}}><ExternalLink size={15}/> Catálogo online</a><button className="company-icon-button" onClick={()=>void load()} title="Atualizar dados" aria-label="Atualizar dados"><RefreshCw size={16}/></button></div></header>
       {error&&<div className="company-error-banner">{error}</div>}
       {tab==='pos'?<EpartsPOS companyId={companyId}/>:tab==='dashboard'?<section className="company-panel">
         <div className="company-panel-head"><div><b>Resumo da operação</b><small>Indicadores comerciais e de estoque da Eparts</small></div><button className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar</button></div>
@@ -247,7 +250,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
           <article className="company-stat-card"><span>Comissão prevista</span><strong>{money(stats.commission)}</strong></article>
         </div>}
         <div className="company-inline-actions"><button className="company-primary" onClick={()=>nav('products')}><Package size={16}/> Abrir produtos e estoque</button></div>
-      </section>:<EpartsCatalogAdminPanel key={tab} companyId={companyId} initialTab={tab}/>}
+      </section>:<EpartsCatalogAdminPanel key={tab+'-'+createVersion} companyId={companyId} initialTab={tab} initialCreate={quickCreate===tab}/>}
       <footer className="company-footer">EPARTS · Painel comercial exclusivo · Acesso protegido por empresa</footer>
     </main>
   </div>
