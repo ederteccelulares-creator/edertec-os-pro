@@ -72,7 +72,7 @@ declare t text;
 begin
  foreach t in array array['eparts_brands','eparts_suppliers','eparts_customers','eparts_products','eparts_sales','eparts_sale_items','eparts_supplier_payouts'] loop
   execute format('drop policy if exists %I on public.%I',t||'_company_members',t);
-  execute format('create policy %I on public.%I for all to authenticated using (exists(select 1 from public.company_members m where m.company_id=%I.company_id and m.user_id=auth.uid() and m.is_active=true)) with check (exists(select 1 from public.company_members m where m.company_id=%I.company_id and m.user_id=auth.uid() and m.is_active=true))',t||'_company_members',t,t,t);
+  execute format('create policy %I on public.%I for all to authenticated using (exists(select 1 from public.company_members m where m.company_id=%I.company_id and m.user_id=auth.uid() and m.is_active=true and m.role in (''owner'',''admin'',''manager''))) with check (exists(select 1 from public.company_members m where m.company_id=%I.company_id and m.user_id=auth.uid() and m.is_active=true and m.role in (''owner'',''admin'',''manager'')))',t||'_company_members',t,t,t);
  end loop;
 end $$;
 drop policy if exists eparts_supplier_self_read on public.eparts_suppliers;
