@@ -6,6 +6,7 @@ import CustomerPortal from './components/CustomerPortal';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import PWAUpdatePrompt from './components/PWAUpdatePrompt';
 import './styles.css';
+import './components/CompanyAuthLogin.css';
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {

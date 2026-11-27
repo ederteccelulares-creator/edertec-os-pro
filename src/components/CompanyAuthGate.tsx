@@ -263,7 +263,7 @@ export default function CompanyAuthGate() {
       {error&&<p className="company-error">{error}</p>}{notice&&<p className="company-notice">{notice}</p>}
       <button className="company-primary" disabled={busy}>{busy?'Aguarde...':mode==='login'?'Entrar':'Criar conta e assistência'}</button>
     </form>}
-    {mode==='login' && !quickMode && <button className="company-link" onClick={()=>{setQuickMode(true);setError('')}}>Entrar com código da empresa e PIN</button>}
+    {mode==='login' && !quickMode && <button type="button" className="company-link company-pin-login" onClick={()=>{setQuickMode(true);setError('');setNotice('')}}><span aria-hidden="true">⌘</span><span><b>Entrar com código da empresa e PIN</b><small>Acesso rápido para funcionários</small></span><span aria-hidden="true">→</span></button>}
     <button className="company-link" onClick={()=>{setMode(mode==='login'?'signup':'login');setQuickMode(false);setError('');setNotice('')}}>{mode==='login'?'Ainda não tem conta? Criar acesso':'Já tem conta? Entrar'}</button>
   </section></main>
 
