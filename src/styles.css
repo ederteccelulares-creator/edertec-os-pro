@@ -2623,3 +2623,56 @@ td b { font-weight:650; }
     box-shadow:0 0 14px #d9273520;
   }
 }
+
+
+/* Acabamento da identidade grafite, dourado e vermelho em toda a área desktop */
+@media (min-width: 761px) {
+  .company-app aside nav > button.active,
+  .company-app aside nav .company-nav-group > button.active,
+  .company-app aside nav .company-nav-submenu > button.active {
+    background:linear-gradient(105deg,#42181d,#24171c) !important;
+    border:1px solid #b92b32 !important;
+    color:#fff !important;
+    box-shadow:inset 3px 0 0 #ff343b,0 0 14px #e31d2b30 !important;
+  }
+  .company-app aside nav > button.active svg,
+  .company-app aside nav .company-nav-group > button.active svg {
+    color:#ff555b !important;
+  }
+  .company-app aside nav > button:hover,
+  .company-app aside nav .company-nav-group > button:hover,
+  .company-app aside nav .company-nav-submenu > button:hover {
+    background:#2b2025 !important;
+    color:#fff !important;
+  }
+  .company-main .company-primary {
+    background:linear-gradient(135deg,#a91e28,#df2934) !important;
+    border:1px solid #f04a50 !important;
+    color:#fff !important;
+  }
+  .company-main .company-panel-head,
+  .company-main .company-panel-head b {
+    color:#f1f4f8 !important;
+  }
+  .company-main .company-panel-head small {
+    color:#bdc7d4 !important;
+  }
+  .company-main .company-panel,
+  .company-main .company-form,
+  .company-main .company-table-wrap {
+    border-color:#3c4654 !important;
+  }
+  .company-main .company-table-wrap th {
+    background:#242a33 !important;
+    color:#f0d28a !important;
+  }
+  .company-main .company-table-wrap tr:hover td {
+    background:#24252b !important;
+  }
+  .company-main .company-error-banner {
+    box-shadow:inset 3px 0 0 #ed3842;
+  }
+  .company-main .company-notice-banner {
+    box-shadow:inset 3px 0 0 #38b978;
+  }
+}
