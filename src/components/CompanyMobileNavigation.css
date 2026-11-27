@@ -1,0 +1,56 @@
+/* Navegação mobile organizada — não altera o menu desktop */
+@media (max-width: 760px) {
+  .company-sidebar .company-mobile-organized-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 8px 0 18px;
+    scrollbar-width: thin;
+  }
+  .company-sidebar .company-nav-section {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .company-sidebar .company-nav-section-label {
+    display: block;
+    padding: 0 13px 5px;
+    color: #8c929e;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.35px;
+  }
+  .company-sidebar .company-mobile-organized-nav > .company-nav-section + .company-nav-section {
+    border-top: 1px solid rgba(255,255,255,.09);
+    padding-top: 13px;
+  }
+  .company-sidebar .company-mobile-organized-nav button {
+    min-height: 46px;
+    border-radius: 10px;
+    padding: 0 13px;
+    gap: 13px;
+    font-size: 13px;
+  }
+  .company-sidebar .company-mobile-organized-nav button.active {
+    background: linear-gradient(100deg, rgba(210,35,43,.24), rgba(210,35,43,.08));
+    color: #fff;
+    box-shadow: inset 3px 0 #e52b35, 0 0 18px rgba(220,35,45,.08);
+  }
+  .company-sidebar .company-mobile-organized-nav button.active svg {
+    color: #ff555d;
+  }
+  .company-bottom-nav {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .company-bottom-nav button {
+    min-width: 0;
+    gap: 4px;
+    font-size: 10px;
+  }
+  .company-bottom-nav button span {
+    white-space: nowrap;
+    font-size: 10px;
+  }
+}
