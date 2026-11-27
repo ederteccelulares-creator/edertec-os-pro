@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { LayoutDashboard, Package, Tags, Truck, ShoppingCart, Wallet, LogOut, RefreshCw } from 'lucide-react'
+import { LayoutDashboard, Package, Tags, Truck, ShoppingCart, Wallet, LogOut, RefreshCw, ExternalLink } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import EpartsCatalogAdminPanel from './EpartsCatalogAdminPanel'
 
@@ -47,7 +47,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
     </aside>
     <main className="company-main">
       <div className="company-mobilebar"><div><b>EPARTS</b><small>{companyName}</small></div></div>
-      <header className="company-top"><div><small>PLATAFORMA DE COMÉRCIO</small><h1>{tab==='dashboard'?'Dashboard Eparts':tab==='products'?'Produtos e estoque':tab==='brands'?'Marcas':tab==='suppliers'?'Fornecedores':tab==='sales'?'Vendas e pedidos':'Comissões e repasses'}</h1></div><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></header>
+      <header className="company-top"><div><small>PLATAFORMA DE COMÉRCIO</small><h1>{tab==='dashboard'?'Dashboard Eparts':tab==='products'?'Produtos e estoque':tab==='brands'?'Marcas':tab==='suppliers'?'Fornecedores':tab==='sales'?'Vendas e pedidos':'Comissões e repasses'}</h1></div><div style={{display:'flex',gap:10,alignItems:'center'}}><a href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer" className="company-secondary" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7}}><ExternalLink size={15}/> Abrir catálogo online</a><button className="company-icon-button" onClick={()=>void load()} title="Atualizar"><RefreshCw size={16}/></button></div></header>
       {error&&<div className="company-error-banner">{error}</div>}
       {tab==='dashboard'?<section className="company-panel">
         <div className="company-panel-head"><div><b>Visão geral da operação</b><small>Indicadores da Eparts, sem módulos de assistência técnica</small></div><button className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar</button></div>
