@@ -96,3 +96,6 @@ revoke all on function public.eparts_supplier_balances(uuid) from public,anon;
 grant execute on function public.eparts_supplier_balances(uuid) to authenticated;
 revoke all on function public.eparts_register_supplier_payout(uuid,uuid,numeric,text,text,text) from public,anon;
 grant execute on function public.eparts_register_supplier_payout(uuid,uuid,numeric,text,text,text) to authenticated;
+
+-- Impede inserções diretas que contornariam a validação transacional do saldo.
+revoke insert on table public.eparts_supplier_payouts from public,anon,authenticated;
