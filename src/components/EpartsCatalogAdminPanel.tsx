@@ -143,7 +143,12 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
     {showForm&&tab==='brands'&&<form className="company-form" onSubmit={saveBrand}><label>Nome da marca<input required value={brandName} onChange={e=>setBrandName(e.target.value)}/></label><div className="company-form-actions"><button type="button" className="company-secondary" onClick={()=>setShowForm(false)}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Salvando...':'Salvar marca'}</button></div></form>}
     {tab==='payouts'&&<>
       <div className="company-panel-head"><div><b>Saldo por fornecedor</b><small>Somente pedidos não cancelados e totalmente pagos liberam valores para repasse</small></div></div>
-      <div className="company-table-wrap"><table><thead><tr><th>FORNECEDOR</th><th>VALOR LIBERADO</th><th>JÁ REPASSADO</th><th>SALDO PENDENTE</th></tr></thead><tbody>{supplierBalances.map(balance=><tr key={balance.supplier_id}><td><b>{balance.supplier_name}</b></td><td>{money(Number(balance.eligible_amount))}</td><td>{money(Number(balance.paid_amount))}</td><td><b>{money(Number(balance.pending_amount))}</b></td></tr>)}{supplierBalances.length===0&&<tr><td colSpan={4}>Nenhum fornecedor cadastrado.</td></tr>}</tbody></table></div>
+      <div className="company-stats-grid">
+        <article className="company-stat-card"><span>Total liberado</span><strong>{money(supplierBalances.reduce((sum,b)=>sum+Number(b.eligible_amount),0))}</strong></article>
+        <article className="company-stat-card"><span>Total repassado</span><strong>{money(supplierBalances.reduce((sum,b)=>sum+Number(b.paid_amount),0))}</strong></article>
+        <article className="company-stat-card"><span>Saldo a repassar</span><strong>{money(supplierBalances.reduce((sum,b)=>sum+Math.max(Number(b.pending_amount),0),0))}</strong></article>
+      </div>
+      <div className="company-table-wrap"><table><thead><tr><th>FORNECEDOR</th><th>VALOR LIBERADO</th><th>JÁ REPASSADO</th><th>SITUAÇÃO DO SALDO</th></tr></thead><tbody>{supplierBalances.map(balance=>{const pending=Number(balance.pending_amount);return <tr key={balance.supplier_id}><td><b>{balance.supplier_name}</b></td><td>{money(Number(balance.eligible_amount))}</td><td>{money(Number(balance.paid_amount))}</td><td><b>{pending<0?'Crédito / adiantamento: '+money(Math.abs(pending)):money(pending)}</b></td></tr>})}{supplierBalances.length===0&&<tr><td colSpan={4}>Nenhum fornecedor cadastrado.</td></tr>}</tbody></table></div>
     </>}
     {tab==='payouts'&&<form className="company-form" onSubmit={savePayout}>
       <div className="company-form-grid">
