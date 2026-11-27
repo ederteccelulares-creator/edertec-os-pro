@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { LayoutDashboard, Package, Tags, Truck, ShoppingCart, Wallet, LogOut, RefreshCw, ExternalLink, Menu, X, ChevronRight, Store } from 'lucide-react'
+import { LayoutDashboard, Package, Tags, Truck, ShoppingCart, Wallet, LogOut, RefreshCw, ExternalLink, Menu, X, ChevronRight, Store, BarChart3 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import EpartsCatalogAdminPanel from './EpartsCatalogAdminPanel'
 import EpartsPOS from './EpartsPOS'
@@ -168,6 +168,15 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         .eparts-workspace .eparts-admin-panel .company-table-wrap table{min-width:680px!important}
       }
       @media(max-width:380px){.eparts-workspace .company-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.eparts-workspace .company-stat-card{padding:10px!important}.eparts-workspace .company-stat-card strong{font-size:19px!important}}
+      .eparts-workspace .eparts-mobile-bottom-nav{display:none}
+      @media(max-width:760px){
+        .eparts-workspace .eparts-mobile-bottom-nav{position:fixed!important;z-index:100!important;left:10px!important;right:10px!important;bottom:calc(8px + env(safe-area-inset-bottom))!important;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:3px!important;padding:7px 5px!important;border:1px solid #755b31!important;border-radius:16px!important;background:rgba(15,13,11,.96)!important;box-shadow:0 8px 30px #000c,0 0 16px #d6ad6022!important;backdrop-filter:blur(14px)!important}
+        .eparts-workspace .eparts-mobile-bottom-nav button{display:flex!important;min-width:0!important;min-height:48px!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:4px!important;padding:4px 2px!important;border:1px solid transparent!important;border-radius:10px!important;background:transparent!important;color:#b9ad98!important;font-size:9px!important;font-weight:650!important}
+        .eparts-workspace .eparts-mobile-bottom-nav button svg{color:#d8b36a!important}
+        .eparts-workspace .eparts-mobile-bottom-nav button.active{border-color:#9c762f!important;background:linear-gradient(145deg,#493516,#21190d)!important;color:#ffe4a3!important}
+        .eparts-workspace .eparts-mobile-bottom-nav button.active svg{color:#ffda83!important}
+        .eparts-workspace>.company-main{padding-bottom:calc(100px + env(safe-area-inset-bottom))!important}
+      }
       @media(min-width:761px){
         .eparts-workspace>.company-sidebar{display:flex!important;flex-direction:column!important;flex:none!important}
         .eparts-workspace>.company-main{flex:1!important;min-width:0!important}
@@ -190,6 +199,13 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         <button onClick={onSignOut}><LogOut size={15}/> Sair da conta</button>
       </div>
     </aside>
+    <nav className="eparts-mobile-bottom-nav" aria-label="Navegação rápida">
+      <button className={tab==='dashboard'?'active':''} onClick={()=>nav('dashboard')}><LayoutDashboard size={19}/><span>Início</span></button>
+      <button className={tab==='products'?'active':''} onClick={()=>nav('products')}><Package size={19}/><span>Produtos</span></button>
+      <button className={tab==='pos'?'active':''} onClick={()=>nav('pos')}><ShoppingCart size={21}/><span>PDV</span></button>
+      <button className={tab==='sales'?'active':''} onClick={()=>nav('sales')}><BarChart3 size={19}/><span>Vendas</span></button>
+      <button className={menuOpen?'active':''} onClick={()=>{setMenuOpen(v=>!v);window.scrollTo({top:0,behavior:'smooth'})}}><Menu size={19}/><span>Menu</span></button>
+    </nav>
     <main className="company-main">
       <header className="company-top"><div><small>EPARTS / PAINEL DE GESTÃO</small><h1>{title}</h1></div><div className="eparts-header-actions"><a href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer" className="company-secondary" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7}}><ExternalLink size={15}/> Catálogo online</a><button className="company-icon-button" onClick={()=>void load()} title="Atualizar dados" aria-label="Atualizar dados"><RefreshCw size={16}/></button></div></header>
       {error&&<div className="company-error-banner">{error}</div>}
