@@ -3383,3 +3383,201 @@ td b { font-weight:650; }
   .company-main .company-finance-dashboard-grid { grid-template-columns:1fr; gap:10px; }
   .company-main .company-dashboard-recent { padding:14px !important; }
 }
+
+
+/* Tema global Edertec OS Pro: eliminar os acentos azuis restantes em todos os módulos */
+.company-app,
+.company-app .company-main {
+  --company-accent:#d6ad60;
+  --company-accent-strong:#f0cf86;
+  --company-primary:#a91f2b;
+  --company-primary-hover:#d52b38;
+  --company-blue:#d6ad60;
+  --company-blue-soft:#382b20;
+  --company-border:#594735;
+}
+.company-app aside.company-sidebar,
+.company-app .company-sidebar {
+  background:linear-gradient(180deg,#111216 0%,#171419 55%,#100f13 100%) !important;
+  border-right:1px solid #59432f !important;
+}
+.company-app .company-sidebar nav button,
+.company-app aside nav button {
+  color:#c6c0b9 !important;
+  border:1px solid transparent !important;
+}
+.company-app .company-sidebar nav button:hover,
+.company-app aside nav button:hover {
+  background:linear-gradient(100deg,#2a1b1d,#21191a) !important;
+  color:#fff1df !important;
+  border-color:#6c4935 !important;
+}
+.company-app .company-sidebar nav button.active,
+.company-app aside nav button.active,
+.company-app .company-sidebar nav .company-nav-group > button.active,
+.company-app aside nav .company-nav-group > button.active,
+.company-app .company-sidebar nav .company-nav-submenu button.active,
+.company-app aside nav .company-nav-submenu button.active {
+  background:linear-gradient(100deg,#641c24,#291518) !important;
+  color:#ffe0a0 !important;
+  border-color:#a64b3c !important;
+  box-shadow:inset 3px 0 #e33a43,0 0 17px #d62c3826 !important;
+}
+.company-app .company-current,
+.company-app .company-workspace,
+.company-app .company-branch-switcher {
+  background:linear-gradient(135deg,#211c1c,#171519) !important;
+  border-color:#765536 !important;
+  color:#f0d28f !important;
+}
+.company-app .company-primary,
+.company-app button.company-primary,
+.company-app .company-pos-finish {
+  background:linear-gradient(115deg,#8f1823 0%,#c52834 58%,#e23b42 100%) !important;
+  color:#fff8ef !important;
+  border:1px solid #ed6460 !important;
+  box-shadow:0 6px 18px #d3233440,inset 0 1px #ffffff24 !important;
+}
+.company-app .company-primary:hover,
+.company-app button.company-primary:hover,
+.company-app .company-pos-finish:hover {
+  background:linear-gradient(115deg,#aa202b,#e13b43) !important;
+  border-color:#ff8a76 !important;
+}
+.company-app .company-secondary,
+.company-app .company-icon-button {
+  background:linear-gradient(135deg,#292329,#19171c) !important;
+  color:#f0d28f !important;
+  border:1px solid #765536 !important;
+}
+.company-app .company-secondary:hover,
+.company-app .company-icon-button:hover {
+  background:#382a25 !important;
+  border-color:#b8894c !important;
+  color:#fff0c8 !important;
+}
+.company-app .company-main input,
+.company-app .company-main select,
+.company-app .company-main textarea,
+.company-app .company-form input,
+.company-app .company-form select,
+.company-app .company-form textarea,
+.company-app .company-top select,
+.company-app .company-table-wrap select {
+  background:#151519 !important;
+  border-color:#594735 !important;
+  color:#f2ece4 !important;
+  accent-color:#d6ad60;
+}
+.company-app .company-main input:focus,
+.company-app .company-main select:focus,
+.company-app .company-main textarea:focus,
+.company-app .company-form input:focus,
+.company-app .company-form select:focus,
+.company-app .company-form textarea:focus {
+  border-color:#d6ad60 !important;
+  box-shadow:0 0 0 3px #d6ad6026 !important;
+  outline:none !important;
+}
+.company-app .company-main input::placeholder,
+.company-app .company-main textarea::placeholder {
+  color:#8f8881 !important;
+}
+.company-app .company-pos-tools > label:first-child,
+.company-app .company-pos-product,
+.company-app .company-pos-qty button,
+.company-app .company-pos-grand,
+.company-app .company-pos-total,
+.company-app .company-pos-line,
+.company-app .company-inventory-tools,
+.company-app .company-purchase-line,
+.company-app .company-table-wrap,
+.company-app .company-table-wrap table,
+.company-app .company-table-wrap th,
+.company-app .company-table-wrap td {
+  border-color:#51402f !important;
+}
+.company-app .company-pos-tools > label:first-child,
+.company-app .company-pos-product,
+.company-app .company-pos-qty button,
+.company-app .company-inventory-tools,
+.company-app .company-purchase-line {
+  background:linear-gradient(135deg,#211f22,#17171b) !important;
+  color:#e9e0d5 !important;
+}
+.company-app .company-pos-product:hover,
+.company-app .company-inventory-tools button:hover {
+  border-color:#bd9147 !important;
+  box-shadow:0 8px 20px #0007,0 0 12px #d6ad6018 !important;
+}
+.company-app .company-pos-qty button,
+.company-app .company-pos-remove {
+  color:#f0cf86 !important;
+  border:1px solid #765536 !important;
+}
+.company-app .company-pos-grand {
+  background:linear-gradient(135deg,#30251e,#1b1717) !important;
+  color:#ffd47a !important;
+}
+.company-app .company-table-wrap th {
+  background:linear-gradient(90deg,#38271f,#292329) !important;
+  color:#f1d18d !important;
+  border-bottom:1px solid #8c633b !important;
+}
+.company-app .company-table-wrap td {
+  background:#17171b !important;
+  color:#e4ddd5 !important;
+  border-bottom:1px solid #352c28 !important;
+}
+.company-app .company-table-wrap tr:hover td {
+  background:#242024 !important;
+}
+.company-app .company-table-wrap a,
+.company-app .company-main a {
+  color:#e7c477 !important;
+}
+.company-app .company-status,
+.company-app .company-badge,
+.company-app .company-pill {
+  border-color:#765536 !important;
+}
+.company-app .company-main [class*="blue"],
+.company-app .company-main [class*="primary-blue"],
+.company-app .company-main [class*="info-blue"] {
+  --tw-bg-opacity:1;
+}
+.company-app .company-main .company-empty,
+.company-app .company-main .company-muted,
+.company-app .company-main .company-help-text {
+  color:#aaa097 !important;
+}
+.company-app .company-main .company-panel,
+.company-app .company-main .company-form,
+.company-app .company-main .company-modal,
+.company-app .company-main .company-print-settings,
+.company-app .company-main .company-backup-content,
+.company-app .company-main .company-inventory-history,
+.company-app .company-main .company-pos-products,
+.company-app .company-main .company-pos-cart,
+.company-app .company-main .company-panel.company-pos-history {
+  border-color:#594735 !important;
+}
+.company-app .company-main button:focus-visible,
+.company-app .company-sidebar button:focus-visible {
+  outline:2px solid #d6ad60 !important;
+  outline-offset:2px !important;
+}
+@media(max-width:760px) {
+  .company-app .company-sidebar,
+  .company-app aside.company-sidebar {
+    background:linear-gradient(180deg,#111216 0%,#171419 55%,#100f13 100%) !important;
+    border-bottom:1px solid #59432f !important;
+  }
+  .company-app .company-sidebar nav button.active,
+  .company-app aside nav button.active {
+    background:linear-gradient(100deg,#641c24,#291518) !important;
+    color:#ffe0a0 !important;
+    border-color:#a64b3c !important;
+    box-shadow:inset 3px 0 #e33a43 !important;
+  }
+}
