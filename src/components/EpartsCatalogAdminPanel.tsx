@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 
 type Customer = { id:string; name:string; email:string|null; phone:string|null; document:string|null; address:Record<string,unknown> }
 type Brand = { id:string; name:string }
-type Supplier = { id:string; name:string; email:string|null; phone:string|null; is_active?:boolean }
+type Supplier = { id:string; name:string; contact_name:string|null; document:string|null; email:string|null; phone:string|null; notes:string|null; user_id?:string|null; is_active:boolean }
 type Product = { id:string; name:string; sku:string|null; barcode:string|null; sale_price:number; cost_price:number; stock_quantity:number; is_active:boolean; show_in_catalog:boolean; eparts_brands?:{name:string}[]|null; eparts_suppliers?:{name:string}[]|null }
 type Props = { companyId:string; initialTab?:Tab }
 type Sale = { id:string; order_number:number; status:string; payment_status:string; total_amount:number; eparts_commission_amount:number; supplier_amount:number; customer_name:string|null; customer_phone:string|null; customer_email?:string|null; customer_address?:Record<string,unknown>|null; notes?:string|null; source?:string; created_at:string };
@@ -21,6 +21,9 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
   const [customers,setCustomers]=useState<Customer[]>([])
   const [customerForm,setCustomerForm]=useState({name:'',phone:'',email:'',document:'',street:'',number:'',complement:'',neighborhood:'',city:'',state:'',zip:'',notes:''})
   const [customerSearch,setCustomerSearch]=useState('')
+  const [editingCustomerId,setEditingCustomerId]=useState<string|null>(null)
+  const [supplierSearch,setSupplierSearch]=useState('')
+  const [editingSupplierId,setEditingSupplierId]=useState<string|null>(null)
   const [suppliers,setSuppliers]=useState<Supplier[]>([])
   const [brands,setBrands]=useState<Brand[]>([])
   const [sales,setSales]=useState<Sale[]>([])
@@ -38,7 +41,7 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
   const [detailLoading,setDetailLoading]=useState(false)
   const [showForm,setShowForm]=useState(false)
   const [productForm,setProductForm]=useState({name:'',sku:'',barcode:'',description:'',brandId:'',supplierId:'',costPrice:'0',salePrice:'0',stock:'0',showInCatalog:true})
-  const [supplierForm,setSupplierForm]=useState({name:'',email:'',phone:'',userId:''})
+  const [supplierForm,setSupplierForm]=useState({name:'',contactName:'',document:'',email:'',phone:'',notes:'',userId:''})
   const [brandName,setBrandName]=useState('')
 
   const load=useCallback(async()=>{
@@ -47,7 +50,7 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
     try{
       const [p,s,b,o,po,balances,cu]=await Promise.all([ 
         supabase.from('eparts_products').select('id,name,sku,barcode,sale_price,cost_price,stock_quantity,is_active,show_in_catalog,eparts_brands(name),eparts_suppliers(name)').eq('company_id',companyId).order('name'),
-        supabase.from('eparts_suppliers').select('id,name,email,phone,is_active').eq('company_id',companyId).order('name'),
+        supabase.from('eparts_suppliers').select('id,name,contact_name,document,email,phone,notes,user_id,is_active').eq('company_id',companyId).order('name'),
         supabase.from('eparts_brands').select('id,name').eq('company_id',companyId).order('name'),
         supabase.from('eparts_sales').select('id,order_number,status,payment_status,total_amount,eparts_commission_amount,supplier_amount,customer_name,customer_phone,created_at').eq('company_id',companyId).order('created_at',{ascending:false}).limit(100),
         supabase.from('eparts_supplier_payouts').select('id,supplier_id,sale_id,amount,payment_method,paid_at,reference,notes,eparts_suppliers(name)').eq('company_id',companyId).order('paid_at',{ascending:false}).limit(200),
@@ -66,7 +69,7 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
     if(customerForm.name.trim().length<2){setError('Informe o nome do cliente.');return}
     setBusy(true);setError('');setNotice('')
     const address={street:customerForm.street.trim(),number:customerForm.number.trim(),complement:customerForm.complement.trim(),neighborhood:customerForm.neighborhood.trim(),city:customerForm.city.trim(),state:customerForm.state.trim(),zip:customerForm.zip.trim(),notes:customerForm.notes.trim()}
-    try{const {error}=await supabase.from('eparts_customers').insert({company_id:companyId,name:customerForm.name.trim(),phone:customerForm.phone.trim()||null,email:customerForm.email.trim()||null,document:customerForm.document.trim()||null,address});if(error)throw error;setCustomerForm({name:'',phone:'',email:'',document:'',street:'',number:'',complement:'',neighborhood:'',city:'',state:'',zip:'',notes:''});setShowForm(false);setNotice('Cliente cadastrado com sucesso.');await load()}
+    try{const payload={name:customerForm.name.trim(),phone:customerForm.phone.trim()||null,email:customerForm.email.trim()||null,document:customerForm.document.trim()||null,address};const result=editingCustomerId?await supabase.from('eparts_customers').update(payload).eq('company_id',companyId).eq('id',editingCustomerId):await supabase.from('eparts_customers').insert({company_id:companyId,...payload});if(result.error)throw result.error;setCustomerForm({name:'',phone:'',email:'',document:'',street:'',number:'',complement:'',neighborhood:'',city:'',state:'',zip:'',notes:''});setEditingCustomerId(null);setShowForm(false);setNotice(editingCustomerId?'Cliente atualizado com sucesso.':'Cliente cadastrado com sucesso.');await load()}
     catch(e){setError(e instanceof Error?e.message:'Falha ao cadastrar cliente.')}
     finally{setBusy(false)}
   }
@@ -82,9 +85,24 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
     event.preventDefault();if(!supabase)return
     if(supplierForm.name.trim().length<2){setError('Informe o nome do fornecedor.');return}
     setBusy(true);setError('');setNotice('')
-    try{const {error}=await supabase.from('eparts_suppliers').insert({company_id:companyId,name:supplierForm.name.trim(),email:supplierForm.email.trim()||null,phone:supplierForm.phone.trim()||null,user_id:supplierForm.userId.trim()||null});if(error)throw error;setSupplierForm({name:'',email:'',phone:'',userId:''});setShowForm(false);setNotice('Fornecedor cadastrado.');await load()}
+    try{const payload={name:supplierForm.name.trim(),contact_name:supplierForm.contactName.trim()||null,document:supplierForm.document.trim()||null,email:supplierForm.email.trim()||null,phone:supplierForm.phone.trim()||null,notes:supplierForm.notes.trim()||null,user_id:supplierForm.userId.trim()||null};const result=editingSupplierId?await supabase.from('eparts_suppliers').update(payload).eq('company_id',companyId).eq('id',editingSupplierId):await supabase.from('eparts_suppliers').insert({company_id:companyId,...payload});if(result.error)throw result.error;setSupplierForm({name:'',contactName:'',document:'',email:'',phone:'',notes:'',userId:''});setEditingSupplierId(null);setShowForm(false);setNotice(editingSupplierId?'Fornecedor atualizado.':'Fornecedor cadastrado.');await load()}
     catch(e){setError(e instanceof Error?e.message:'Falha ao cadastrar fornecedor.')}
     finally{setBusy(false)}
+  }
+
+  function editCustomer(customer:Customer){
+    const a=customer.address||{};
+    setCustomerForm({name:customer.name,phone:customer.phone||'',email:customer.email||'',document:customer.document||'',street:String(a.street||''),number:String(a.number||''),complement:String(a.complement||''),neighborhood:String(a.neighborhood||''),city:String(a.city||''),state:String(a.state||''),zip:String(a.zip||''),notes:String(a.notes||'')});
+    setEditingCustomerId(customer.id);setShowForm(true);setError('');setNotice('');
+  }
+  function editSupplier(supplier:Supplier){
+    setSupplierForm({name:supplier.name,contactName:supplier.contact_name||'',document:supplier.document||'',email:supplier.email||'',phone:supplier.phone||'',notes:supplier.notes||'',userId:supplier.user_id||''});
+    setEditingSupplierId(supplier.id);setShowForm(true);setError('');setNotice('');
+  }
+  async function toggleSupplier(supplier:Supplier){
+    if(!supabase)return;setBusy(true);setError('');setNotice('');
+    try{const {error}=await supabase.from('eparts_suppliers').update({is_active:!supplier.is_active}).eq('company_id',companyId).eq('id',supplier.id);if(error)throw error;setNotice(supplier.is_active?'Fornecedor inativado.':'Fornecedor reativado.');await load()}
+    catch(e){setError(e instanceof Error?e.message:'Não foi possível alterar o fornecedor.')}finally{setBusy(false)}
   }
   async function saveProduct(event:FormEvent){
     event.preventDefault();if(!supabase)return
