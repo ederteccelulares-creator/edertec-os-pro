@@ -21,25 +21,25 @@ export default function CompanyFinancialEntriesPanel({company}:{company:Company}
  const openRec=entries.filter(e=>e.entry_type==='receivable'&&e.status==='open').reduce((s,e)=>s+Number(e.amount),0)
  async function submit(e:FormEvent){e.preventDefault();setBusy(true);setError('');setNotice('');try{await createFinancialEntry({companyId:company.id,branchId:branchId||null,entryType,category,description,counterparty,amount:Number(amount),dueDate,notes,financialAccountId});setDescription('');setCounterparty('');setAmount('');setNotes('');setFinancialAccountId('');setShow(false);setNotice('Lançamento financeiro criado.');await load()}catch(x){setError(x instanceof Error?x.message:'Falha ao salvar.')}finally{setBusy(false)}}
  async function settle(){if(!settling)return;setBusy(true);setError('');setNotice('');try{await settleFinancialEntry(company.id,settling.id,settleMethod,settleAccountId||null);setNotice('Lançamento baixado e movimento incluído na conta selecionada.');setSettling(null);setSettleAccountId('');await load()}catch(x){setError(x instanceof Error?x.message:'Falha ao baixar lançamento.')}finally{setBusy(false)}}
- const entryModal = show ? (<div className="company-financial-entry-backdrop" role="presentation" onClick={()=>!busy&&setShow(false)}><form className="company-form company-financial-entry-modal" role="dialog" aria-modal="true" aria-labelledby="financial-entry-title" onClick={e=>e.stopPropagation()} onSubmit={submit}><div className="company-financial-entry-modal-head"><h3 id="financial-entry-title">Novo lançamento</h3><button type="button" className="company-secondary company-financial-entry-close" aria-label="Fechar formulário" disabled={busy} onClick={()=>setShow(false)}>×</button></div><div className="company-form-grid">
-   <label>Tipo<select value={entryType} onChange={e=>setEntryType(e.target.value as 'payable'|'receivable')}><option value="payable">Conta a pagar</option><option value="receivable">Conta a receber</option></select></label>
-   <label>Filial<select value={branchId} onChange={e=>setBranchId(e.target.value)}><option value="">Matriz / não definida</option>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label>
-   <label>Conta bancária<select required value={financialAccountId} onChange={e=>setFinancialAccountId(e.target.value)}><option value="">Selecione a conta cadastrada</option>{accounts.filter(a=>!a.branch_id||a.branch_id===branchId||(!branchId&&!a.branch_id)).map(a=><option key={a.id} value={a.id}>{a.account_name} · {a.bank_name}</option>)}</select></label>
-      <label>Categoria<input required value={category} onChange={e=>setCategory(e.target.value)}/></label><label>Descrição<input required value={description} onChange={e=>setDescription(e.target.value)}/></label>
-   <label>Fornecedor / cliente<input value={counterparty} onChange={e=>setCounterparty(e.target.value)}/></label><label>Valor (R$)<input required type="number" min="0.01" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)}/></label>
-   <label>Vencimento<input required type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)}/></label></div>
-   <label>Observações<input value={notes} onChange={e=>setNotes(e.target.value)}/></label>
-   <div className="company-form-actions"><button type="button" className="company-secondary" disabled={busy} onClick={()=>setShow(false)}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Salvando...':'Salvar lançamento'}</button></div>
-  </form></div>}, document.body) : {show&&<div className="company-financial-entry-backdrop" role="presentation" onClick={()=>!busy&&setShow(false)}><form className="company-form company-financial-entry-modal" role="dialog" aria-modal="true" aria-labelledby="financial-entry-title" onClick={e=>e.stopPropagation()} onSubmit={submit}><div className="company-financial-entry-modal-head"><h3 id="financial-entry-title">Novo lançamento</h3><button type="button" className="company-secondary company-financial-entry-close" aria-label="Fechar formulário" disabled={busy} onClick={()=>setShow(false)}>×</button></div><div className="company-form-grid">
-   <label>Tipo<select value={entryType} onChange={e=>setEntryType(e.target.value as 'payable'|'receivable')}><option value="payable">Conta a pagar</option><option value="receivable">Conta a receber</option></select></label>
-   <label>Filial<select value={branchId} onChange={e=>setBranchId(e.target.value)}><option value="">Matriz / não definida</option>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label>
-   <label>Conta bancária<select required value={financialAccountId} onChange={e=>setFinancialAccountId(e.target.value)}><option value="">Selecione a conta cadastrada</option>{accounts.filter(a=>!a.branch_id||a.branch_id===branchId||(!branchId&&!a.branch_id)).map(a=><option key={a.id} value={a.id}>{a.account_name} · {a.bank_name}</option>)}</select></label>
-      <label>Categoria<input required value={category} onChange={e=>setCategory(e.target.value)}/></label><label>Descrição<input required value={description} onChange={e=>setDescription(e.target.value)}/></label>
-   <label>Fornecedor / cliente<input value={counterparty} onChange={e=>setCounterparty(e.target.value)}/></label><label>Valor (R$)<input required type="number" min="0.01" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)}/></label>
-   <label>Vencimento<input required type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)}/></label></div>
-   <label>Observações<input value={notes} onChange={e=>setNotes(e.target.value)}/></label>
-   <div className="company-form-actions"><button type="button" className="company-secondary" disabled={busy} onClick={()=>setShow(false)}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Salvando...':'Salvar lançamento'}</button></div>
-  </form></div>}) : null
+ const entryModal = show ? (
+  <div className="company-financial-entry-backdrop" role="presentation" onClick={()=>!busy&&setShow(false)}>
+   <form className="company-form company-financial-entry-modal" role="dialog" aria-modal="true" aria-labelledby="financial-entry-title" onClick={e=>e.stopPropagation()} onSubmit={submit}>
+    <div className="company-financial-entry-modal-head"><h3 id="financial-entry-title">Novo lançamento</h3><button type="button" className="company-secondary company-financial-entry-close" aria-label="Fechar formulário" disabled={busy} onClick={()=>setShow(false)}>×</button></div>
+    <div className="company-form-grid">
+     <label>Tipo<select value={entryType} onChange={e=>setEntryType(e.target.value as 'payable'|'receivable')}><option value="payable">Conta a pagar</option><option value="receivable">Conta a receber</option></select></label>
+     <label>Filial<select value={branchId} onChange={e=>setBranchId(e.target.value)}><option value="">Matriz / não definida</option>{branches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label>
+     <label>Conta bancária<select required value={financialAccountId} onChange={e=>setFinancialAccountId(e.target.value)}><option value="">Selecione a conta cadastrada</option>{accounts.filter(a=>!a.branch_id||a.branch_id===branchId||(!branchId&&!a.branch_id)).map(a=><option key={a.id} value={a.id}>{a.account_name} · {a.bank_name}</option>)}</select></label>
+     <label>Categoria<input required value={category} onChange={e=>setCategory(e.target.value)}/></label>
+     <label>Descrição<input required value={description} onChange={e=>setDescription(e.target.value)}/></label>
+     <label>Fornecedor / cliente<input value={counterparty} onChange={e=>setCounterparty(e.target.value)}/></label>
+     <label>Valor (R$)<input required type="number" min="0.01" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)}/></label>
+     <label>Vencimento<input required type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)}/></label>
+    </div>
+    <label>Observações<input value={notes} onChange={e=>setNotes(e.target.value)}/></label>
+    <div className="company-form-actions"><button type="button" className="company-secondary" disabled={busy} onClick={()=>setShow(false)}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Salvando...':'Salvar lançamento'}</button></div>
+   </form>
+  </div>
+ ) : null
  return <section className="company-panel">
   <div className="company-panel-head"><div><b>Contas a pagar e receber</b><small>{entries.length} lançamentos</small></div><button className="company-primary" onClick={()=>setShow(v=>!v)}><Plus size={16}/> Novo lançamento</button></div>
   {error&&<div className="company-error-banner">{error}</div>}{notice&&<div className="company-notice-banner">{notice}</div>}
