@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import { LayoutDashboard, Package, Tags, Truck, ShoppingCart, Wallet, LogOut, RefreshCw, ExternalLink, Menu, X, ChevronRight, Store, BarChart3 } from 'lucide-react'
+import { LayoutDashboard, Package, Tags, Truck, ShoppingCart, Wallet, Users, LogOut, RefreshCw, ExternalLink, Menu, X, ChevronRight, Store, BarChart3 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import EpartsCatalogAdminPanel from './EpartsCatalogAdminPanel'
 import EpartsPOS from './EpartsPOS'
 
 type Props = { companyId:string; companyName:string; email:string; role:string; onSignOut:()=>void }
-type Tab = 'dashboard'|'products'|'brands'|'suppliers'|'sales'|'payouts'|'pos'
+type Tab = 'dashboard'|'products'|'brands'|'suppliers'|'customers'|'sales'|'payouts'|'pos'
 const money=(n:number)=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 
 export default function EpartsWorkspace({companyId,companyName,email,role,onSignOut}:Props) {
@@ -37,11 +37,11 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
     setMenuOpen(false)
   },[tab])
   const nav=(value:Tab)=>setTab(value)
-  const title=tab==='dashboard'?'Visão geral':tab==='products'?'Produtos e estoque':tab==='brands'?'Marcas':tab==='suppliers'?'Fornecedores':tab==='sales'?'Vendas e pedidos':tab==='pos'?'Ponto de venda':'Comissões e repasses'
+  const title=tab==='dashboard'?'Visão geral':tab==='products'?'Produtos e estoque':tab==='brands'?'Marcas':tab==='suppliers'?'Fornecedores':tab==='customers'?'Clientes':tab==='sales'?'Vendas e pedidos':tab==='pos'?'Ponto de venda':'Comissões e repasses'
   const navItems=[
     {section:'VISÃO GERAL',items:[{id:'dashboard' as Tab,label:'Dashboard',icon:LayoutDashboard}]},
     {section:'GESTÃO COMERCIAL',items:[{id:'pos' as Tab,label:'PDV · Ponto de venda',icon:ShoppingCart},{id:'products' as Tab,label:'Produtos e estoque',icon:Package},{id:'sales' as Tab,label:'Vendas e pedidos',icon:ShoppingCart}]},
-    {section:'CADASTROS',items:[{id:'brands' as Tab,label:'Marcas',icon:Tags},{id:'suppliers' as Tab,label:'Fornecedores',icon:Truck},{id:'payouts' as Tab,label:'Comissões e repasses',icon:Wallet}]}
+    {section:'CADASTROS',items:[{id:'brands' as Tab,label:'Marcas',icon:Tags},{id:'suppliers' as Tab,label:'Fornecedores',icon:Truck},{id:'customers' as Tab,label:'Clientes',icon:Users},{id:'payouts' as Tab,label:'Comissões e repasses',icon:Wallet}]}
   ]
   return <div className="company-app eparts-workspace">
     <style>{`
