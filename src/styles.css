@@ -2577,3 +2577,49 @@ td b { font-weight:650; }
     opacity:1 !important;
   }
 }
+
+
+/* Identidade visual experimental: grafite + dourado + vermelho Edertec (desktop) */
+@media (min-width: 761px) {
+  .company-sidebar .active,
+  .company-sidebar button[aria-current="page"],
+  .company-sidebar .company-nav-item.active {
+    border-color:#b92b32 !important;
+    box-shadow:inset 3px 0 0 #ff343b,0 0 16px #e31d2b35 !important;
+  }
+  .company-main .company-primary,
+  .company-main button.company-primary {
+    background:linear-gradient(135deg,#b51f29,#e52b35) !important;
+    border-color:#ff4a50 !important;
+    color:#fff !important;
+    box-shadow:0 5px 18px #d51e2b35 !important;
+  }
+  .company-main .company-primary:hover {
+    background:linear-gradient(135deg,#d32631,#f13a43) !important;
+    box-shadow:0 7px 22px #ed263c55 !important;
+  }
+  .company-main .company-panel-head svg,
+  .company-main .company-section-title svg {
+    color:#e6c77f;
+  }
+  .company-main .company-dashboard-quick>button:hover,
+  .company-main .company-panel:hover {
+    border-color:#805b3e !important;
+  }
+  .company-main .company-dashboard-quick>button:hover {
+    box-shadow:0 10px 25px #e0203030 !important;
+  }
+  .company-main .company-icon-button:hover,
+  .company-main .company-secondary:hover {
+    border-color:#bd3039 !important;
+    box-shadow:0 0 12px #e0203028 !important;
+  }
+  .company-main .company-dashboard-stats article,
+  .company-main .company-panel,
+  .company-main .company-form {
+    background-image:linear-gradient(135deg,#1b2939 0%,#141d29 72%,#211b20 100%) !important;
+  }
+  .company-main .company-dashboard-stats article > span {
+    box-shadow:0 0 14px #d9273520;
+  }
+}
