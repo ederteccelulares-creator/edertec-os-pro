@@ -12,7 +12,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
   const [tab,setTab]=useState<Tab>('dashboard')
   const [quickCreate,setQuickCreate]=useState<'customers'|'suppliers'|null>(null)
   const [createVersion,setCreateVersion]=useState(0)
-  const quickAdd=(target:'customers'|'suppliers')=>{setQuickCreate(target);setTab(target);setCreateVersion(v=>v+1)}
+  const quickAdd=(target:'customers'|'suppliers')=>{setMenuOpen(false);setQuickCreate(target);setTab(target);setCreateVersion(v=>v+1)}
   const [menuOpen,setMenuOpen]=useState(false)
   const [stats,setStats]=useState({products:0,suppliers:0,orders:0,revenue:0,commission:0,stock:0})
   const [loading,setLoading]=useState(true)
@@ -39,7 +39,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
     if(window.innerWidth<=760)window.scrollTo({top:0,left:0,behavior:'auto'})
     setMenuOpen(false)
   },[tab])
-  const nav=(value:Tab)=>{setQuickCreate(null);setTab(value)}
+  const nav=(value:Tab)=>{setMenuOpen(false);setQuickCreate(null);setTab(value)}
   const title=tab==='dashboard'?'Visão geral':tab==='products'?'Produtos e estoque':tab==='brands'?'Marcas':tab==='suppliers'?'Fornecedores':tab==='customers'?'Clientes':tab==='sales'?'Vendas e pedidos':tab==='pos'?'Ponto de venda':'Comissões e repasses'
   const navItems=[
     {section:'INÍCIO',items:[{id:'dashboard' as Tab,label:'Visão geral',icon:LayoutDashboard}]},
