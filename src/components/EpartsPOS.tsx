@@ -4,11 +4,14 @@ import {supabase} from '../lib/supabase'
 
 type Product={id:string;name:string;sku:string|null;barcode:string|null;sale_price:number;stock_quantity:number;image_url:string|null}
 type CartLine={product:Product;quantity:number}
+type Customer={id:string;name:string;phone:string|null}
 type Props={companyId:string}
 const money=(v:number)=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 
 export default function EpartsPOS({companyId}:Props){
  const [products,setProducts]=useState<Product[]>([])
+ const [customers,setCustomers]=useState<Customer[]>([])
+ const [selectedCustomer,setSelectedCustomer]=useState('')
  const [cart,setCart]=useState<CartLine[]>([])
  const [search,setSearch]=useState('')
  const [payment,setPayment]=useState('pix')
@@ -22,8 +25,12 @@ export default function EpartsPOS({companyId}:Props){
  const load=useCallback(async()=>{
   if(!supabase)return
   setLoading(true);setError('')
-  const {data,error}=await supabase.from('eparts_products').select('id,name,sku,barcode,sale_price,stock_quantity,image_url').eq('company_id',companyId).eq('is_active',true).order('name')
-  if(error)setError(error.message);else setProducts((data||[]) as Product[])
+  const [productResult,customerResult]=await Promise.all([
+   supabase.from('eparts_products').select('id,name,sku,barcode,sale_price,stock_quantity,image_url').eq('company_id',companyId).eq('is_active',true).order('name'),
+   supabase.from('eparts_customers').select('id,name,phone').eq('company_id',companyId).order('name')
+  ])
+  if(productResult.error)setError(productResult.error.message);else setProducts((productResult.data||[]) as Product[])
+  if(customerResult.error)setError(customerResult.error.message);else setCustomers((customerResult.data||[]) as Customer[])
   setLoading(false)
  },[companyId])
  useEffect(()=>{void load()},[load])
@@ -39,13 +46,13 @@ export default function EpartsPOS({companyId}:Props){
   if(discountValue>subtotal){setError('O desconto não pode ser maior que o subtotal.');return}
   setBusy(true);setError('');setNotice('')
   try{
-   const {data,error}=await supabase.rpc('eparts_finalize_pos_sale',{p_company_id:companyId,p_items:cart.map(x=>({product_id:x.product.id,quantity:x.quantity})),p_payment_method:payment,p_customer_name:customer.trim()||'Consumidor final',p_discount:discountValue,p_notes:null})
+   const {data,error}=await supabase.rpc('eparts_finalize_pos_sale',{p_company_id:companyId,p_items:cart.map(x=>({product_id:x.product.id,quantity:x.quantity})),p_payment_method:payment,p_customer_name:(customers.find(c=>c.id===selectedCustomer)?.name||customer.trim()||'Consumidor final'),p_discount:discountValue,p_notes:null})
    if(error)throw error
    const saleId=String(data)
    const {data:sale}=await supabase.from('eparts_sales').select('id,order_number,total_amount').eq('company_id',companyId).eq('id',saleId).single()
-   setLastSale({id:saleId,number:Number(sale?.order_number||0),total:Number(sale?.total_amount||total),items:cart,customer:customer.trim()||'Consumidor final',payment})
+   setLastSale({id:saleId,number:Number(sale?.order_number||0),total:Number(sale?.total_amount||total),items:cart,customer:(customers.find(c=>c.id===selectedCustomer)?.name||customer.trim()||'Consumidor final'),payment})
    setNotice('Venda finalizada! O estoque foi baixado automaticamente.')
-   setCart([]);setCustomer('');setDiscount('0');await load()
+   setCart([]);setCustomer('');setSelectedCustomer('');setDiscount('0');await load()
   }catch(e){setError(e instanceof Error?e.message:'Não foi possível finalizar a venda.')}
   finally{setBusy(false)}
  }
@@ -141,7 +148,8 @@ export default function EpartsPOS({companyId}:Props){
   <div className="pos-cart">
    <div className="pos-cart-head"><h3><ShoppingCart size={25}/> Carrinho ({cart.reduce((n,x)=>n+x.quantity,0)} itens)</h3><button className="pos-clear" onClick={()=>setCart([])} disabled={!cart.length}><Trash2 size={18}/> Limpar</button></div>
    <div className="pos-cart-lines">{cart.map(line=><div className="pos-line" key={line.product.id}><span className="pos-line-name">{line.quantity}x&nbsp; {line.product.name}</span><div className="pos-line-tools"><button onClick={()=>change(line.product.id,-1)} aria-label="Diminuir"><Minus size={14}/></button><b>{line.quantity}</b><button onClick={()=>change(line.product.id,1)} aria-label="Aumentar"><Plus size={14}/></button><button onClick={()=>change(line.product.id,-line.quantity)} aria-label="Remover"><Trash2 size={14}/></button></div><b className="pos-line-price">{money(line.product.sale_price*line.quantity)}</b></div>)}</div>
-   <label className="pos-field">Cliente (opcional)<input value={customer} onChange={e=>setCustomer(e.target.value)} placeholder="Consumidor final"/></label>
+   <label className="pos-field">Cliente cadastrado (opcional)<select value={selectedCustomer} onChange={e=>{setSelectedCustomer(e.target.value);setCustomer('')}}><option value="">Consumidor final / digitar abaixo</option>{customers.map(c=><option key={c.id} value={c.id}>{c.name}{c.phone?' · '+c.phone:''}</option>)}</select></label>
+   {!selectedCustomer&&<label className="pos-field">Nome do cliente<input value={customer} onChange={e=>setCustomer(e.target.value)} placeholder="Nome do cliente avulso"/></label>}
    <label className="pos-field">Desconto (R$)<input type="number" min="0" step="0.01" value={discount} onChange={e=>setDiscount(e.target.value)}/></label>
    <div className="pos-summary"><div className="pos-summary-row"><span>Subtotal</span><b>{money(subtotal)}</b></div>{discountValue>0&&<div className="pos-summary-row"><span>Desconto</span><b>- {money(discountValue)}</b></div>}<div className="pos-summary-row total"><span>Total</span><strong>{money(total)}</strong></div></div>
   </div>
