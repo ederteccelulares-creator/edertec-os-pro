@@ -63,6 +63,7 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
     finally{setLoading(false)}
   },[companyId])
   useEffect(()=>{void load()},[load])
+  useEffect(()=>{if(initialCreate){setTab(initialTab);setShowForm(true)}},[initialCreate,initialTab])
 
   async function saveCustomer(event:FormEvent){
     event.preventDefault();if(!supabase)return
@@ -168,7 +169,7 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
     }catch(e){setError(e instanceof Error?e.message:'Não foi possível atualizar o pedido.')}
     finally{setUpdatingSale(null)}
   }
-  const startNew=()=>{setShowForm(v=>!v);setError('');setNotice('')}
+  const startNew=()=>{setShowForm(true);setError('');setNotice('')}
   return <section className="company-panel eparts-admin-panel">
     <style>{`
       .eparts-admin-panel .eparts-tabs {
@@ -290,7 +291,7 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
       <button className={tab==='sales'?'company-primary':'company-secondary'} onClick={()=>{setTab('sales');setShowForm(false)}}><Truck size={15}/> Vendas ({sales.length})</button>
       <button className={tab==='payouts'?'company-primary':'company-secondary'} onClick={()=>{setTab('payouts');setShowForm(false)}}><Wallet size={15}/> Repasses ({payouts.length})</button>
     </div>
-    <div className="company-panel-head eparts-list-head"><div><b>{tab==='customers'?'Clientes cadastrados':tab==='products'?'Produtos do catálogo':tab==='suppliers'?'Fornecedores cadastrados':tab==='brands'?'Marcas cadastradas':tab==='payouts'?'Repasses aos fornecedores':'Pedidos e vendas'}</b><small>{tab==='customers'?'Cadastre e consulte os clientes da sua empresa':tab==='products'?'Gerencie preço, custo, estoque e publicação no catálogo':tab==='suppliers'?'Cadastre parceiros que acompanham suas vendas':tab==='brands'?'Organize os produtos por marca':tab==='payouts'?'Registre e consulte valores já repassados':'Acompanhe pedidos, comissão da Eparts e valores dos fornecedores'}</small></div>{tab!=='sales'&&tab!=='payouts'&&<button className="company-primary" onClick={startNew}><BadgePlus size={16}/> Novo cadastro</button>}</div>
+    <div className="company-panel-head eparts-list-head"><div><b>{tab==='customers'?'Clientes cadastrados':tab==='products'?'Produtos do catálogo':tab==='suppliers'?'Fornecedores cadastrados':tab==='brands'?'Marcas cadastradas':tab==='payouts'?'Repasses aos fornecedores':'Pedidos e vendas'}</b><small>{tab==='customers'?'Cadastre e consulte os clientes da sua empresa':tab==='products'?'Gerencie preço, custo, estoque e publicação no catálogo':tab==='suppliers'?'Cadastre parceiros que acompanham suas vendas':tab==='brands'?'Organize os produtos por marca':tab==='payouts'?'Registre e consulte valores já repassados':'Acompanhe pedidos, comissão da Eparts e valores dos fornecedores'}</small></div>{tab!=='sales'&&tab!=='payouts'&&<button type="button" className="company-primary" onClick={startNew}><BadgePlus size={16}/> {tab==='customers'?'Cadastrar cliente':tab==='suppliers'?'Cadastrar fornecedor':'Novo cadastro'}</button>}</div>
     {error&&<div className="company-error-banner">{error}</div>}{notice&&<div className="company-success-banner">{notice}</div>}
     {showForm&&tab==='customers'&&<form className="company-form" onSubmit={saveCustomer}>
       <div className="company-form-grid"><label>Nome completo<input required value={customerForm.name} onChange={e=>setCustomerForm(v=>({...v,name:e.target.value}))}/></label><label>Telefone / WhatsApp<input value={customerForm.phone} onChange={e=>setCustomerForm(v=>({...v,phone:e.target.value}))}/></label><label>E-mail<input type="email" value={customerForm.email} onChange={e=>setCustomerForm(v=>({...v,email:e.target.value}))}/></label><label>CPF / CNPJ<input value={customerForm.document} onChange={e=>setCustomerForm(v=>({...v,document:e.target.value}))}/></label><label>CEP<input value={customerForm.zip} onChange={e=>setCustomerForm(v=>({...v,zip:e.target.value}))}/></label><label>Rua<input value={customerForm.street} onChange={e=>setCustomerForm(v=>({...v,street:e.target.value}))}/></label><label>Número<input value={customerForm.number} onChange={e=>setCustomerForm(v=>({...v,number:e.target.value}))}/></label><label>Complemento<input value={customerForm.complement} onChange={e=>setCustomerForm(v=>({...v,complement:e.target.value}))}/></label><label>Bairro<input value={customerForm.neighborhood} onChange={e=>setCustomerForm(v=>({...v,neighborhood:e.target.value}))}/></label><label>Cidade<input value={customerForm.city} onChange={e=>setCustomerForm(v=>({...v,city:e.target.value}))}/></label><label>Estado<input maxLength={2} value={customerForm.state} onChange={e=>setCustomerForm(v=>({...v,state:e.target.value.toUpperCase()}))}/></label></div>
