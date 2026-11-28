@@ -477,7 +477,6 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         .eparts-workspace .company-panel-head small{color:#bdb3b4!important}
       }
       @media(max-width:760px){.eparts-workspace .eparts-menu-page{padding-bottom:8px}.eparts-workspace .eparts-menu-group{padding:13px!important}.eparts-workspace .eparts-menu-options button,.eparts-workspace .eparts-menu-options a{min-height:48px;font-size:13px}}
-    `}
       /* Final pass: every EPARTS navigation tab follows the approved palette */
       .eparts-workspace .company-nav-section-label,.eparts-workspace .company-nav-item svg,
       .eparts-workspace .eparts-menu-options svg{color:#ff4052!important}
@@ -574,6 +573,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
           padding-top:0!important;
         }
       }
+    `}
 </style>
     <aside className="company-sidebar">
       <div className="eparts-brand-row">
