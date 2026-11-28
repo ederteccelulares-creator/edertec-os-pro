@@ -8,7 +8,7 @@ type Brand = { id:string; name:string }
 type Product = { id:string; brand_id:string|null; name:string; sku:string|null; stock_quantity:number; sale_price:number; image_url:string|null }
 type SaleItem = { id:string; sale_id:string; product_id:string; product_name:string; sku:string|null; quantity:number; unit_price:number; line_total:number; eparts_commission_amount:number; supplier_amount:number; created_at:string }
 type Sale = { id:string; order_number:number; status:string; payment_status:string; created_at:string }
-type Payout = { id:string; amount:number; payment_method:string; paid_at:string; reference:string|null; notes:string|null }
+type Payout = { id:string; amount:number; payment_method:string; paid_at:string; reference:string|null; notes:string|null }\ntype PaymentRequest = { id:string; amount:number; notes:string|null; status:'pending'|'approved'|'rejected'|'paid'; requested_at:string; admin_notes:string|null }
 
 const money=(value:number)=>Number(value||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 const date=(value:string)=>new Date(value).toLocaleDateString('pt-BR')
@@ -20,7 +20,7 @@ export default function EpartsSupplierPortal(){
   const [brands,setBrands]=useState<Brand[]>([])
   const [items,setItems]=useState<SaleItem[]>([])
   const [sales,setSales]=useState<Sale[]>([])
-  const [payouts,setPayouts]=useState<Payout[]>([])
+  const [payouts,setPayouts]=useState<Payout[]>([])\n  const [paymentRequests,setPaymentRequests]=useState<PaymentRequest[]>([])\n  const [requestAmount,setRequestAmount]=useState('')\n  const [requestNotes,setRequestNotes]=useState('')
   const [username,setUsername]=useState('')
   const [password,setPassword]=useState('')
   const [showPassword,setShowPassword]=useState(false)
@@ -43,11 +43,11 @@ export default function EpartsSupplierPortal(){
       const brandIds=(brandLinks||[]).map(row=>row.brand_id as string)
       let productQuery=supabase.from('eparts_products').select('id,brand_id,name,sku,stock_quantity,sale_price,image_url').eq('company_id',profile.company_id)
       productQuery=brandIds.length?productQuery.or('supplier_id.eq.'+profile.id+',brand_id.in.('+brandIds.join(',')+')'):productQuery.eq('supplier_id',profile.id)
-      const [p,po]=await Promise.all([
+      const [p,po,requests]=await Promise.all([
         productQuery.order('name'),
-        supabase.from('eparts_supplier_payouts').select('id,amount,payment_method,paid_at,reference,notes').eq('company_id',profile.company_id).eq('supplier_id',profile.id).order('paid_at',{ascending:false})
+        supabase.from('eparts_supplier_payouts').select('id,amount,payment_method,paid_at,reference,notes').eq('company_id',profile.company_id).eq('supplier_id',profile.id).order('paid_at',{ascending:false}),\n        supabase.from('eparts_supplier_payment_requests').select('id,amount,notes,status,requested_at,admin_notes').eq('company_id',profile.company_id).eq('supplier_id',profile.id).order('requested_at',{ascending:false})
       ])
-      if(p.error) throw p.error;if(po.error) throw po.error
+      if(p.error) throw p.error;if(po.error) throw po.error;if(requests.error)throw requests.error
       const {data:brandRows,error:brandsError}=brandIds.length?await supabase.from('eparts_brands').select('id,name').eq('company_id',profile.company_id).in('id',brandIds).order('name'):{data:[],error:null}
       if(brandsError)throw brandsError
       const productIds=(p.data||[]).map(row=>row.id as string)
@@ -70,7 +70,7 @@ export default function EpartsSupplierPortal(){
         if(error) throw error
         saleRows=(data||[]) as Sale[]
       }
-      setProducts((p.data||[]) as Product[]);setBrands((brandRows||[]) as Brand[]);setItems(itemRows);setSales(saleRows);setPayouts((po.data||[]) as Payout[])
+      setProducts((p.data||[]) as Product[]);setBrands((brandRows||[]) as Brand[]);setItems(itemRows);setSales(saleRows);setPayouts((po.data||[]) as Payout[]);setPaymentRequests((requests.data||[]) as PaymentRequest[])
     }catch(e){setError(e instanceof Error?e.message:'Não foi possível carregar o portal do fornecedor.')}
     finally{setLoading(false)}
   }
@@ -85,6 +85,19 @@ export default function EpartsSupplierPortal(){
 
   async function login(e:FormEvent){e.preventDefault();if(!supabase)return;setBusy(true);setError('');try{const {data,error}=await supabase.auth.signInWithPassword({email:username.trim().toLowerCase()+'@eparts-login.invalid',password});if(error)throw error;setSession(data.session);if(data.user)await loadSupplier(data.user.id)}catch(e){setError(e instanceof Error?e.message:'Não foi possível entrar.')}finally{setBusy(false)}}
   async function logout(){await supabase?.auth.signOut();setSession(null);setSupplier(null)}
+  async function requestPayment(event:FormEvent){
+    event.preventDefault();if(!supabase)return
+    const amount=Number(requestAmount)
+    if(!Number.isFinite(amount)||amount<=0){setError('Informe um valor válido para solicitar.');return}
+    setBusy(true);setError('');setNotice('')
+    try{
+      const {error}=await supabase.rpc('eparts_request_supplier_payment',{p_amount:amount,p_notes:requestNotes.trim()||null})
+      if(error)throw error
+      setRequestAmount('');setRequestNotes('');setNotice('Solicitação de pagamento enviada ao administrador EPARTS.')
+      if(session)await loadSupplier(session.user.id)
+    }catch(e){setError(e instanceof Error?e.message:'Não foi possível enviar a solicitação.')}
+    finally{setBusy(false)}
+  }
 
   const visibleItems=useMemo(()=>items.filter(row=>{const sale=sales.find(x=>x.id===row.sale_id);if(!sale||sale.status==='cancelled')return false;const day=sale.created_at.slice(0,10);return(!from||day>=from)&&(!to||day<=to)}),[items,sales,from,to])
   const gross=visibleItems.reduce((n,x)=>n+Number(x.line_total),0)
@@ -94,7 +107,7 @@ export default function EpartsSupplierPortal(){
   const paid=payouts.filter(p=>!from||p.paid_at.slice(0,10)>=from).filter(p=>!to||p.paid_at.slice(0,10)<=to).reduce((n,p)=>n+Number(p.amount),0)
   const eligibleTotal=items.reduce((n,item)=>{const sale=sales.find(x=>x.id===item.sale_id);return sale&&sale.status!=='cancelled'&&sale.payment_status==='paid'?n+Number(item.supplier_amount):n},0)
   const paidAllTime=payouts.reduce((n,p)=>n+Number(p.amount),0)
-  const pending=Math.max(0,eligibleTotal-paidAllTime)
+  const openRequests=paymentRequests.filter(r=>r.status==='pending'||r.status==='approved').reduce((n,r)=>n+Number(r.amount),0)\n  const pending=Math.max(0,eligibleTotal-paidAllTime-openRequests)
 
   return <main className="ep-supplier-root">
     <style>{`
@@ -213,6 +226,18 @@ export default function EpartsSupplierPortal(){
         </section>
         <section className="ep-supplier-card" style={{marginBottom:14}}><h2 className="ep-supplier-section-title">Vendas dos seus produtos</h2>
           {visibleItems.length===0?<div className="ep-supplier-empty">Nenhuma venda encontrada neste período.</div>:<div className="ep-supplier-table-wrap"><table><thead><tr><th>PEDIDO</th><th>DATA</th><th>PRODUTO</th><th>QTD.</th><th>VALOR</th><th>EPARTS</th><th>SUA PARTE</th><th>STATUS</th></tr></thead><tbody>{visibleItems.map(item=>{const sale=sales.find(x=>x.id===item.sale_id);return <tr key={item.id}><td>#{sale?.order_number||'—'}</td><td>{sale?date(sale.created_at):date(item.created_at)}</td><td>{item.product_name}</td><td>{item.quantity}</td><td>{money(item.line_total)}</td><td>{money(item.eparts_commission_amount)}</td><td>{money(item.supplier_amount)}</td><td>{sale?.payment_status||sale?.status||'—'}</td></tr>})}</tbody></table></div>}
+        </section>
+        <section className="ep-supplier-card" style={{marginBottom:14}}>
+          <h2 className="ep-supplier-section-title">Solicitar pagamento</h2>
+          <p>Solicite o repasse do seu saldo liberado. O pagamento só será confirmado pelo administrador EPARTS.</p>
+          <div className="ep-supplier-stat ep-highlight" style={{margin:'12px 0'}}><span>Saldo disponível para nova solicitação</span><strong>{money(pending)}</strong></div>
+          <form onSubmit={requestPayment}>
+            <label>Valor solicitado (R$)<input type="number" min="0.01" max={pending.toFixed(2)} step="0.01" required value={requestAmount} onChange={e=>setRequestAmount(e.target.value)} placeholder="0,00" disabled={pending<=0}/></label>
+            <label>Observação (opcional)<input value={requestNotes} onChange={e=>setRequestNotes(e.target.value)} maxLength={500} placeholder="Ex.: dados ou referência para o financeiro"/></label>
+            <button type="submit" disabled={busy||pending<=0}>{busy?'Enviando...':'Solicitar pagamento'}</button>
+          </form>
+          <h3 className="ep-supplier-section-title" style={{marginTop:20}}>Minhas solicitações</h3>
+          {paymentRequests.length===0?<div className="ep-supplier-empty">Você ainda não fez solicitações.</div>:<div className="ep-supplier-table-wrap"><table><thead><tr><th>DATA</th><th>VALOR</th><th>SITUAÇÃO</th><th>OBSERVAÇÃO</th></tr></thead><tbody>{paymentRequests.map(r=><tr key={r.id}><td>{date(r.requested_at)}</td><td>{money(r.amount)}</td><td>{r.status==='pending'?'Pendente':r.status==='approved'?'Aprovada':r.status==='rejected'?'Recusada':'Paga'}</td><td>{[r.notes,r.admin_notes].filter(Boolean).join(' · ')||'—'}</td></tr>)}</tbody></table></div>}
         </section>
         <section className="ep-supplier-card"><h2 className="ep-supplier-section-title">Repasses</h2><div className="ep-supplier-grid"><div className="ep-supplier-stat"><span>Total pago</span><strong>{money(paid)}</strong></div><div className="ep-supplier-stat"><span>Saldo liberado a receber</span><strong>{money(pending)}</strong></div><div className="ep-supplier-stat"><span>Percentual EPARTS</span><strong>{commissionRate.toLocaleString('pt-BR',{maximumFractionDigits:2})}%</strong></div></div>
           {payouts.length===0?<div className="ep-supplier-empty">Ainda não há repasses registrados.</div>:<div className="ep-supplier-table-wrap"><table><thead><tr><th>DATA</th><th>VALOR</th><th>FORMA</th><th>REFERÊNCIA / OBSERVAÇÃO</th></tr></thead><tbody>{payouts.map(p=><tr key={p.id}><td>{date(p.paid_at)}</td><td>{money(p.amount)}</td><td>{p.payment_method}</td><td>{[p.reference,p.notes].filter(Boolean).join(' · ')||'—'}</td></tr>)}</tbody></table></div>}
