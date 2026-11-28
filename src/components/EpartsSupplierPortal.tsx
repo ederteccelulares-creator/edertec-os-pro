@@ -145,6 +145,45 @@ export default function EpartsSupplierPortal(){
       .ep-supplier-section-title{margin:0 0 14px;color:#ff777d;font-size:16px}
       .ep-supplier-brand-list{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 18px}.ep-supplier-brand-chip{padding:7px 11px;border:1px solid #743039;border-radius:999px;background:#251014;color:#ffb0b4;font-size:12px;font-weight:700}.ep-supplier-muted{color:#a99d9d;font-size:12px}
       @media(max-width:720px){.ep-supplier-root{padding:18px 12px 30px}.ep-supplier-card{padding:15px}.ep-supplier-login{padding:24px 17px}.ep-supplier-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.ep-supplier-stat{padding:13px}.ep-supplier-stat strong{font-size:19px}.ep-supplier-top{align-items:flex-start;flex-direction:column}.ep-supplier-top button{align-self:flex-end}.ep-supplier-login-links span{font-size:10px}}
+      /* Ajustes de organização do portal do fornecedor em telas pequenas */
+      .ep-supplier-root{box-sizing:border-box;width:100%;max-width:100%;overflow-x:hidden}
+      .ep-supplier-root *{box-sizing:border-box}
+      .ep-supplier-wrap{min-width:0;width:100%}
+      .ep-supplier-top>div{min-width:0;width:100%}
+      .ep-supplier-top h1{overflow-wrap:anywhere}
+      .ep-supplier-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%;min-width:0}
+      .ep-supplier-filters label{display:grid;grid-template-columns:minmax(0,1fr);min-width:0;width:100%;flex:none}
+      .ep-supplier-filters input{display:block;width:100%;min-width:0;max-width:100%;padding:10px 8px;font-size:14px}
+      .ep-supplier-stat{min-width:0}
+      .ep-supplier-stat strong{overflow-wrap:anywhere}
+      .ep-supplier-empty{padding:18px 12px;line-height:1.5}
+      .ep-supplier-card{min-width:0}
+      @media(max-width:720px){
+        .ep-supplier-root{padding:16px 12px 32px}
+        .ep-supplier-brand{justify-content:flex-start;margin:4px 0 24px;gap:12px}
+        .ep-supplier-brand-mark{width:50px;height:50px;flex:0 0 50px}
+        .ep-supplier-brand b{font-size:34px;letter-spacing:1px}
+        .ep-supplier-brand small{font-size:8px;letter-spacing:2px}
+        .ep-supplier-top{gap:8px;margin-bottom:14px}
+        .ep-supplier-top button{align-self:flex-start}
+        .ep-supplier-filters{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:14px 0}
+        .ep-supplier-filters input{font-size:13px;padding:9px 5px}
+        .ep-supplier-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}
+        .ep-supplier-grid>.ep-supplier-stat:last-child:nth-child(odd){grid-column:1/-1}
+        .ep-supplier-stat{padding:12px}
+        .ep-supplier-stat span{font-size:10px;line-height:1.35}
+        .ep-supplier-stat strong{font-size:18px}
+        .ep-supplier-card{padding:14px;margin-bottom:12px}
+        .ep-supplier-section-title{font-size:15px}
+      }
+      @media(max-width:380px){
+        .ep-supplier-brand b{font-size:29px}
+        .ep-supplier-brand small{letter-spacing:1.3px}
+        .ep-supplier-filters{grid-template-columns:minmax(0,1fr)}
+        .ep-supplier-filters input{font-size:15px;padding:10px}
+        .ep-supplier-grid{grid-template-columns:minmax(0,1fr)}
+        .ep-supplier-grid>.ep-supplier-stat:last-child:nth-child(odd){grid-column:auto}
+      }
     `}</style>
     <div className="ep-supplier-wrap">
       <div className="ep-supplier-brand"><span className="ep-supplier-brand-mark"><Store size={23}/></span><div><b>EPARTS</b><small>PORTAL DO FORNECEDOR</small></div></div>
