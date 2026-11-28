@@ -82,7 +82,17 @@ export default function EpartsRegistrations({companyId,initialTab,initialCreate=
       .eparts-registrations th{color:#ed142c;font-size:10px}
       .eparts-registrations .er-message{padding:11px;border-radius:9px;margin:10px 0;background:#292016;color:#ffb5bd}
       @media(max-width:600px){.eparts-registrations .er-grid{grid-template-columns:1fr}.eparts-registrations .er-form{padding:12px}}
-    `}</style>
+    `}
+      .eparts-registrations .er-tabs button{border-color:#64202a!important;background:#171012!important;color:#eee!important}
+      .eparts-registrations .er-tabs button.active{background:linear-gradient(110deg,#ed142c,#76000e)!important;border-color:#ff4052!important;color:#fff!important}
+      .eparts-registrations .er-form{border-color:#64202a!important;background:linear-gradient(145deg,#1a1315,#0c0b0b)!important}
+      .eparts-registrations label{color:#e8dfe0!important}
+      .eparts-registrations input,.eparts-registrations textarea{border-color:#5b3037!important;background:#090909!important;color:#fff!important}
+      .eparts-registrations input:focus,.eparts-registrations textarea:focus{border-color:#ed142c!important;box-shadow:0 0 0 3px #ed142c22!important}
+      .eparts-registrations th{color:#ff8793!important}
+      .eparts-registrations th,.eparts-registrations td{border-color:#352126!important}
+      .eparts-registrations .er-message{background:#291216!important;color:#ffb5bd!important;border:1px solid #64202a!important}
+  </style>
     <div className="company-panel-head"><div><b>Cadastros da EPARTS</b><small>Gerencie clientes, fornecedores, marcas e categorias</small></div><button type="button" className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar</button></div>
     <div className="er-tabs">{(Object.keys(titles) as Tab[]).map(k=>{const I=k==='customers'?Users:k==='suppliers'?Truck:k==='brands'?Tags:FolderOpen;return <button type="button" key={k} className={tab===k?'active':''} onClick={()=>{setTab(k);setShowForm(false);setSearch('')}}><I size={15}/> {titles[k]} ({k===tab?rows.length:'•'})</button>})}</div>
     <div className="company-panel-head"><div><b><Icon size={17}/> {titles[tab]} cadastrados</b><small>Cadastro separado por empresa, com acesso protegido</small></div><button type="button" className="company-primary" onClick={startNew}><BadgePlus size={16}/> Cadastrar {label}</button></div>
