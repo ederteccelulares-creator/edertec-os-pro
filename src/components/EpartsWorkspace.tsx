@@ -54,14 +54,14 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
   ]
   return <div className="company-app eparts-workspace">
     <style>{`
-      .eparts-workspace{--ep-gold:#d8b36a;--ep-gold-light:#f3d99f;--ep-muted:#9c927f;background:#0b0b0c;color:#f4f0e8;min-height:100vh}
+      .eparts-workspace{--ep-gold:#ed142c;--ep-gold-light:#ff9aa5;--ep-muted:#9c927f;background:#0b0b0c;color:#f4f0e8;min-height:100vh}
       .eparts-workspace .company-sidebar{position:sticky;top:0;height:100vh;overflow-y:auto;width:278px;padding:25px 18px 18px;background:linear-gradient(180deg,#171411 0%,#100f0e 48%,#0c0c0c 100%);border-right:1px solid rgba(216,179,106,.2);box-shadow:12px 0 35px rgba(0,0,0,.18)}
       .eparts-workspace .eparts-brand-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px}
       .eparts-workspace .company-logo{gap:12px;padding:0 5px}
-      .eparts-workspace .company-logo>span{width:44px;height:44px;background:linear-gradient(145deg,#f1d28d,#a9782b);color:#17120a;border-radius:13px;box-shadow:0 8px 24px rgba(190,143,54,.2)}
-      .eparts-workspace .company-logo b{font-size:19px;letter-spacing:2.5px;color:#f4d99e}
+      .eparts-workspace .company-logo>span{width:44px;height:44px;background:linear-gradient(145deg,#ff6878,#a90019);color:#17120a;border-radius:13px;box-shadow:0 8px 24px rgba(190,143,54,.2)}
+      .eparts-workspace .company-logo b{font-size:19px;letter-spacing:2.5px;color:#ffb5bd}
       .eparts-workspace .company-logo small{font-size:8px;letter-spacing:1.3px;color:#a99a7e}
-      .eparts-workspace .eparts-company-chip{display:flex;align-items:center;gap:9px;padding:12px 13px;margin-bottom:25px;border:1px solid rgba(216,179,106,.2);background:rgba(216,179,106,.055);border-radius:12px;color:#e7d4ad;font-size:12px;line-height:1.4}
+      .eparts-workspace .eparts-company-chip{display:flex;align-items:center;gap:9px;padding:12px 13px;margin-bottom:25px;border:1px solid rgba(216,179,106,.2);background:rgba(216,179,106,.055);border-radius:12px;color:#ffd0d5;font-size:12px;line-height:1.4}
       .eparts-workspace .eparts-company-chip svg{color:var(--ep-gold);flex:none}
       .eparts-workspace .company-sidebar nav{display:grid;gap:20px;margin:0}
       .eparts-workspace .company-nav-section{display:grid;gap:6px}
@@ -69,19 +69,19 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
       .eparts-workspace .company-sidebar nav button{width:100%;min-height:44px;padding:10px 12px;gap:12px;border:1px solid transparent;border-radius:10px;color:#b8b0a3;font-size:12px;font-weight:550;transition:all .18s ease}
       .eparts-workspace .company-sidebar nav button svg{color:#9c8c6c;flex:none}
       .eparts-workspace .company-sidebar nav button:hover{background:rgba(255,255,255,.045);color:#fff}
-      .eparts-workspace .company-sidebar nav button.active{background:linear-gradient(100deg,rgba(216,179,106,.19),rgba(216,179,106,.055));border-color:rgba(216,179,106,.2);color:#f4d99e;box-shadow:inset 3px 0 #d8b36a}
-      .eparts-workspace .company-sidebar nav button.active svg{color:#e5c47f}
+      .eparts-workspace .company-sidebar nav button.active{background:linear-gradient(100deg,rgba(216,179,106,.19),rgba(216,179,106,.055));border-color:rgba(216,179,106,.2);color:#ffb5bd;box-shadow:inset 3px 0 #ed142c}
+      .eparts-workspace .company-sidebar nav button.active svg{color:#ff8793}
       .eparts-workspace .eparts-nav-arrow{margin-left:auto;opacity:.7}
-      .eparts-workspace .company-sidebar nav .eparts-nav-link{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:10px 12px;border:1px solid rgba(216,179,106,.18);border-radius:10px;background:rgba(216,179,106,.06);color:#e7d4ad;text-decoration:none;font-size:12px;font-weight:650}
-      .eparts-workspace .company-sidebar nav .eparts-nav-link svg{color:#d8b36a;flex:none}
+      .eparts-workspace .company-sidebar nav .eparts-nav-link{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:10px 12px;border:1px solid rgba(216,179,106,.18);border-radius:10px;background:rgba(216,179,106,.06);color:#ffd0d5;text-decoration:none;font-size:12px;font-weight:650}
+      .eparts-workspace .company-sidebar nav .eparts-nav-link svg{color:#ed142c;flex:none}
       .eparts-workspace .company-sidebar nav .eparts-nav-link:hover{background:rgba(216,179,106,.13);border-color:rgba(216,179,106,.38)}
       @media(max-width:760px){
-        .eparts-workspace>.company-sidebar nav .eparts-nav-link{display:flex!important;align-items:center!important;min-height:46px!important;padding:9px 10px!important;border:1px solid #6b532d!important;border-radius:10px!important;background:linear-gradient(120deg,#302415,#17130e)!important;color:#f2d99f!important;font-size:12px!important;text-decoration:none!important}
-        .eparts-workspace>.company-sidebar nav .eparts-nav-link svg{color:#e4c27d!important}
+        .eparts-workspace>.company-sidebar nav .eparts-nav-link{display:flex!important;align-items:center!important;min-height:46px!important;padding:9px 10px!important;border:1px solid #8f1524!important;border-radius:10px!important;background:linear-gradient(120deg,#302415,#17130e)!important;color:#ffb5bd!important;font-size:12px!important;text-decoration:none!important}
+        .eparts-workspace>.company-sidebar nav .eparts-nav-link svg{color:#ff6878!important}
       }
       .eparts-workspace .company-user{margin-top:auto;padding:16px 5px 0;border-top:1px solid rgba(216,179,106,.15)}
       .eparts-workspace .eparts-user-meta{display:flex;align-items:center;gap:10px;min-width:0}
-      .eparts-workspace .eparts-user-avatar{width:34px;height:34px;display:grid;place-items:center;flex:none;border-radius:50%;background:#292117;color:#e4c47e;border:1px solid rgba(216,179,106,.25)}
+      .eparts-workspace .eparts-user-avatar{width:34px;height:34px;display:grid;place-items:center;flex:none;border-radius:50%;background:#292117;color:#ff6878;border:1px solid rgba(216,179,106,.25)}
       .eparts-workspace .company-user b{font-size:11px;color:#e9e1d2;overflow-wrap:anywhere}
       .eparts-workspace .company-user small{font-size:10px;color:#8f8779}
       .eparts-workspace .company-user button{margin:13px 0 0;padding:8px 4px;color:#b5a995;font-size:11px}
@@ -92,7 +92,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
       .eparts-workspace .company-top h1{margin:7px 0 0;color:#f5efe4;font-size:clamp(24px,2.3vw,31px);letter-spacing:-.8px;font-weight:700}
       .eparts-workspace .eparts-header-actions{display:flex;align-items:center;gap:9px}
       .eparts-workspace .company-secondary{border-color:rgba(216,179,106,.25);background:rgba(216,179,106,.045);color:#e5d3ad;border-radius:10px;font-size:11px}
-      .eparts-workspace .company-icon-button{border-color:rgba(216,179,106,.22);background:#191612;color:#e6c77f;border-radius:10px}
+      .eparts-workspace .company-icon-button{border-color:rgba(216,179,106,.22);background:#191612;color:#ff6878;border-radius:10px}
       .eparts-workspace .company-panel{border:1px solid rgba(216,179,106,.16);background:linear-gradient(145deg,rgba(27,24,20,.96),rgba(17,16,15,.98));border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.2)}
       .eparts-workspace .company-panel-head b{color:#f0e7d7}
       .eparts-workspace .company-panel-head small{color:#9e9587}
@@ -100,7 +100,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
       .eparts-workspace .company-stat-card{min-width:0;padding:19px;border:1px solid rgba(216,179,106,.16);border-radius:14px;background:linear-gradient(145deg,rgba(43,35,25,.72),rgba(21,19,17,.98));transition:transform .18s ease,border-color .18s ease}
       .eparts-workspace .company-stat-card:hover{transform:translateY(-2px);border-color:rgba(216,179,106,.35)}
       .eparts-workspace .company-stat-card span{color:#b9ad98;font-size:11px;line-height:1.45}
-      .eparts-workspace .company-stat-card strong{display:block;margin-top:8px;color:#f0d18c;font-size:clamp(22px,2.2vw,29px);letter-spacing:-.5px;overflow-wrap:anywhere}
+      .eparts-workspace .company-stat-card strong{display:block;margin-top:8px;color:#ff8793;font-size:clamp(22px,2.2vw,29px);letter-spacing:-.5px;overflow-wrap:anywhere}
       .eparts-workspace .company-footer{padding:22px 3px;color:#746d61;font-size:10px}
       .eparts-workspace .eparts-mobile-menu-button{display:none}
       @media(max-width:900px){.eparts-workspace .company-sidebar{width:250px}.eparts-workspace .company-main{padding:25px 20px}}
@@ -112,7 +112,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         .eparts-workspace .company-logo>span{width:38px;height:38px}
         .eparts-workspace .company-logo b{font-size:16px}
         .eparts-workspace .company-logo small{font-size:7px}
-        .eparts-workspace .eparts-mobile-menu-button{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border:1px solid rgba(216,179,106,.24);border-radius:10px;background:#211b12;color:#e9cb88}
+        .eparts-workspace .eparts-mobile-menu-button{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border:1px solid rgba(216,179,106,.24);border-radius:10px;background:#211b12;color:#ff6878}
         .eparts-workspace .eparts-company-chip{display:none}
         .eparts-workspace .company-sidebar nav{display:grid;gap:14px;margin:0;padding:4px 0 15px}
         .eparts-workspace .eparts-nav-closed{display:none!important}
@@ -134,62 +134,62 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
       /* EPARTS mobile shell: header and drawer must remain visible above legacy company CSS */
       @media(max-width:760px){
         .eparts-workspace{display:block!important;min-height:100dvh!important;background:#090909!important}
-        .eparts-workspace>.company-sidebar{display:block!important;position:sticky!important;top:0!important;z-index:300!important;width:100%!important;height:auto!important;max-height:none!important;overflow:visible!important;padding:10px 14px 0!important;background:linear-gradient(105deg,#090909,#17120d 55%,#090909)!important;border:0!important;border-bottom:1px solid #b68b3c!important;box-shadow:0 8px 25px #000b!important;transform:none!important}
+        .eparts-workspace>.company-sidebar{display:block!important;position:sticky!important;top:0!important;z-index:300!important;width:100%!important;height:auto!important;max-height:none!important;overflow:visible!important;padding:10px 14px 0!important;background:linear-gradient(105deg,#090909,#17120d 55%,#090909)!important;border:0!important;border-bottom:1px solid #a90019!important;box-shadow:0 8px 25px #000b!important;transform:none!important}
         .eparts-workspace .eparts-brand-row{display:flex!important;min-height:54px!important;align-items:center!important;justify-content:space-between!important;margin:0!important;padding:0 0 9px!important}
         .eparts-workspace .company-logo{display:flex!important;align-items:center!important;gap:10px!important}
-        .eparts-workspace .company-logo>span{display:grid!important;place-items:center!important;width:42px!important;height:42px!important;border:1px solid #d9ad58!important;background:linear-gradient(145deg,#1b1710,#090909)!important;color:#e8c56e!important;border-radius:11px!important}
+        .eparts-workspace .company-logo>span{display:grid!important;place-items:center!important;width:42px!important;height:42px!important;border:1px solid #ed142c!important;background:linear-gradient(145deg,#1b1710,#090909)!important;color:#ff6878!important;border-radius:11px!important}
         .eparts-workspace .company-logo b{font-size:18px!important;letter-spacing:2px!important;color:#f2d18b!important}
-        .eparts-workspace .company-logo small{font-size:8px!important;letter-spacing:1px!important;color:#dfbd77!important}
-        .eparts-workspace .eparts-mobile-menu-button{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:42px!important;height:42px!important;border:1px solid #b58b39!important;border-radius:10px!important;background:#17130d!important;color:#f0cf7d!important}
+        .eparts-workspace .company-logo small{font-size:8px!important;letter-spacing:1px!important;color:#ff9aa5!important}
+        .eparts-workspace .eparts-mobile-menu-button{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:42px!important;height:42px!important;border:1px solid #a90019!important;border-radius:10px!important;background:#17130d!important;color:#f0cf7d!important}
         .eparts-workspace .eparts-company-chip{display:none!important}
         .eparts-workspace>.company-sidebar nav{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;padding:9px 0 13px!important;margin:0!important;max-height: min(62dvh,480px)!important;overflow:auto!important}
         .eparts-workspace>.company-sidebar nav.eparts-nav-closed{display:none!important}
         .eparts-workspace .company-nav-section{display:contents!important}
         .eparts-workspace .company-nav-section-label{display:none!important}
         .eparts-workspace>.company-sidebar nav button{display:flex!important;align-items:center!important;justify-content:flex-start!important;min-width:0!important;min-height:46px!important;padding:9px 10px!important;border:1px solid #383027!important;border-radius:10px!important;background:linear-gradient(120deg,#1b1916,#111)!important;color:#e6dfd2!important;font-size:12px!important;white-space:normal!important}
-        .eparts-workspace>.company-sidebar nav button.active{border-color:#d6ad60!important;background:linear-gradient(110deg,#5c4217,#21180c)!important;color:#ffe3a4!important;box-shadow:inset 3px 0 #edc66f!important}
+        .eparts-workspace>.company-sidebar nav button.active{border-color:#ed142c!important;background:linear-gradient(110deg,#6f1020,#21180c)!important;color:#ffe3a4!important;box-shadow:inset 3px 0 #ff6878!important}
         .eparts-workspace .company-user{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;margin:0!important;padding:9px 2px!important;border-top:1px solid #3c3020!important}
         .eparts-workspace .eparts-user-meta{display:flex!important;min-width:0!important}
         .eparts-workspace .company-user b{display:block!important;max-width:210px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
         .eparts-workspace .company-user small{display:block!important}
         .eparts-workspace .company-user button{display:flex!important;align-items:center!important;gap:5px!important;margin:0!important;padding:7px!important;font-size:10px!important}
         .eparts-workspace>.company-main{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;min-height:calc(100dvh - 70px)!important;padding:18px 13px calc(28px + env(safe-area-inset-bottom))!important;background:radial-gradient(ellipse at 50% 0%,#4c351322,transparent 40%),#090909!important}
-        .eparts-workspace .company-top{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;padding:4px 1px 15px!important;margin:0 0 15px!important;border-bottom:1px solid #44351e!important}
+        .eparts-workspace .company-top{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;padding:4px 1px 15px!important;margin:0 0 15px!important;border-bottom:1px solid #6f1020!important}
         .eparts-workspace .company-top>div:first-child{min-width:0!important}
-        .eparts-workspace .company-top small{font-size:8px!important;letter-spacing:1.5px!important;color:#c3a267!important}
+        .eparts-workspace .company-top small{font-size:8px!important;letter-spacing:1.5px!important;color:#ff8793!important}
         .eparts-workspace .company-top h1{font-size:clamp(21px,6vw,27px)!important;line-height:1.15!important;color:#f4d797!important}
         .eparts-workspace .eparts-header-actions{display:flex!important;align-items:center!important;gap:7px!important;width:auto!important;flex:none!important}
         .eparts-workspace .eparts-header-actions>a{padding:9px!important;font-size:10px!important}
         .eparts-workspace .company-icon-button{width:40px!important;height:40px!important;min-width:40px!important}
-        .eparts-workspace .company-panel{padding:14px!important;margin:0 0 14px!important;border:1px solid #59462b!important;border-radius:14px!important;background:linear-gradient(145deg,#1a1816,#101010)!important}
-        .eparts-workspace .company-panel-head{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:9px!important;flex-wrap:wrap!important;padding-bottom:12px!important;margin-bottom:13px!important;border-bottom:1px solid #443a2c!important}
+        .eparts-workspace .company-panel{padding:14px!important;margin:0 0 14px!important;border:1px solid #6f1020!important;border-radius:14px!important;background:linear-gradient(145deg,#1a1816,#101010)!important}
+        .eparts-workspace .company-panel-head{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:9px!important;flex-wrap:wrap!important;padding-bottom:12px!important;margin-bottom:13px!important;border-bottom:1px solid #6f1020!important}
         .eparts-workspace .company-panel-head>div{min-width:0!important}
-        .eparts-workspace .company-panel-head b{font-size:15px!important;color:#f2d797!important}
+        .eparts-workspace .company-panel-head b{font-size:15px!important;color:#ffb5bd!important}
         .eparts-workspace .company-panel-head small{display:block!important;margin-top:4px!important;font-size:11px!important;line-height:1.4!important;color:#b8afa2!important}
         .eparts-workspace .company-panel-head>button{min-height:40px!important;padding:8px 12px!important}
         .eparts-workspace .company-stats-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
-        .eparts-workspace .company-stat-card{display:block!important;min-width:0!important;min-height:104px!important;padding:13px!important;border:1px solid #59472d!important;border-radius:12px!important;background:linear-gradient(145deg,#262017,#141210)!important}
+        .eparts-workspace .company-stat-card{display:block!important;min-width:0!important;min-height:104px!important;padding:13px!important;border:1px solid #6f1020!important;border-radius:12px!important;background:linear-gradient(145deg,#262017,#141210)!important}
         .eparts-workspace .company-stat-card span{display:block!important;font-size:11px!important;color:#c4b79e!important}
-        .eparts-workspace .company-stat-card strong{font-size:22px!important;color:#f2cf7b!important}
+        .eparts-workspace .company-stat-card strong{font-size:22px!important;color:#ff8793!important}
         .eparts-workspace .company-inline-actions{display:flex!important;flex-wrap:wrap!important;gap:8px!important;margin-top:14px!important}
         .eparts-workspace .company-inline-actions button{min-height:43px!important}
         .eparts-workspace .company-footer{padding:15px 2px!important;font-size:9px!important}
         .eparts-workspace .eparts-admin-panel .eparts-tabs{display:none!important}
         .eparts-workspace .eparts-admin-panel .eparts-list-head{display:flex!important;align-items:flex-start!important;gap:10px!important}
         .eparts-workspace .eparts-admin-panel .eparts-list-head>button{width:100%!important;min-height:46px!important;justify-content:center!important}
-        .eparts-workspace .eparts-admin-panel .company-form{padding:12px!important;margin:12px 0!important;border-color:#6c532d!important;background:#13110e!important}
+        .eparts-workspace .eparts-admin-panel .company-form{padding:12px!important;margin:12px 0!important;border-color:#8f1524!important;background:#13110e!important}
         .eparts-workspace .eparts-admin-panel .company-form-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:10px!important}
-        .eparts-workspace .eparts-admin-panel .company-form input,.eparts-workspace .eparts-admin-panel .company-form select,.eparts-workspace .eparts-admin-panel .company-form textarea{min-height:43px!important;background:#090909!important;color:#fff!important;border:1px solid #58472e!important;border-radius:9px!important;font-size:16px!important}
+        .eparts-workspace .eparts-admin-panel .company-form input,.eparts-workspace .eparts-admin-panel .company-form select,.eparts-workspace .eparts-admin-panel .company-form textarea{min-height:43px!important;background:#090909!important;color:#fff!important;border:1px solid #6f1020!important;border-radius:9px!important;font-size:16px!important}
         .eparts-workspace .eparts-admin-panel .company-table-wrap{max-width:100%!important;overflow-x:auto!important}
         .eparts-workspace .eparts-admin-panel .company-table-wrap table{min-width:680px!important}
       }
       @media(max-width:380px){.eparts-workspace .company-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.eparts-workspace .company-stat-card{padding:10px!important}.eparts-workspace .company-stat-card strong{font-size:19px!important}}
       .eparts-workspace .eparts-mobile-bottom-nav{display:none}
       @media(max-width:760px){
-        .eparts-workspace .eparts-mobile-bottom-nav{position:fixed!important;z-index:100!important;left:10px!important;right:10px!important;bottom:calc(8px + env(safe-area-inset-bottom))!important;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:3px!important;padding:7px 5px!important;border:1px solid #755b31!important;border-radius:16px!important;background:rgba(15,13,11,.96)!important;box-shadow:0 8px 30px #000c,0 0 16px #d6ad6022!important;backdrop-filter:blur(14px)!important}
+        .eparts-workspace .eparts-mobile-bottom-nav{position:fixed!important;z-index:100!important;left:10px!important;right:10px!important;bottom:calc(8px + env(safe-area-inset-bottom))!important;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:3px!important;padding:7px 5px!important;border:1px solid #8f1524!important;border-radius:16px!important;background:rgba(15,13,11,.96)!important;box-shadow:0 8px 30px #000c,0 0 16px #ed142c22!important;backdrop-filter:blur(14px)!important}
         .eparts-workspace .eparts-mobile-bottom-nav button{display:flex!important;min-width:0!important;min-height:48px!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:4px!important;padding:4px 2px!important;border:1px solid transparent!important;border-radius:10px!important;background:transparent!important;color:#b9ad98!important;font-size:9px!important;font-weight:650!important}
-        .eparts-workspace .eparts-mobile-bottom-nav button svg{color:#d8b36a!important}
-        .eparts-workspace .eparts-mobile-bottom-nav button.active{border-color:#9c762f!important;background:linear-gradient(145deg,#493516,#21190d)!important;color:#ffe4a3!important}
+        .eparts-workspace .eparts-mobile-bottom-nav button svg{color:#ed142c!important}
+        .eparts-workspace .eparts-mobile-bottom-nav button.active{border-color:#9c762f!important;background:linear-gradient(145deg,#6f1020,#21190d)!important;color:#ffb5bd!important}
         .eparts-workspace .eparts-mobile-bottom-nav button.active svg{color:#ffda83!important}
         .eparts-workspace>.company-main{padding-bottom:calc(100px + env(safe-area-inset-bottom))!important}
       }
@@ -230,7 +230,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         .eparts-workspace>.company-sidebar nav:not(.eparts-nav-closed){
           position:fixed!important;top:76px!important;left:12px!important;right:12px!important;z-index:310!important;
           display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:13px!important;max-height:calc(100dvh - 96px)!important;overflow-y:auto!important;
-          padding:16px!important;border:1px solid #70562e!important;border-radius:16px!important;
+          padding:16px!important;border:1px solid #8f1524!important;border-radius:16px!important;
           background:linear-gradient(155deg,#171410 0%,#0d0c0b 72%)!important;
           box-shadow:0 22px 65px #000e,0 0 0 100vmax #0009!important;
           overscroll-behavior:contain!important;
@@ -253,16 +253,16 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
       .eparts-workspace .eparts-overview-panel .company-panel-head{align-items:center!important}
       .eparts-workspace .eparts-overview-panel .company-panel-head>div{min-width:0!important}
       .eparts-workspace .eparts-overview-panel .company-stats-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;margin-top:18px!important}
-      .eparts-workspace .eparts-overview-panel .company-stat-card{min-height:112px!important;padding:17px!important;border:1px solid #51432e!important;border-radius:13px!important;background:linear-gradient(145deg,#1c1a16,#121110)!important}
+      .eparts-workspace .eparts-overview-panel .company-stat-card{min-height:112px!important;padding:17px!important;border:1px solid #6f1020!important;border-radius:13px!important;background:linear-gradient(145deg,#1c1a16,#121110)!important}
       .eparts-workspace .eparts-overview-panel .company-stat-card span{display:block!important;font-size:12px!important;line-height:1.4!important;color:#bcb09b!important}
       .eparts-workspace .eparts-overview-panel .company-stat-card strong{display:block!important;margin-top:12px!important;font-size:27px!important;line-height:1.1!important;color:#f0cf83!important;overflow-wrap:anywhere!important}
       .eparts-workspace .eparts-quick-panel{margin:0!important}
       .eparts-workspace .eparts-quick-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;margin-top:15px!important}
-      .eparts-workspace .eparts-quick-grid button{display:flex!important;min-width:0!important;min-height:112px!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:7px!important;padding:13px 8px!important;border:1px solid #51432e!important;border-radius:13px!important;background:linear-gradient(145deg,#211c13,#131210)!important;color:#e9d5a9!important}
-      .eparts-workspace .eparts-quick-grid button svg{color:#e1bd73!important}
+      .eparts-workspace .eparts-quick-grid button{display:flex!important;min-width:0!important;min-height:112px!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:7px!important;padding:13px 8px!important;border:1px solid #6f1020!important;border-radius:13px!important;background:linear-gradient(145deg,#211c13,#131210)!important;color:#ffd0d5!important}
+      .eparts-workspace .eparts-quick-grid button svg{color:#ff8793!important}
       .eparts-workspace .eparts-quick-grid button b{font-size:13px!important;color:#f5ead5!important}
       .eparts-workspace .eparts-quick-grid button small{font-size:10px!important;color:#a99d89!important;text-align:center!important}
-      .eparts-workspace .eparts-quick-grid button:hover{border-color:#c49b52!important;background:#292115!important}
+      .eparts-workspace .eparts-quick-grid button:hover{border-color:#a90019!important;background:#292115!important}
       @media(max-width:760px){
         .eparts-workspace .eparts-dashboard{gap:13px!important}
         .eparts-workspace .eparts-overview-panel .company-panel-head{align-items:stretch!important;flex-direction:column!important}
@@ -284,10 +284,10 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
       .eparts-workspace .company-top small{font-weight:700!important}
       .eparts-workspace .eparts-header-actions{flex-wrap:wrap!important;justify-content:flex-end!important}
       .eparts-workspace button,.eparts-workspace a{transition:background .18s ease,border-color .18s ease,color .18s ease,transform .18s ease!important}
-      .eparts-workspace .company-primary{border:1px solid #d6ad60!important;border-radius:10px!important;background:linear-gradient(135deg,#d8b36a,#a87932)!important;color:#17120a!important;font-weight:750!important;box-shadow:0 5px 16px #b58b3922!important}
+      .eparts-workspace .company-primary{border:1px solid #ed142c!important;border-radius:10px!important;background:linear-gradient(135deg,#ed142c,#a87932)!important;color:#17120a!important;font-weight:750!important;box-shadow:0 5px 16px #a9001922!important}
       .eparts-workspace .company-primary:hover{filter:brightness(1.08)!important;transform:translateY(-1px)!important}
-      .eparts-workspace .company-secondary{border:1px solid #51432e!important;border-radius:10px!important;background:#191714!important;color:#e8d6b3!important}
-      .eparts-workspace .company-secondary:hover{border-color:#bd9650!important;background:#242017!important;color:#ffe3a4!important}
+      .eparts-workspace .company-secondary{border:1px solid #6f1020!important;border-radius:10px!important;background:#191714!important;color:#ffd0d5!important}
+      .eparts-workspace .company-secondary:hover{border-color:#a90019!important;background:#242017!important;color:#ffe3a4!important}
       .eparts-workspace .company-panel{padding:22px!important;border-color:#393126!important;border-radius:17px!important;background:linear-gradient(145deg,#171614,#10100f)!important;box-shadow:0 12px 34px #0005!important}
       .eparts-workspace .company-panel-head{gap:14px!important}
       .eparts-workspace .company-panel-head b{font-size:15px!important;font-weight:700!important;letter-spacing:-.01em!important}
@@ -295,22 +295,22 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
       .eparts-workspace .company-stat-card{border-color:#403522!important;background:linear-gradient(145deg,#211d16,#141311)!important;box-shadow:inset 0 1px #ffffff08!important}
       .eparts-workspace .company-stat-card span{font-weight:550!important;color:#bdb19c!important}
       .eparts-workspace .company-stat-card strong{font-weight:750!important}
-      .eparts-workspace .company-form{display:grid!important;gap:15px!important;padding:20px!important;border:1px solid #51432e!important;border-radius:14px!important;background:#141311!important}
-      .eparts-workspace .company-form label{display:grid!important;gap:7px!important;color:#d9c9aa!important;font-size:12px!important;font-weight:650!important}
+      .eparts-workspace .company-form{display:grid!important;gap:15px!important;padding:20px!important;border:1px solid #6f1020!important;border-radius:14px!important;background:#141311!important}
+      .eparts-workspace .company-form label{display:grid!important;gap:7px!important;color:#ffd0d5!important;font-size:12px!important;font-weight:650!important}
       .eparts-workspace .company-form input,.eparts-workspace .company-form select,.eparts-workspace .company-form textarea,.eparts-workspace select,.eparts-workspace input:not([type=checkbox]){min-height:42px!important;border:1px solid #494033!important;border-radius:9px!important;background:#0d0d0c!important;color:#f6f0e5!important;padding:10px 12px!important;outline:none!important}
-      .eparts-workspace .company-form input:focus,.eparts-workspace .company-form select:focus,.eparts-workspace .company-form textarea:focus,.eparts-workspace select:focus,.eparts-workspace input:focus{border-color:#c49b52!important;box-shadow:0 0 0 3px #c49b5220!important}
+      .eparts-workspace .company-form input:focus,.eparts-workspace .company-form select:focus,.eparts-workspace .company-form textarea:focus,.eparts-workspace select:focus,.eparts-workspace input:focus{border-color:#a90019!important;box-shadow:0 0 0 3px #a9001920!important}
       .eparts-workspace .company-form textarea{min-height:82px!important;resize:vertical!important}
       .eparts-workspace .company-form-grid{gap:14px!important}
       .eparts-workspace .company-form-actions{display:flex!important;justify-content:flex-end!important;flex-wrap:wrap!important;gap:9px!important;padding-top:8px!important;border-top:1px solid #332d24!important}
       .eparts-workspace .company-table-wrap{overflow:auto!important;border:1px solid #393126!important;border-radius:12px!important;background:#11100f!important}
       .eparts-workspace table{width:100%!important;border-collapse:separate!important;border-spacing:0!important}
-      .eparts-workspace table th{padding:13px 14px!important;background:#1d1913!important;color:#cbb17d!important;font-size:10px!important;font-weight:800!important;letter-spacing:.08em!important;white-space:nowrap!important;border-bottom:1px solid #493a25!important}
+      .eparts-workspace table th{padding:13px 14px!important;background:#1d1913!important;color:#ff9aa5!important;font-size:10px!important;font-weight:800!important;letter-spacing:.08em!important;white-space:nowrap!important;border-bottom:1px solid #493a25!important}
       .eparts-workspace table td{padding:13px 14px!important;border-bottom:1px solid #29251f!important;color:#ded7ca!important;font-size:12px!important;vertical-align:middle!important}
       .eparts-workspace table tr:last-child td{border-bottom:0!important}
       .eparts-workspace table tbody tr:hover td{background:#ffffff06!important}
-      .eparts-workspace table td b{color:#f4e8d1!important}
+      .eparts-workspace table td b{color:#ffd0d5!important}
       .eparts-workspace table td small{display:block!important;margin-top:4px!important;color:#958b7b!important}
-      .eparts-workspace .company-empty{padding:24px!important;border:1px dashed #51432e!important;border-radius:12px!important;background:#141311!important;color:#bdb19c!important;text-align:center!important}
+      .eparts-workspace .company-empty{padding:24px!important;border:1px dashed #6f1020!important;border-radius:12px!important;background:#141311!important;color:#bdb19c!important;text-align:center!important}
       .eparts-workspace .company-error-banner,.eparts-workspace .company-success-banner{border-radius:10px!important;padding:12px 14px!important}
       @media(max-width:760px){
         .eparts-workspace .company-main{padding-left:13px!important;padding-right:13px!important}
@@ -335,19 +335,19 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         .eparts-workspace .eparts-mobile-drawer .company-nav-section{display:grid!important;gap:6px!important;padding-top:9px!important;border-top:1px solid #3b3020!important}
         .eparts-workspace .eparts-mobile-drawer .company-nav-section:first-child{padding-top:0!important;border-top:0!important}
         .eparts-workspace .eparts-mobile-drawer .company-nav-section-label{display:block!important;padding:3px 8px!important;color:#d2ad68!important;font-size:9px!important;letter-spacing:1.35px!important;font-weight:800!important}
-        .eparts-workspace .eparts-mobile-drawer button,.eparts-workspace .eparts-mobile-drawer .eparts-nav-link{display:flex!important;align-items:center!important;gap:12px!important;width:100%!important;min-height:46px!important;padding:10px 12px!important;border:1px solid #51432e!important;border-radius:10px!important;background:#171512!important;color:#f0e4cb!important;font-size:13px!important;text-decoration:none!important;text-align:left!important}
-        .eparts-workspace .eparts-mobile-drawer button.active{border-color:#d6ad60!important;background:#493516!important;color:#ffe3a4!important}
-        .eparts-workspace .eparts-mobile-drawer svg{flex:none!important;color:#e1bd73!important}
+        .eparts-workspace .eparts-mobile-drawer button,.eparts-workspace .eparts-mobile-drawer .eparts-nav-link{display:flex!important;align-items:center!important;gap:12px!important;width:100%!important;min-height:46px!important;padding:10px 12px!important;border:1px solid #6f1020!important;border-radius:10px!important;background:#171512!important;color:#ffd0d5!important;font-size:13px!important;text-decoration:none!important;text-align:left!important}
+        .eparts-workspace .eparts-mobile-drawer button.active{border-color:#ed142c!important;background:#6f1020!important;color:#ffe3a4!important}
+        .eparts-workspace .eparts-mobile-drawer svg{flex:none!important;color:#ff8793!important}
       }
       .eparts-workspace .eparts-menu-page{display:grid;gap:13px}
       .eparts-workspace .eparts-menu-group{margin:0!important}
       .eparts-workspace .eparts-menu-group .company-panel-head{margin-bottom:12px}
-      .eparts-workspace .eparts-menu-group .company-panel-head b{color:#d9b66f;font-size:11px;letter-spacing:1.4px}
+      .eparts-workspace .eparts-menu-group .company-panel-head b{color:#ff6878;font-size:11px;letter-spacing:1.4px}
       .eparts-workspace .eparts-menu-options{display:grid;gap:8px}
-      .eparts-workspace .eparts-menu-options button,.eparts-workspace .eparts-menu-options a{display:flex;align-items:center;gap:12px;width:100%;min-height:49px;padding:12px;border:1px solid #51432e;border-radius:10px;background:#171512;color:#f0e4cb;text-align:left;text-decoration:none;font-size:13px}
+      .eparts-workspace .eparts-menu-options button,.eparts-workspace .eparts-menu-options a{display:flex;align-items:center;gap:12px;width:100%;min-height:49px;padding:12px;border:1px solid #6f1020;border-radius:10px;background:#171512;color:#ffd0d5;text-align:left;text-decoration:none;font-size:13px}
       .eparts-workspace .eparts-menu-options button>span,.eparts-workspace .eparts-menu-options a>span{flex:1}
-      .eparts-workspace .eparts-menu-options button>svg:first-child,.eparts-workspace .eparts-menu-options a>svg:first-child{color:#e1bd73}
-      .eparts-workspace .eparts-menu-options button.active{border-color:#d6ad60;background:#493516;color:#ffe3a4}
+      .eparts-workspace .eparts-menu-options button>svg:first-child,.eparts-workspace .eparts-menu-options a>svg:first-child{color:#ff8793}
+      .eparts-workspace .eparts-menu-options button.active{border-color:#ed142c;background:#6f1020;color:#ffe3a4}
       @media(max-width:760px){.eparts-workspace .eparts-menu-page{padding-bottom:8px}.eparts-workspace .eparts-menu-group{padding:13px!important}.eparts-workspace .eparts-menu-options button,.eparts-workspace .eparts-menu-options a{min-height:48px;font-size:13px}}
     `}</style>
     <aside className="company-sidebar">
