@@ -69,9 +69,9 @@ export default function EpartsRegistrations({companyId,initialTab,initialCreate=
   return <section className="company-panel eparts-registrations">
     <style>{`
       .eparts-registrations .er-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:16px 0}
-      .eparts-registrations .er-tabs button{min-height:44px;border:1px solid #66502c;border-radius:10px;background:#17130e;color:#e8d6b1;font-weight:650}
-      .eparts-registrations .er-tabs button.active{background:linear-gradient(110deg,#604719,#241b0e);border-color:#d8b36a;color:#ffe4a3}
-      .eparts-registrations .er-form{display:grid;gap:12px;padding:16px;margin:14px 0;border:1px solid #70562e;border-radius:14px;background:#12110f}
+      .eparts-registrations .er-tabs button{min-height:44px;border:1px solid #66502c;border-radius:10px;background:#17130e;color:#ffd0d5;font-weight:650}
+      .eparts-registrations .er-tabs button.active{background:linear-gradient(110deg,#604719,#241b0e);border-color:#ed142c;color:#ffb5bd}
+      .eparts-registrations .er-form{display:grid;gap:12px;padding:16px;margin:14px 0;border:1px solid #8f1524;border-radius:14px;background:#12110f}
       .eparts-registrations .er-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
       .eparts-registrations label{display:grid;gap:6px;color:#d7c8ab;font-size:12px}
       .eparts-registrations input,.eparts-registrations textarea{width:100%;min-height:43px;box-sizing:border-box;padding:10px;border:1px solid #57472f;border-radius:9px;background:#090909;color:#fff;font-size:16px}
@@ -79,8 +79,8 @@ export default function EpartsRegistrations({companyId,initialTab,initialCreate=
       .eparts-registrations .er-table{width:100%;overflow:auto}
       .eparts-registrations table{width:100%;min-width:520px;border-collapse:collapse}
       .eparts-registrations th,.eparts-registrations td{padding:12px;text-align:left;border-bottom:1px solid #3c3327;color:#e8e0d3;font-size:12px}
-      .eparts-registrations th{color:#c8a96c;font-size:10px}
-      .eparts-registrations .er-message{padding:11px;border-radius:9px;margin:10px 0;background:#292016;color:#f2d79b}
+      .eparts-registrations th{color:#ed142c;font-size:10px}
+      .eparts-registrations .er-message{padding:11px;border-radius:9px;margin:10px 0;background:#292016;color:#ffb5bd}
       @media(max-width:600px){.eparts-registrations .er-grid{grid-template-columns:1fr}.eparts-registrations .er-form{padding:12px}}
     `}</style>
     <div className="company-panel-head"><div><b>Cadastros da EPARTS</b><small>Gerencie clientes, fornecedores, marcas e categorias</small></div><button type="button" className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar</button></div>
