@@ -4,6 +4,7 @@ import { Building2, CreditCard, ExternalLink, LoaderCircle, LogOut, Mail, Shield
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 import { listMyCompanies, registerCompany, type Company, type CompanyMembership } from '../lib/company-data'
 import CompanyWorkspace from './CompanyWorkspace'
+import EpartsWorkspace from './EpartsWorkspace'
 import PlatformAdminPanel from './PlatformAdminPanel'
 
 const EPARTS_COMPANY_ID = '336c5941-6f23-418e-968e-730442650d98'
@@ -315,7 +316,7 @@ export default function CompanyAuthGate() {
       <p><b>E-mail:</b> {registrationInfo.email}</p>
       <p>Entre com seu e-mail e senha. Para funcionários, use o código da empresa, usuário e PIN.</p>
       <button className="company-link" onClick={()=>setRegistrationInfo(null)}>Continuar</button>
-    </section>}</><CompanyWorkspace company={selected} role={memberships.find(m=>m.company_id===selected.id)?.role||'technician'} email={session.user.email||''} onSignOut={signOut}/></>
+    </section>}</>{epartsOnly ? <EpartsWorkspace companyId={selected.id} companyName={selected.name} role={memberships.find(m=>m.company_id===selected.id)?.role||'technician'} email={session.user.email||''} onSignOut={signOut}/> : <CompanyWorkspace company={selected} role={memberships.find(m=>m.company_id===selected.id)?.role||'technician'} email={session.user.email||''} onSignOut={signOut}/>} </>
   }
 
   if (epartsOnly && !selected && memberships.length === 0) return <main className="company-auth"><section className="company-auth-card"><div className="company-auth-brand"><Smartphone size={25}/><div><b>EPARTS</b><small>ACESSO EXCLUSIVO</small></div></div><h1>Usuário sem acesso à EPARTS</h1><p>Esta conta não possui vínculo com a empresa EPARTS. O ambiente é restrito aos usuários cadastrados e autorizados pela própria empresa.</p><button className="company-primary" onClick={signOut}>Sair da conta</button></section></main>
