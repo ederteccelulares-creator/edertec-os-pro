@@ -23,7 +23,7 @@ export default function EpartsRegistrations({companyId,initialTab,initialCreate=
     if(!supabase)return
     setLoading(true);setError('')
     try {
-      const columns=tab==='customers'?'id,name,phone,email,document,address':tab==='suppliers'?'id,name,contact_name,phone,email,document,notes,is_active':'id,name,description,is_active'
+      const columns=tab==='customers'?'id,name,phone,email,document,address':tab==='suppliers'?'id,name,contact_name,phone,email,document,notes,is_active':tab==='brands'?'id,name':'id,name,description,is_active'
       const {data,error}=await supabase.from(table).select(columns).eq('company_id',companyId).order('name')
       if(error)throw error
       setRows(data||[])
