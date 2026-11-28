@@ -17,13 +17,16 @@ export default function EpartsRegistrations({companyId,initialTab,initialCreate=
   const [error,setError]=useState('')
   const [notice,setNotice]=useState('')
   const [search,setSearch]=useState('')
+  const [accessSupplier,setAccessSupplier]=useState<Row|null>(null)
+  const [accessUsername,setAccessUsername]=useState('')
+  const [accessPassword,setAccessPassword]=useState('')
   const table=tab==='customers'?'eparts_customers':tab==='suppliers'?'eparts_suppliers':tab==='brands'?'eparts_brands':'eparts_categories'
   const label=tab==='customers'?'cliente':tab==='suppliers'?'fornecedor':tab==='brands'?'marca':'categoria'
   const load=async()=>{
     if(!supabase)return
     setLoading(true);setError('')
     try {
-      const columns=tab==='customers'?'id,name,phone,email,document,address':tab==='suppliers'?'id,name,contact_name,phone,email,document,notes,is_active':tab==='brands'?'id,name':'id,name,description,is_active'
+      const columns=tab==='customers'?'id,name,phone,email,document,address':tab==='suppliers'?'id,name,contact_name,phone,email,document,notes,is_active,username':tab==='brands'?'id,name':'id,name,description,is_active'
       const {data,error}=await supabase.from(table).select(columns).eq('company_id',companyId).order('name')
       if(error)throw error
       setRows(data||[])
@@ -47,6 +50,18 @@ export default function EpartsRegistrations({companyId,initialTab,initialCreate=
       setForm(empty);setShowForm(false);setNotice(label[0].toUpperCase()+label.slice(1)+' cadastrado(a) com sucesso.');await load()
     } catch(e) {setError(e instanceof Error?e.message:'Não foi possível salvar o cadastro.')}
     finally {setBusy(false)}
+  }
+  async function saveSupplierAccess(e:FormEvent){
+    e.preventDefault();if(!supabase||!accessSupplier)return
+    setBusy(true);setError('');setNotice('')
+    try{
+      const {data,error}=await supabase.functions.invoke('eparts-supplier-access',{body:{supplier_id:accessSupplier.id,username:accessUsername.trim().toLowerCase(),password:accessPassword}})
+      if(error)throw error
+      if(data?.error)throw new Error(data.error)
+      setNotice('Acesso criado/atualizado para '+accessSupplier.name+'. Entregue o usuário e a senha ao fornecedor.')
+      setAccessSupplier(null);setAccessUsername('');setAccessPassword('');await load()
+    }catch(e){setError(e instanceof Error?e.message:'Não foi possível criar o acesso do fornecedor.')}
+    finally{setBusy(false)}
   }
   const filtered=rows.filter(r=>[r.name,r.phone||'',r.email||'',r.document||'',r.contact_name||'',r.description||''].join(' ').toLocaleLowerCase('pt-BR').includes(search.toLocaleLowerCase('pt-BR')))
   const titles={customers:'Clientes',suppliers:'Fornecedores',brands:'Marcas',categories:'Categorias'}
@@ -72,6 +87,14 @@ export default function EpartsRegistrations({companyId,initialTab,initialCreate=
     <div className="er-tabs">{(Object.keys(titles) as Tab[]).map(k=>{const I=k==='customers'?Users:k==='suppliers'?Truck:k==='brands'?Tags:FolderOpen;return <button type="button" key={k} className={tab===k?'active':''} onClick={()=>{setTab(k);setShowForm(false);setSearch('')}}><I size={15}/> {titles[k]} ({k===tab?rows.length:'•'})</button>})}</div>
     <div className="company-panel-head"><div><b><Icon size={17}/> {titles[tab]} cadastrados</b><small>Cadastro separado por empresa, com acesso protegido</small></div><button type="button" className="company-primary" onClick={startNew}><BadgePlus size={16}/> Cadastrar {label}</button></div>
     {error&&<div className="er-message" role="alert">{error}</div>}{notice&&<div className="er-message" role="status">{notice}</div>}
+    {tab==='suppliers'&&accessSupplier&&<form className="er-form" onSubmit={saveSupplierAccess}>
+      <div><b>Acesso do fornecedor: {accessSupplier.name}</b><p>Crie um usuário e uma senha com pelo menos 8 caracteres.</p></div>
+      <div className="er-grid">
+        <label>Usuário<input required minLength={4} maxLength={30} autoCapitalize="none" value={accessUsername} onChange={e=>setAccessUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g,''))} placeholder="ex.: fornecedor01"/></label>
+        <label>Senha provisória<input required minLength={8} maxLength={72} type="password" autoComplete="new-password" value={accessPassword} onChange={e=>setAccessPassword(e.target.value)} placeholder="Mínimo de 8 caracteres"/></label>
+      </div>
+      <div className="er-actions"><button type="button" className="company-secondary" onClick={()=>setAccessSupplier(null)}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Salvando acesso...':'Salvar acesso'}</button></div>
+    </form>}
     {showForm&&<form className="er-form" onSubmit={save}>
       <div className="er-grid">
         <label>Nome {tab==='customers'?'completo':tab==='suppliers'?'da empresa / fornecedor':tab==='brands'?'da marca':'da categoria'}<input autoFocus required value={form.name} onChange={e=>setForm(v=>({...v,name:e.target.value}))} placeholder="Digite o nome"/></label>
@@ -84,6 +107,6 @@ export default function EpartsRegistrations({companyId,initialTab,initialCreate=
       <div className="er-actions"><button type="button" className="company-secondary" onClick={()=>setShowForm(false)}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Salvando...':'Salvar '+label}</button></div>
     </form>}
     <label style={{display:'block',margin:'14px 0'}}>Buscar {label}<input value={search} onChange={e=>setSearch(e.target.value)} placeholder={'Digite o nome do '+label}/></label>
-    {loading?<p className="company-empty">Carregando cadastros...</p>:filtered.length===0?<p className="company-empty">Nenhum(a) {label} encontrado(a). Clique em “Cadastrar {label}” para adicionar.</p>:<div className="er-table"><table><thead><tr><th>NOME</th>{tab==='customers'&&<><th>TELEFONE</th><th>E-MAIL</th><th>DOCUMENTO</th></>}{tab==='suppliers'&&<><th>RESPONSÁVEL</th><th>TELEFONE</th><th>E-MAIL</th></>}{tab==='categories'&&<th>DESCRIÇÃO</th>}{tab==='brands'&&<th>CADASTRO</th>}</tr></thead><tbody>{filtered.map(r=><tr key={r.id}><td><b>{r.name}</b></td>{tab==='customers'&&<><td>{r.phone||'—'}</td><td>{r.email||'—'}</td><td>{r.document||'—'}</td></>}{tab==='suppliers'&&<><td>{r.contact_name||'—'}</td><td>{r.phone||'—'}</td><td>{r.email||'—'}</td></>}{tab==='categories'&&<td>{r.description||'—'}</td>}{tab==='brands'&&<td>Ativa</td>}</tr>)}</tbody></table></div>}
+    {loading?<p className="company-empty">Carregando cadastros...</p>:filtered.length===0?<p className="company-empty">Nenhum(a) {label} encontrado(a). Clique em “Cadastrar {label}” para adicionar.</p>:<div className="er-table"><table><thead><tr><th>NOME</th>{tab==='customers'&&<><th>TELEFONE</th><th>E-MAIL</th><th>DOCUMENTO</th></>}{tab==='suppliers'&&<><th>RESPONSÁVEL</th><th>TELEFONE</th><th>E-MAIL</th><th>USUÁRIO</th><th>ACESSO</th></>}{tab==='categories'&&<th>DESCRIÇÃO</th>}{tab==='brands'&&<th>CADASTRO</th>}</tr></thead><tbody>{filtered.map(r=><tr key={r.id}><td><b>{r.name}</b></td>{tab==='customers'&&<><td>{r.phone||'—'}</td><td>{r.email||'—'}</td><td>{r.document||'—'}</td></>}{tab==='suppliers'&&<><td>{r.contact_name||'—'}</td><td>{r.phone||'—'}</td><td>{r.email||'—'}</td><td>{r.username||'Não criado'}</td><td><button type="button" className="company-secondary" onClick={()=>{setAccessSupplier(r);setAccessUsername(r.username||'');setAccessPassword('')}}>{r.username?'Alterar acesso':'Criar acesso'}</button></td></>}{tab==='categories'&&<td>{r.description||'—'}</td>}{tab==='brands'&&<td>Ativa</td>}</tr>)}</tbody></table></div>}
   </section>
 }
