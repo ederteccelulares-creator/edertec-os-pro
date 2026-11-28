@@ -324,6 +324,20 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         .eparts-workspace table th,.eparts-workspace table td{padding:11px 10px!important}
       }
 
+
+      /* Mobile drawer outside sticky sidebar: avoids iOS Safari clipping */
+      .eparts-workspace .eparts-mobile-drawer-backdrop{display:none}
+      @media(max-width:760px){
+        .eparts-workspace>.company-sidebar>nav{display:none!important}
+        .eparts-workspace .eparts-mobile-drawer-backdrop{display:block!important;position:fixed!important;inset:0!important;z-index:9998!important;background:rgba(0,0,0,.72)!important;backdrop-filter:blur(3px)!important}
+        .eparts-workspace .eparts-mobile-drawer{position:absolute!important;top:max(12px,env(safe-area-inset-top))!important;left:12px!important;right:12px!important;max-height:calc(100dvh - 24px - env(safe-area-inset-bottom))!important;overflow-y:auto!important;display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:12px!important;padding:17px!important;border:1px solid #8a6935!important;border-radius:16px!important;background:linear-gradient(155deg,#1c1812,#090909 78%)!important;box-shadow:0 22px 65px #000e!important;overscroll-behavior:contain!important}
+        .eparts-workspace .eparts-mobile-drawer .company-nav-section{display:grid!important;gap:6px!important;padding-top:9px!important;border-top:1px solid #3b3020!important}
+        .eparts-workspace .eparts-mobile-drawer .company-nav-section:first-child{padding-top:0!important;border-top:0!important}
+        .eparts-workspace .eparts-mobile-drawer .company-nav-section-label{display:block!important;padding:3px 8px!important;color:#d2ad68!important;font-size:9px!important;letter-spacing:1.35px!important;font-weight:800!important}
+        .eparts-workspace .eparts-mobile-drawer button,.eparts-workspace .eparts-mobile-drawer .eparts-nav-link{display:flex!important;align-items:center!important;gap:12px!important;width:100%!important;min-height:46px!important;padding:10px 12px!important;border:1px solid #51432e!important;border-radius:10px!important;background:#171512!important;color:#f0e4cb!important;font-size:13px!important;text-decoration:none!important;text-align:left!important}
+        .eparts-workspace .eparts-mobile-drawer button.active{border-color:#d6ad60!important;background:#493516!important;color:#ffe3a4!important}
+        .eparts-workspace .eparts-mobile-drawer svg{flex:none!important;color:#e1bd73!important}
+      }
     `}</style>
     <aside className="company-sidebar">
       <div className="eparts-brand-row">
@@ -351,6 +365,21 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         <button onClick={onSignOut}><LogOut size={15}/> Sair da conta</button>
       </div>
     </aside>
+    {menuOpen&&<div className="eparts-mobile-drawer-backdrop" onClick={()=>setMenuOpen(false)}>
+      <nav className="eparts-mobile-drawer" aria-label="Menu EPARTS" onClick={e=>e.stopPropagation()}>
+        {navItems.map(group=><div className="company-nav-section" key={group.section}>
+          <span className="company-nav-section-label">{group.section}</span>
+          {group.items.map(item=><button type="button" key={item.id} className={tab===item.id?'active':''} onClick={()=>nav(item.id)}><item.icon size={17}/><span>{item.label}</span>{tab===item.id&&<ChevronRight className="eparts-nav-arrow" size={15}/>}</button>)}
+          {group.section==='CADASTRO RÁPIDO'&&<>
+            <button type="button" onClick={()=>quickAdd('customers')}><Users size={17}/><span>Cadastrar cliente</span><ChevronRight className="eparts-nav-arrow" size={15}/></button>
+            <button type="button" onClick={()=>quickAdd('suppliers')}><Truck size={17}/><span>Cadastrar fornecedor</span><ChevronRight className="eparts-nav-arrow" size={15}/></button>
+            <button type="button" onClick={()=>quickAdd('brands')}><Tags size={17}/><span>Cadastrar marca</span><ChevronRight className="eparts-nav-arrow" size={15}/></button>
+            <button type="button" onClick={()=>quickAdd('categories')}><Boxes size={17}/><span>Cadastrar categoria</span><ChevronRight className="eparts-nav-arrow" size={15}/></button>
+          </>}
+          {group.section==='CATÁLOGO ONLINE'&&<a className="eparts-nav-link" href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer" onClick={()=>setMenuOpen(false)}><Store size={17}/><span>Abrir catálogo</span><ExternalLink size={14} className="eparts-nav-arrow"/></a>}
+        </div>)}
+      </nav>
+    </div>}
     <nav className="eparts-mobile-bottom-nav" aria-label="Navegação rápida">
       <button className={tab==='dashboard'?'active':''} onClick={()=>nav('dashboard')}><LayoutDashboard size={19}/><span>Início</span></button>
       <button className={tab==='products'?'active':''} onClick={()=>nav('products')}><Package size={19}/><span>Produtos</span></button>
