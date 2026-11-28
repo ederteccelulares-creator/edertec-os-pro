@@ -21,7 +21,7 @@ if ('serviceWorker' in navigator) {
 const params = new URLSearchParams(window.location.search);
 const trackingToken = params.get('acompanhar');
 const customerPortalToken = params.get('area-cliente');
-const path = window.location.pathname.replace(/\\/+$/, '') || '/';
+const path = window.location.pathname.replace(/\/+$/, '') || '/';
 const epartsCatalog = params.get('catalogo') === 'eparts' || path === '/eparts/catalogo';
 const epartsSupplierPortal = params.get('portal') === 'fornecedor' || path === '/eparts/fornecedor';
 const epartsWorkspace = path === '/eparts';
