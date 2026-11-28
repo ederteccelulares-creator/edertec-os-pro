@@ -348,6 +348,63 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
       .eparts-workspace .eparts-menu-options button>span,.eparts-workspace .eparts-menu-options a>span{flex:1}
       .eparts-workspace .eparts-menu-options button>svg:first-child,.eparts-workspace .eparts-menu-options a>svg:first-child{color:#ff8793}
       .eparts-workspace .eparts-menu-options button.active{border-color:#ed142c;background:#6f1020;color:#ffe3a4}
+      /* Refinamento visual Edertec: vermelho consistente, menos dourado e menos brilho */
+      .eparts-workspace{
+        --ep-gold:#ed142c!important;--ep-gold-light:#ff6878!important;
+        --ep-muted:#aaa!important;
+      }
+      .eparts-workspace .company-top small{color:#e45b68!important}
+      .eparts-workspace .company-top h1{color:#f7f4f4!important}
+      .eparts-workspace .company-secondary,
+      .eparts-workspace .company-icon-button,
+      .eparts-workspace .company-panel-head>button{
+        border-color:#70202a!important;background:#211316!important;color:#ff6878!important;
+      }
+      .eparts-workspace .company-secondary:hover,
+      .eparts-workspace .company-icon-button:hover,
+      .eparts-workspace .company-panel-head>button:hover{
+        border-color:#ed142c!important;background:#3a1018!important;color:#fff!important;
+      }
+      .eparts-workspace .company-panel{border-color:#49343a!important;background:linear-gradient(145deg,#191516,#101010)!important}
+      .eparts-workspace .company-panel-head b{color:#f5eeee!important}
+      .eparts-workspace .company-stat-card{
+        border-color:#493238!important;background:linear-gradient(145deg,#21191b,#121112)!important;
+        box-shadow:inset 3px 0 #8f1524!important;
+      }
+      .eparts-workspace .company-stat-card:hover{border-color:#a52b3b!important;box-shadow:inset 3px 0 #ed142c,0 8px 22px #0007!important}
+      .eparts-workspace .company-stat-card strong{color:#fff!important}
+      .eparts-workspace .company-stat-card span{color:#c7bfc0!important}
+      .eparts-workspace .eparts-mobile-bottom-nav{
+        border-color:#76202b!important;background:rgba(12,10,11,.97)!important;
+        box-shadow:0 8px 28px #000c!important;
+      }
+      .eparts-workspace .eparts-mobile-bottom-nav button{color:#c9c0c1!important}
+      .eparts-workspace .eparts-mobile-bottom-nav button svg{color:#ed4052!important}
+      .eparts-workspace .eparts-mobile-bottom-nav button.active{
+        border-color:#ed142c!important;background:linear-gradient(145deg,#7d1423,#310d14)!important;color:#fff!important;
+        box-shadow:inset 0 0 0 1px #ed142c55!important;
+      }
+      .eparts-workspace .eparts-mobile-bottom-nav button.active svg{color:#fff!important}
+      .eparts-workspace .eparts-quick-grid button{
+        border-color:#493238!important;background:linear-gradient(145deg,#21191b,#121112)!important;color:#f5eeee!important;
+      }
+      .eparts-workspace .eparts-quick-grid button svg{color:#ed4052!important}
+      .eparts-workspace .eparts-quick-grid button:hover{border-color:#ed142c!important;background:#2b1116!important}
+      .eparts-workspace .eparts-menu-group .company-panel-head b{color:#ff6878!important}
+      .eparts-workspace .eparts-mobile-drawer{
+        border-color:#76202b!important;background:linear-gradient(155deg,#211316,#090909 78%)!important;
+      }
+      .eparts-workspace .eparts-mobile-drawer .company-nav-section-label{color:#ff6878!important}
+      .eparts-workspace .eparts-mobile-drawer button.active{background:#6f1020!important;color:#fff!important}
+      @media(max-width:760px){
+        .eparts-workspace .company-top{border-bottom-color:#4a252c!important}
+        .eparts-workspace .company-top h1{color:#fff!important}
+        .eparts-workspace .company-panel{border-color:#493238!important}
+        .eparts-workspace .company-stat-card{min-height:108px!important}
+        .eparts-workspace .company-stat-card strong{font-size:23px!important}
+        .eparts-workspace .company-panel-head b{color:#fff!important}
+        .eparts-workspace .company-panel-head small{color:#bdb3b4!important}
+      }
       @media(max-width:760px){.eparts-workspace .eparts-menu-page{padding-bottom:8px}.eparts-workspace .eparts-menu-group{padding:13px!important}.eparts-workspace .eparts-menu-options button,.eparts-workspace .eparts-menu-options a{min-height:48px;font-size:13px}}
     `}</style>
     <aside className="company-sidebar">
