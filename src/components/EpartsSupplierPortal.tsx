@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { LogOut, RefreshCw, Store } from 'lucide-react'
+import { LogOut, RefreshCw, Store, UserRound, LockKeyhole, Eye, EyeOff, ChartNoAxesColumn, Package, Tag, Coins, LogIn } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 type Supplier = { id:string; company_id:string; name:string; email:string|null; user_id:string|null }
@@ -21,6 +21,7 @@ export default function EpartsSupplierPortal(){
   const [payouts,setPayouts]=useState<Payout[]>([])
   const [username,setUsername]=useState('')
   const [password,setPassword]=useState('')
+  const [showPassword,setShowPassword]=useState(false)
   const [busy,setBusy]=useState(false)
   const [loading,setLoading]=useState(true)
   const [error,setError]=useState('')
@@ -73,46 +74,65 @@ export default function EpartsSupplierPortal(){
 
   return <main className="ep-supplier-root">
     <style>{`
-      .ep-supplier-root{min-height:100vh;padding:22px 15px 44px;background:radial-gradient(ellipse at 50% 0%,#352714 0%,#0a0908 42%);color:#f5efe4;font-family:Inter,system-ui,sans-serif}
-      .ep-supplier-wrap{width:min(1100px,100%);margin:0 auto}
-      .ep-supplier-brand{display:flex;align-items:center;gap:12px;margin:6px 0 30px}
-      .ep-supplier-brand-mark{display:grid;place-items:center;width:46px;height:46px;border:1px solid #b88b43;border-radius:13px;color:#e9c778;background:#1a160f}
-      .ep-supplier-brand b{display:block;color:#f2d18b;font-size:19px;letter-spacing:2px}
-      .ep-supplier-brand small{color:#a99a7e;font-size:9px;letter-spacing:1.5px}
-      .ep-supplier-card{padding:22px;border:1px solid #4b3b25;border-radius:17px;background:linear-gradient(145deg,#191714,#0f0e0d);box-shadow:0 18px 50px #0007}
-      .ep-supplier-login{max-width:460px;margin:8vh auto}
-      .ep-supplier-root h1{margin:0 0 8px;color:#f3d797;font-size:27px}
-      .ep-supplier-root p{color:#b8ad9b;line-height:1.55}
-      .ep-supplier-root label{display:grid;gap:7px;margin:14px 0;color:#d9c9aa;font-size:12px;font-weight:650}
-      .ep-supplier-root input{width:100%;min-height:46px;padding:11px 13px;border:1px solid #4b4030;border-radius:10px;background:#090909;color:#fff;font-size:16px}
-      .ep-supplier-root button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:43px;padding:10px 14px;border:1px solid #b58b43;border-radius:10px;background:linear-gradient(135deg,#d8b36a,#a87932);color:#17120a;font-weight:750}
-      .ep-supplier-root button:disabled{opacity:.6}
-      .ep-supplier-error{margin:14px 0;padding:12px;border:1px solid #7e3939;border-radius:10px;background:#351717;color:#ffd0d0;font-size:13px}
-      .ep-supplier-notice{color:#e8cf94!important;font-size:13px}
+      .ep-supplier-root{min-height:100vh;padding:28px 16px 48px;background:radial-gradient(ellipse at 50% 12%,#260909 0%,#100707 38%,#050505 78%);color:#f5f5f5;font-family:Inter,system-ui,sans-serif;position:relative;overflow:hidden}
+      .ep-supplier-root:before,.ep-supplier-root:after{content:"";position:fixed;pointer-events:none;width:2px;height:55vh;background:linear-gradient(transparent,#f21b24,transparent);box-shadow:0 0 18px #f21b24;transform:rotate(38deg);opacity:.65}
+      .ep-supplier-root:before{left:5%;top:-8vh}.ep-supplier-root:after{right:5%;bottom:-8vh}
+      .ep-supplier-wrap{width:min(1100px,100%);margin:0 auto;position:relative;z-index:1}
+      .ep-supplier-brand{display:flex;align-items:center;justify-content:center;gap:14px;margin:8px 0 28px;text-align:left}
+      .ep-supplier-brand-mark{display:grid;place-items:center;width:58px;height:58px;border:1px solid #ff3038;border-radius:15px;color:#ff3038;background:#130909;box-shadow:0 0 22px #ef182744}
+      .ep-supplier-brand b{display:block;color:#f5f5f5;font-size:clamp(30px,5vw,48px);font-weight:950;font-style:italic;letter-spacing:2px;text-shadow:0 2px 14px #000}
+      .ep-supplier-brand small{display:block;color:#ff343c;font-size:10px;letter-spacing:3px;font-weight:800}
+      .ep-supplier-card{padding:22px;border:1px solid #482024;border-radius:17px;background:linear-gradient(145deg,#171313,#090909);box-shadow:0 18px 50px #0009}
+      .ep-supplier-login{max-width:720px;margin:0 auto;padding:clamp(22px,5vw,48px);border:1px solid #a82a31;box-shadow:0 0 28px #e51b2430,inset 0 0 30px #e51b2408}
+      .ep-supplier-login-head{text-align:center;margin-bottom:26px}
+      .ep-supplier-login-icon{display:grid;place-items:center;width:76px;height:76px;margin:0 auto 14px;color:#f21e28;filter:drop-shadow(0 0 9px #ef1827)}
+      .ep-supplier-root h1{margin:0 0 8px;color:#fff;font-size:clamp(24px,4vw,34px);font-weight:800}
+      .ep-supplier-root p{color:#bdb5b5;line-height:1.55}
+      .ep-supplier-login-head p{max-width:430px;margin:8px auto 0;font-size:15px}
+      .ep-supplier-root label{display:grid;gap:8px;margin:15px 0;color:#e0dada;font-size:13px;font-weight:650}
+      .ep-supplier-field{display:flex;align-items:center;gap:12px;min-height:58px;padding:0 16px;border:1px solid #666;border-radius:13px;background:#080808;color:#aaa}
+      .ep-supplier-field:focus-within{border-color:#f02a34;box-shadow:0 0 0 3px #f02a3420}
+      .ep-supplier-field input{width:100%;min-width:0;min-height:54px;padding:10px 0;border:0;outline:0;background:transparent;color:#fff;font-size:16px}
+      .ep-supplier-field button{min-height:38px;padding:6px;border:0;background:transparent;color:#aaa}
+      .ep-supplier-root button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:11px 16px;border:1px solid #ff3038;border-radius:11px;background:linear-gradient(135deg,#ff252e,#b9000a);color:#fff;font-weight:800;cursor:pointer}
+      .ep-supplier-root button:disabled{opacity:.6;cursor:wait}
+      .ep-supplier-login-submit{width:100%;min-height:58px!important;margin-top:10px;font-size:17px;box-shadow:0 8px 24px #d900183d}
+      .ep-supplier-error{margin:14px 0;padding:12px;border:1px solid #a7353b;border-radius:10px;background:#351012;color:#ffd0d0;font-size:13px}
+      .ep-supplier-notice{color:#bdb5b5!important;font-size:12px;text-align:center;margin:20px 0 0}
+      .ep-supplier-login-links{display:flex;justify-content:center;gap:0;border-top:1px solid #3b3333;margin-top:26px;padding-top:20px}
+      .ep-supplier-login-links span{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;color:#eee;font-size:12px;font-weight:650}
+      .ep-supplier-login-links span+span{border-left:1px solid #514747}
+      .ep-supplier-login-links svg{color:#ff343c}
       .ep-supplier-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
-      .ep-supplier-top small{color:#c5a56a;letter-spacing:1.7px;font-size:9px;font-weight:800}
+      .ep-supplier-top small{color:#ff555c;letter-spacing:1.7px;font-size:9px;font-weight:800}
       .ep-supplier-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:17px 0}
-      .ep-supplier-stat{padding:17px;border:1px solid #51432e;border-radius:13px;background:linear-gradient(145deg,#211c14,#121110)}
-      .ep-supplier-stat span{display:block;color:#bdb19c;font-size:11px}
-      .ep-supplier-stat strong{display:block;margin-top:9px;color:#f0cf83;font-size:22px;overflow-wrap:anywhere}
+      .ep-supplier-stat{padding:17px;border:1px solid #54272b;border-radius:13px;background:linear-gradient(145deg,#211416,#121010)}
+      .ep-supplier-stat span{display:block;color:#bdb1b1;font-size:11px}
+      .ep-supplier-stat strong{display:block;margin-top:9px;color:#ff656b;font-size:22px;overflow-wrap:anywhere}
       .ep-supplier-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:16px 0}
       .ep-supplier-filters label{min-width:140px;flex:1;margin:0}
-      .ep-supplier-table-wrap{overflow:auto;border:1px solid #393126;border-radius:12px}
+      .ep-supplier-root input{width:100%;min-height:46px;padding:11px 13px;border:1px solid #554448;border-radius:10px;background:#090909;color:#fff;font-size:16px}
+      .ep-supplier-table-wrap{overflow:auto;border:1px solid #393033;border-radius:12px}
       .ep-supplier-root table{width:100%;border-collapse:collapse;min-width:650px}
-      .ep-supplier-root th,.ep-supplier-root td{padding:12px;text-align:left;border-bottom:1px solid #30291f;font-size:12px}
-      .ep-supplier-root th{color:#d7b873;background:#1c1812;font-size:10px;letter-spacing:1px}
-      .ep-supplier-root td{color:#e4dccd}
-      .ep-supplier-empty{padding:25px;text-align:center;color:#b8ad9b}
-      .ep-supplier-section-title{margin:0 0 14px;color:#f2d797;font-size:16px}
-      @media(max-width:720px){.ep-supplier-root{padding:16px 12px 30px}.ep-supplier-card{padding:15px}.ep-supplier-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.ep-supplier-stat{padding:13px}.ep-supplier-stat strong{font-size:19px}.ep-supplier-top{align-items:flex-start;flex-direction:column}.ep-supplier-top button{align-self:flex-end}}
+      .ep-supplier-root th,.ep-supplier-root td{padding:12px;text-align:left;border-bottom:1px solid #302629;font-size:12px}
+      .ep-supplier-root th{color:#ff6b71;background:#1c1113;font-size:10px;letter-spacing:1px}
+      .ep-supplier-root td{color:#e4dcdc}
+      .ep-supplier-empty{padding:25px;text-align:center;color:#b8adad}
+      .ep-supplier-section-title{margin:0 0 14px;color:#ff777d;font-size:16px}
+      @media(max-width:720px){.ep-supplier-root{padding:18px 12px 30px}.ep-supplier-card{padding:15px}.ep-supplier-login{padding:24px 17px}.ep-supplier-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.ep-supplier-stat{padding:13px}.ep-supplier-stat strong{font-size:19px}.ep-supplier-top{align-items:flex-start;flex-direction:column}.ep-supplier-top button{align-self:flex-end}.ep-supplier-login-links span{font-size:10px}}
     `}</style>
     <div className="ep-supplier-wrap">
       <div className="ep-supplier-brand"><span className="ep-supplier-brand-mark"><Store size={23}/></span><div><b>EPARTS</b><small>PORTAL DO FORNECEDOR</small></div></div>
       {!session?<section className="ep-supplier-card ep-supplier-login">
-        <h1>Acesso do fornecedor</h1><p>Entre com o usuário e a senha fornecidos pelo administrador da EPARTS.</p>
-        <form onSubmit={login}><label>Usuário<input type="text" autoCapitalize="none" autoComplete="username" minLength={4} maxLength={30} required value={username} onChange={e=>setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g,''))} placeholder="Seu usuário"/></label><label>Senha<input type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)}/></label>
-          {error&&<div className="ep-supplier-error">{error}</div>}<button type="submit" disabled={busy}>{busy?'Validando acesso...':'Entrar no portal'}</button>
-        </form><p className="ep-supplier-notice">O acesso é individual. Cada fornecedor visualiza somente seus próprios produtos, vendas e repasses.</p>
+        <div className="ep-supplier-login-head"><span className="ep-supplier-login-icon"><Store size={76}/></span><h1>Acesso do Fornecedor</h1><p>Acompanhe suas marcas, produtos, vendas e movimentações.</p></div>
+        <form onSubmit={login}>
+          <label>Usuário<span className="ep-supplier-field"><UserRound size={21}/><input type="text" autoCapitalize="none" autoComplete="username" minLength={4} maxLength={30} required value={username} onChange={e=>setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g,''))} placeholder="Seu usuário"/></span></label>
+          <label>Senha<span className="ep-supplier-field"><LockKeyhole size={21}/><input type={showPassword?'text':'password'} autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)} placeholder="Sua senha"/><button type="button" aria-label={showPassword?'Ocultar senha':'Mostrar senha'} onClick={()=>setShowPassword(v=>!v)}>{showPassword?<EyeOff size={19}/>:<Eye size={19}/>}</button></span></label>
+          {error&&<div className="ep-supplier-error" role="alert">{error}</div>}
+          <button className="ep-supplier-login-submit" type="submit" disabled={busy}><LogIn size={20}/>{busy?'Validando acesso...':'Entrar'}</button>
+        </form>
+        <p className="ep-supplier-notice">Acesso individual e protegido. Você visualiza somente as informações vinculadas ao seu cadastro.</p>
+        <div className="ep-supplier-login-links"><span><ChartNoAxesColumn size={25}/>Vendas</span><span><Package size={25}/>Produtos</span><span><Tag size={25}/>Marcas</span><span><Coins size={25}/>Repasses</span></div>
       </section>:loading?<section className="ep-supplier-card">Carregando seu painel...</section>:!supplier?<section className="ep-supplier-card"><h1>Acesso ainda não vinculado</h1><p>{error||'Peça ao administrador da EPARTS para vincular este usuário ao seu cadastro de fornecedor.'}</p><button onClick={logout}><LogOut size={16}/> Sair</button></section>:<>
         <div className="ep-supplier-top"><div><small>ÁREA EXCLUSIVA DO FORNECEDOR</small><h1>Olá, {supplier.name}</h1><p>Acompanhe seus produtos, vendas e repasses.</p></div><button onClick={()=>void loadSupplier(session.user.id)}><RefreshCw size={16}/> Atualizar</button></div>
         {error&&<div className="ep-supplier-error">{error}</div>}
