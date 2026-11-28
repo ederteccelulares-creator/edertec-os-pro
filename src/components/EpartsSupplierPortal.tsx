@@ -92,7 +92,9 @@ export default function EpartsSupplierPortal(){
   const supplierTotal=visibleItems.reduce((n,x)=>n+Number(x.supplier_amount),0)
   const commissionRate=gross>0?(epartsCommission/gross)*100:12
   const paid=payouts.filter(p=>!from||p.paid_at.slice(0,10)>=from).filter(p=>!to||p.paid_at.slice(0,10)<=to).reduce((n,p)=>n+Number(p.amount),0)
-  const pending=Math.max(0,supplierTotal-paid)
+  const eligibleTotal=items.reduce((n,item)=>{const sale=sales.find(x=>x.id===item.sale_id);return sale&&sale.status!=='cancelled'&&sale.payment_status==='paid'?n+Number(item.supplier_amount):n},0)
+  const paidAllTime=payouts.reduce((n,p)=>n+Number(p.amount),0)
+  const pending=Math.max(0,eligibleTotal-paidAllTime)
 
   return <main className="ep-supplier-root">
     <style>{`
