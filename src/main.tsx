@@ -12,7 +12,7 @@ import './components/CompanyAuthLogin.css';
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register(\`\${import.meta.env.BASE_URL}sw.js\`, { updateViaCache: 'none' }).then(registration => registration.update()).catch(error => {
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`, { updateViaCache: 'none' }).then(registration => registration.update()).catch(error => {
       console.error('Não foi possível registrar o modo instalável:', error);
     });
   });
