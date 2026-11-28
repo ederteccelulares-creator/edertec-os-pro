@@ -12,9 +12,11 @@ const EPARTS_COMPANY_ID = '336c5941-6f23-418e-968e-730442650d98'
 export default function CompanyAuthGate() {
   const currentPath = window.location.pathname.replace(/\/+$/, '') || '/'
   const currentParams = new URLSearchParams(window.location.search)
-  const epartsOnly = window.location.hostname === 'eparts.edertecospro.com.br' || currentPath === '/eparts' || currentParams.get('painel') === 'eparts'
+  const routeEpartsOnly = window.location.hostname === 'eparts.edertecospro.com.br' || currentPath === '/eparts' || currentParams.get('painel') === 'eparts'
   const isAdminRoute = window.location.pathname.replace(/\/+$/, '') === '/admin' || new URLSearchParams(window.location.search).get('admin') === '1'
   const [session, setSession] = useState<Session | null>(null)
+  const epartsAdminEmail = session?.user.email?.trim().toLowerCase() === 'edertecospro@gmail.com'
+  const epartsOnly = routeEpartsOnly || epartsAdminEmail
   const [memberships, setMemberships] = useState<CompanyMembership[]>([])
   const [platformAdmin, setPlatformAdmin] = useState(false)
   const [selected, setSelected] = useState<Company | null>(null)
