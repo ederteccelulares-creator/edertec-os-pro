@@ -10,9 +10,9 @@ const money=(n:number)=>Number(n||0).toLocaleString('pt-BR',{style:'currency',cu
 
 export default function EpartsWorkspace({companyId,companyName,email,role,onSignOut}:Props) {
   const [tab,setTab]=useState<Tab>('dashboard')
-  const [quickCreate,setQuickCreate]=useState<'customers'|'suppliers'|null>(null)
+  const [quickCreate,setQuickCreate]=useState<'customers'|'suppliers'|'brands'|null>(null)
   const [createVersion,setCreateVersion]=useState(0)
-  const quickAdd=(target:'customers'|'suppliers')=>{setMenuOpen(false);setQuickCreate(target);setTab(target);setCreateVersion(v=>v+1)}
+  const quickAdd=(target:'customers'|'suppliers'|'brands')=>{setMenuOpen(false);setQuickCreate(target);setTab(target);setCreateVersion(v=>v+1)}
   const [menuOpen,setMenuOpen]=useState(false)
   const [stats,setStats]=useState({products:0,suppliers:0,orders:0,revenue:0,commission:0,stock:0})
   const [loading,setLoading]=useState(true)
@@ -337,6 +337,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
           {group.section==='CADASTRO RÁPIDO'&&<>
             <button type="button" onClick={()=>quickAdd('customers')}><Users size={17}/><span>Cadastrar cliente</span><ChevronRight className="eparts-nav-arrow" size={15}/></button>
             <button type="button" onClick={()=>quickAdd('suppliers')}><Truck size={17}/><span>Cadastrar fornecedor</span><ChevronRight className="eparts-nav-arrow" size={15}/></button>
+            <button type="button" onClick={()=>quickAdd('brands')}><Tags size={17}/><span>Cadastrar marca</span><ChevronRight className="eparts-nav-arrow" size={15}/></button>
           </>}
           {group.section==='CATÁLOGO ONLINE'&&
             <a className="eparts-nav-link" href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer"><Store size={17}/><span>Abrir catálogo</span><ExternalLink size={14} className="eparts-nav-arrow"/></a>
@@ -378,7 +379,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
             <button type="button" onClick={()=>nav('sales')}><BarChart3 size={25}/><b>Vendas</b><small>Pedidos e histórico</small></button>
           </div>
         </section>
-      </div>:<EpartsCatalogAdminPanel key={tab+'-'+createVersion} companyId={companyId} initialTab={tab} initialCreate={quickCreate===tab||tab==='customers'||tab==='suppliers'}/>}
+      </div>:<EpartsCatalogAdminPanel key={tab+'-'+createVersion} companyId={companyId} initialTab={tab} initialCreate={quickCreate===tab}/>}
       <footer className="company-footer">EPARTS · Painel comercial exclusivo · Acesso protegido por empresa</footer>
     </main>
   </div>
