@@ -167,7 +167,7 @@ export default function EpartsPOS({companyId}:Props){
    .eparts-pos .pos-payment-title{font-size:15px!important;color:#e8ddc8!important}
    .eparts-pos .pos-pay{gap:9px!important}
    .eparts-pos .pos-pay button{min-height:58px!important;border-color:#494033!important;border-radius:10px!important;background:#171614!important;color:#ddd4c4!important;font-size:13px!important}
-   .eparts-pos .pos-pay button svg{color:#d9b56d!important}
+   .eparts-pos .pos-pay button svg{color:#ff6878!important}
    .eparts-pos .pos-pay button.active{border:1px solid #a90019!important;background:linear-gradient(120deg,#5b3037,#21180d)!important;color:#ffe4a4!important;box-shadow:inset 0 0 0 1px #a9001930!important}
    .eparts-pos .pos-final{min-height:58px!important;margin-top:14px!important;border:1px solid #ed142c!important;border-radius:10px!important;background:linear-gradient(100deg,#a90019,#76000e)!important;font-size:17px!important;box-shadow:0 6px 16px #8f15242b!important}
    .eparts-pos .pos-stock-note{border:1px solid #4c6946!important;border-radius:10px!important;background:#111a11!important;color:#c7d9c2!important;font-size:12px!important}
@@ -201,7 +201,12 @@ export default function EpartsPOS({companyId}:Props){
    .eparts-pos .pos-pay button{border-color:#5b3037!important;background:#191214!important;color:#fff!important}
    .eparts-pos .pos-pay button.active{border-color:#ff4052!important;background:linear-gradient(120deg,#ed142c,#76000e)!important;color:#fff!important}
    .eparts-pos .pos-final{background:linear-gradient(100deg,#ed142c,#850012)!important;border-color:#ff4052!important}
-  </style>
+  
+   .eparts-pos .pos-pay button svg{color:#ff6878!important}
+   .eparts-pos .pos-field{color:#e8dfe0!important}
+   .eparts-pos .pos-summary-row.total strong{color:#fff!important}
+   .eparts-pos .pos-stock-note{border-color:#438d46!important}
+</style>
   <div className="pos-heading"><span className="pos-heading-icon"><ShoppingCart size={48}/></span><div><h2>PDV <span style={{color:'#d8d0c5',fontWeight:450}}>– Ponto de Venda</span></h2><p>Venda rápida · controle de estoque em tempo real</p></div></div>
   {error&&<div className="pos-message">{error}</div>}{notice&&<div className="pos-message success"><CheckCircle2 size={18}/>{notice}</div>}
   <div className="pos-toolbar">
