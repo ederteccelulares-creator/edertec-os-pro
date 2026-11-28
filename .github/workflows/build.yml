@@ -17,9 +17,7 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Build application
-        run: npm run build
-        env:
-          VITE_BASE_PATH: ${{ github.event_name == 'pull_request' && '/eparts/' || '/' }}
+        run: npm run build -- --mode ${{ github.event_name == 'pull_request' && 'eparts' || 'production' }}
       - name: Upload Hostinger deployment package
         uses: actions/upload-artifact@v4
         with:
