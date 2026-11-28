@@ -284,7 +284,6 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
           gap: 10px;
         }
       }
-    `}
       /* EPARTS: identidade visual preta e vermelha compartilhada */
       .eparts-admin-panel .eparts-tabs>button{border:1px solid #64202a!important;background:#171012!important;color:#f4eeee!important}
       .eparts-admin-panel .eparts-tabs>button.company-primary,
@@ -301,7 +300,8 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
       .eparts-admin-panel .company-panel-head b{color:#fff!important}
       .eparts-admin-panel .company-panel-head small{color:#bdb3b4!important}
       .eparts-admin-panel .eparts-checkbox{color:#eee!important}
-    </style>
+      `}
+</style>
     <div className="company-panel-head"><div><b>Central Eparts</b><small>Cadastros e catálogo do marketplace · comissão da plataforma: 12%</small></div><button className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar</button></div>
     <div className="company-inline-actions eparts-tabs">
       <button className={tab==='customers'?'company-primary':'company-secondary'} onClick={()=>{setTab('customers');setShowForm(false)}}><BadgePlus size={15}/> Clientes ({customers.length})</button>
