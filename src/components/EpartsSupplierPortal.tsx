@@ -84,7 +84,9 @@ export default function EpartsSupplierPortal(){
 
   const visibleItems=useMemo(()=>items.filter(row=>{const sale=sales.find(x=>x.id===row.sale_id);if(!sale)return false;const day=sale.created_at.slice(0,10);return(!from||day>=from)&&(!to||day<=to)}),[items,sales,from,to])
   const gross=visibleItems.reduce((n,x)=>n+Number(x.line_total),0)
+  const epartsCommission=visibleItems.reduce((n,x)=>n+Number(x.eparts_commission_amount),0)
   const supplierTotal=visibleItems.reduce((n,x)=>n+Number(x.supplier_amount),0)
+  const commissionRate=gross>0?(epartsCommission/gross)*100:12
   const paid=payouts.filter(p=>!from||p.paid_at.slice(0,10)>=from).filter(p=>!to||p.paid_at.slice(0,10)<=to).reduce((n,p)=>n+Number(p.amount),0)
   const pending=Math.max(0,supplierTotal-paid)
 
@@ -121,10 +123,10 @@ export default function EpartsSupplierPortal(){
       .ep-supplier-login-links svg{color:#ff343c}
       .ep-supplier-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
       .ep-supplier-top small{color:#ff555c;letter-spacing:1.7px;font-size:9px;font-weight:800}
-      .ep-supplier-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:17px 0}
+      .ep-supplier-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:17px 0}
       .ep-supplier-stat{padding:17px;border:1px solid #54272b;border-radius:13px;background:linear-gradient(145deg,#211416,#121010)}
       .ep-supplier-stat span{display:block;color:#bdb1b1;font-size:11px}
-      .ep-supplier-stat strong{display:block;margin-top:9px;color:#ff656b;font-size:22px;overflow-wrap:anywhere}
+      .ep-supplier-stat strong{display:block;margin-top:9px;color:#ff656b;font-size:22px;overflow-wrap:anywhere}.ep-supplier-stat.ep-highlight{border-color:#9c343a;background:linear-gradient(145deg,#2a1013,#130b0c)}.ep-supplier-stat.ep-highlight strong{color:#ff858a}.ep-supplier-stat.ep-positive strong{color:#80d9a2}
       .ep-supplier-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:16px 0}
       .ep-supplier-filters label{min-width:140px;flex:1;margin:0}
       .ep-supplier-root input{width:100%;min-height:46px;padding:11px 13px;border:1px solid #554448;border-radius:10px;background:#090909;color:#fff;font-size:16px}
@@ -157,15 +159,16 @@ export default function EpartsSupplierPortal(){
           <div className="ep-supplier-stat"><span>Produtos vinculados</span><strong>{products.length}</strong></div>
           <div className="ep-supplier-stat"><span>Unidades vendidas</span><strong>{visibleItems.reduce((n,x)=>n+Number(x.quantity),0)}</strong></div>
           <div className="ep-supplier-stat"><span>Valor vendido</span><strong>{money(gross)}</strong></div>
-          <div className="ep-supplier-stat"><span>Seu valor previsto</span><strong>{money(supplierTotal)}</strong></div>
+          <div className="ep-supplier-stat ep-highlight"><span>Comissão EPARTS ({commissionRate.toLocaleString('pt-BR',{maximumFractionDigits:2})}%)</span><strong>{money(epartsCommission)}</strong></div>
+          <div className="ep-supplier-stat ep-positive"><span>Seu valor após comissão</span><strong>{money(supplierTotal)}</strong></div>
         </div>
         <section className="ep-supplier-card" style={{marginBottom:14}}><h2 className="ep-supplier-section-title">Produtos vinculados</h2>
           {products.length===0?<div className="ep-supplier-empty">Nenhum produto vinculado ao seu cadastro.</div>:<div className="ep-supplier-table-wrap"><table><thead><tr><th>PRODUTO</th><th>CÓDIGO</th><th>ESTOQUE ATUAL</th><th>PREÇO DE VENDA</th></tr></thead><tbody>{products.map(p=><tr key={p.id}><td>{p.name}</td><td>{p.sku||'—'}</td><td>{p.stock_quantity}</td><td>{money(p.sale_price)}</td></tr>)}</tbody></table></div>}
         </section>
         <section className="ep-supplier-card" style={{marginBottom:14}}><h2 className="ep-supplier-section-title">Vendas dos seus produtos</h2>
-          {visibleItems.length===0?<div className="ep-supplier-empty">Nenhuma venda encontrada neste período.</div>:<div className="ep-supplier-table-wrap"><table><thead><tr><th>PEDIDO</th><th>DATA</th><th>PRODUTO</th><th>QTD.</th><th>VALOR</th><th>SUA PARTE</th><th>STATUS</th></tr></thead><tbody>{visibleItems.map(item=>{const sale=sales.find(x=>x.id===item.sale_id);return <tr key={item.id}><td>#{sale?.order_number||'—'}</td><td>{sale?date(sale.created_at):date(item.created_at)}</td><td>{item.product_name}</td><td>{item.quantity}</td><td>{money(item.line_total)}</td><td>{money(item.supplier_amount)}</td><td>{sale?.payment_status||sale?.status||'—'}</td></tr>})}</tbody></table></div>}
+          {visibleItems.length===0?<div className="ep-supplier-empty">Nenhuma venda encontrada neste período.</div>:<div className="ep-supplier-table-wrap"><table><thead><tr><th>PEDIDO</th><th>DATA</th><th>PRODUTO</th><th>QTD.</th><th>VALOR</th><th>EPARTS</th><th>SUA PARTE</th><th>STATUS</th></tr></thead><tbody>{visibleItems.map(item=>{const sale=sales.find(x=>x.id===item.sale_id);return <tr key={item.id}><td>#{sale?.order_number||'—'}</td><td>{sale?date(sale.created_at):date(item.created_at)}</td><td>{item.product_name}</td><td>{item.quantity}</td><td>{money(item.line_total)}</td><td>{money(item.eparts_commission_amount)}</td><td>{money(item.supplier_amount)}</td><td>{sale?.payment_status||sale?.status||'—'}</td></tr>})}</tbody></table></div>}
         </section>
-        <section className="ep-supplier-card"><h2 className="ep-supplier-section-title">Repasses</h2><div className="ep-supplier-grid"><div className="ep-supplier-stat"><span>Total pago</span><strong>{money(paid)}</strong></div><div className="ep-supplier-stat"><span>Saldo estimado</span><strong>{money(pending)}</strong></div></div>
+        <section className="ep-supplier-card"><h2 className="ep-supplier-section-title">Repasses</h2><div className="ep-supplier-grid"><div className="ep-supplier-stat"><span>Total pago</span><strong>{money(paid)}</strong></div><div className="ep-supplier-stat"><span>Saldo estimado a receber</span><strong>{money(pending)}</strong></div><div className="ep-supplier-stat"><span>Percentual EPARTS</span><strong>{commissionRate.toLocaleString('pt-BR',{maximumFractionDigits:2})}%</strong></div></div>
           {payouts.length===0?<div className="ep-supplier-empty">Ainda não há repasses registrados.</div>:<div className="ep-supplier-table-wrap"><table><thead><tr><th>DATA</th><th>VALOR</th><th>FORMA</th><th>REFERÊNCIA</th></tr></thead><tbody>{payouts.map(p=><tr key={p.id}><td>{date(p.paid_at)}</td><td>{money(p.amount)}</td><td>{p.payment_method}</td><td>{p.reference||p.notes||'—'}</td></tr>)}</tbody></table></div>}
         </section>
         <p style={{textAlign:'right',marginTop:16}}><button onClick={logout}><LogOut size={16}/> Sair do portal</button></p>
