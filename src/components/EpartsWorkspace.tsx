@@ -522,6 +522,41 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         }
         .eparts-workspace .company-top{margin-top:0!important;padding-top:0!important}
       }
+
+      /* Identidade EPARTS: títulos brancos em todas as abas */
+      .eparts-workspace .company-top h1,
+      .eparts-workspace .company-panel-head b,
+      .eparts-workspace .eparts-menu-group .company-panel-head b,
+      .eparts-workspace .eparts-menu-group h2,
+      .eparts-workspace .eparts-overview-panel .company-panel-head b,
+      .eparts-workspace .eparts-quick-panel .company-panel-head b,
+      .eparts-workspace .eparts-financial-split .company-panel-head b,
+      .eparts-workspace .company-section-title,
+      .eparts-workspace h1,.eparts-workspace h2,.eparts-workspace h3,
+      .eparts-workspace .eparts-admin-panel h1,
+      .eparts-workspace .eparts-admin-panel h2,
+      .eparts-workspace .eparts-admin-panel h3,
+      .eparts-workspace .eparts-pos h1,
+      .eparts-workspace .eparts-pos h2,
+      .eparts-workspace .eparts-pos h3,
+      .eparts-workspace .eparts-registrations h1,
+      .eparts-workspace .eparts-registrations h2,
+      .eparts-workspace .eparts-registrations h3{
+        color:#fff!important;
+      }
+      .eparts-workspace .company-nav-section-label,
+      .eparts-workspace .eparts-menu-group .company-panel-head b{
+        color:#fff!important;
+      }
+      .eparts-workspace .company-panel-head small,
+      .eparts-workspace .company-top small{color:#c9c1c2!important}
+      .eparts-workspace .eparts-menu-options button>svg:first-child,
+      .eparts-workspace .eparts-menu-options a>svg:first-child,
+      .eparts-workspace .company-nav-item svg{color:#ed142c!important}
+      .eparts-workspace .eparts-menu-options button.active,
+      .eparts-workspace .eparts-menu-options a.active{
+        background:linear-gradient(110deg,#ed142c,#76000e)!important;color:#fff!important;
+      }
 </style>
     <aside className="company-sidebar">
       <div className="eparts-brand-row">
