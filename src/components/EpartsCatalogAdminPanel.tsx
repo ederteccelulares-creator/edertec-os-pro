@@ -11,7 +11,7 @@ type Sale = { id:string; order_number:number; status:string; payment_status:stri
 type SaleItem = {id:string;product_name:string;sku:string|null;quantity:number;unit_price:number;line_total:number;eparts_commission_amount:number;supplier_amount:number};
 type SaleEvent = {id:string;old_status:string|null;new_status:string;old_payment_status:string|null;new_payment_status:string;created_at:string};
 type Payout = {id:string;supplier_id:string;sale_id:string|null;amount:number;payment_method:string;paid_at:string;reference:string|null;notes:string|null;eparts_suppliers?:{name:string}[]|null};
-type SupplierBalance = {supplier_id:string;supplier_name:string;eligible_amount:number;paid_amount:number;pending_amount:number};
+type SupplierBalance = {supplier_id:string;supplier_name:string;eligible_amount:number;paid_amount:number;pending_amount:number}\ntype SupplierPaymentRequest = {id:string;company_id:string;supplier_id:string;amount:number;notes:string|null;status:'pending'|'approved'|'rejected'|'paid';requested_at:string;reviewed_at:string|null;admin_notes:string|null;eparts_suppliers?:{name:string}[]|null};
 type Tab = 'products'|'suppliers'|'brands'|'sales'|'payouts'|'customers'
 const money=(value:number)=>Number(value||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 
@@ -28,7 +28,7 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
   const [brands,setBrands]=useState<Brand[]>([])
   const [sales,setSales]=useState<Sale[]>([])
   const [payouts,setPayouts]=useState<Payout[]>([])
-  const [supplierBalances,setSupplierBalances]=useState<SupplierBalance[]>([])
+  const [supplierBalances,setSupplierBalances]=useState<SupplierBalance[]>([])\n  const [paymentRequests,setPaymentRequests]=useState<SupplierPaymentRequest[]>([])
   const [payoutForm,setPayoutForm]=useState({supplierId:'',saleId:'',amount:'',paymentMethod:'pix',reference:'',notes:''})
   const [loading,setLoading]=useState(true)
   const [busy,setBusy]=useState(false)
@@ -50,17 +50,17 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
     if(!supabase)return
     setLoading(true);setError('')
     try{
-      const [p,s,b,o,po,balances,cu]=await Promise.all([ 
+      const [p,s,b,o,po,balances,cu,requests]=await Promise.all([ 
         supabase.from('eparts_products').select('id,name,sku,barcode,description,brand_id,supplier_id,sale_price,cost_price,stock_quantity,is_active,show_in_catalog,eparts_brands(name),eparts_suppliers(name)').eq('company_id',companyId).order('name'),
         supabase.from('eparts_suppliers').select('id,name,contact_name,document,email,phone,notes,user_id,is_active').eq('company_id',companyId).order('name'),
         supabase.from('eparts_brands').select('id,name').eq('company_id',companyId).order('name'),
         supabase.from('eparts_sales').select('id,order_number,status,payment_status,total_amount,eparts_commission_amount,supplier_amount,customer_name,customer_phone,created_at').eq('company_id',companyId).order('created_at',{ascending:false}).limit(100),
         supabase.from('eparts_supplier_payouts').select('id,supplier_id,sale_id,amount,payment_method,paid_at,reference,notes,eparts_suppliers(name)').eq('company_id',companyId).order('paid_at',{ascending:false}).limit(200),
         supabase.rpc('eparts_supplier_balances',{p_company_id:companyId}),
-        supabase.from('eparts_customers').select('id,name,email,phone,document,address').eq('company_id',companyId).order('name'),
+        supabase.from('eparts_customers').select('id,name,email,phone,document,address').eq('company_id',companyId).order('name'),\n        supabase.from('eparts_supplier_payment_requests').select('id,company_id,supplier_id,amount,notes,status,requested_at,reviewed_at,admin_notes,eparts_suppliers(name)').eq('company_id',companyId).order('requested_at',{ascending:false}).limit(200),
       ])
-      if(p.error)throw p.error;if(s.error)throw s.error;if(b.error)throw b.error;if(o.error)throw o.error;if(po.error)throw po.error;if(balances.error)throw balances.error;if(cu.error)throw cu.error
-      setProducts((p.data||[]) as Product[]);setSuppliers((s.data||[]) as Supplier[]);setBrands((b.data||[]) as Brand[]);setSales((o.data||[]) as Sale[]);setPayouts((po.data||[]) as Payout[]);setSupplierBalances((balances.data||[]) as SupplierBalance[]);setCustomers((cu.data||[]) as Customer[])
+      if(p.error)throw p.error;if(s.error)throw s.error;if(b.error)throw b.error;if(o.error)throw o.error;if(po.error)throw po.error;if(balances.error)throw balances.error;if(cu.error)throw cu.error;if(requests.error)throw requests.error
+      setProducts((p.data||[]) as Product[]);setSuppliers((s.data||[]) as Supplier[]);setBrands((b.data||[]) as Brand[]);setSales((o.data||[]) as Sale[]);setPayouts((po.data||[]) as Payout[]);setSupplierBalances((balances.data||[]) as SupplierBalance[]);setCustomers((cu.data||[]) as Customer[]);setPaymentRequests((requests.data||[]) as SupplierPaymentRequest[])
     }catch(e){setError(e instanceof Error?e.message:'Não foi possível carregar os dados do Eparts.')}
     finally{setLoading(false)}
   },[companyId])
@@ -122,6 +122,19 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
       if(result.error)throw result.error
       setProductForm({name:'',sku:'',barcode:'',description:'',brandId:'',supplierId:'',costPrice:'0',salePrice:'0',stock:'0',showInCatalog:true});setEditingProductId(null);setShowForm(false);setNotice(editingProductId?'Produto atualizado com sucesso.':'Produto cadastrado no Eparts.');await load()
     }catch(e){setError(e instanceof Error?e.message:'Falha ao cadastrar produto.')}
+    finally{setBusy(false)}
+  }
+  async function updatePaymentRequest(request:SupplierPaymentRequest,status:'approved'|'rejected'|'paid'){
+    if(!supabase)return
+    if(status==='paid'){setError('Para marcar como paga, registre primeiro o repasse no formulário abaixo. Depois vincule a solicitação manualmente.');return}
+    const label=status==='approved'?'aprovar':'recusar'
+    if(!window.confirm('Deseja '+label+' a solicitação de '+money(Number(request.amount))+' de '+(request.eparts_suppliers?.[0]?.name||'fornecedor')+'?'))return
+    setBusy(true);setError('');setNotice('')
+    try{
+      const {error}=await supabase.from('eparts_supplier_payment_requests').update({status,reviewed_at:new Date().toISOString(),reviewed_by:(await supabase.auth.getUser()).data.user?.id||null}).eq('company_id',companyId).eq('id',request.id)
+      if(error)throw error
+      setNotice(status==='approved'?'Solicitação aprovada.':'Solicitação recusada.');await load()
+    }catch(e){setError(e instanceof Error?e.message:'Não foi possível atualizar a solicitação.')}
     finally{setBusy(false)}
   }
   async function savePayout(event:FormEvent){
@@ -341,6 +354,10 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
       </div>
       <div className="company-table-wrap"><table><thead><tr><th>FORNECEDOR</th><th>VALOR LIBERADO</th><th>JÁ REPASSADO</th><th>SITUAÇÃO DO SALDO</th></tr></thead><tbody>{supplierBalances.map(balance=>{const pending=Number(balance.pending_amount);return <tr key={balance.supplier_id}><td><b>{balance.supplier_name}</b></td><td>{money(Number(balance.eligible_amount))}</td><td>{money(Number(balance.paid_amount))}</td><td><b>{pending<0?'Crédito / adiantamento: '+money(Math.abs(pending)):money(pending)}</b></td></tr>})}{supplierBalances.length===0&&<tr><td colSpan={4}>Nenhum fornecedor cadastrado.</td></tr>}</tbody></table></div>
     </>}
+    {tab==='payouts'&&<section className="company-form" style={{marginBottom:16}}>
+      <div className="company-panel-head"><div><b>Solicitações de pagamento</b><small>Pedidos enviados pelos fornecedores pelo portal</small></div><b>{paymentRequests.filter(r=>r.status==='pending').length} pendentes</b></div>
+      {paymentRequests.length===0?<p className="company-empty">Nenhuma solicitação recebida.</p>:<div className="company-table-wrap"><table><thead><tr><th>FORNECEDOR</th><th>DATA</th><th>VALOR</th><th>OBSERVAÇÃO</th><th>STATUS</th><th>AÇÕES</th></tr></thead><tbody>{paymentRequests.map(r=><tr key={r.id}><td><b>{r.eparts_suppliers?.[0]?.name||suppliers.find(s=>s.id===r.supplier_id)?.name||'Fornecedor'}</b></td><td>{new Date(r.requested_at).toLocaleString('pt-BR')}</td><td><b>{money(Number(r.amount))}</b></td><td>{r.notes||'—'}</td><td>{r.status==='pending'?'Pendente':r.status==='approved'?'Aprovada':r.status==='rejected'?'Recusada':'Paga'}</td><td>{r.status==='pending'?<div style={{display:'flex',gap:6,flexWrap:'wrap'}}><button type="button" className="company-primary" disabled={busy} onClick={()=>void updatePaymentRequest(r,'approved')}>Aprovar</button><button type="button" className="company-secondary" disabled={busy} onClick={()=>void updatePaymentRequest(r,'rejected')}>Recusar</button></div>:<span>—</span>}</td></tr>)}</tbody></table></div>}
+    </section>}
     {tab==='payouts'&&<form className="company-form" onSubmit={savePayout}>
       <div className="company-form-grid">
         <label>Fornecedor<select required value={payoutForm.supplierId} onChange={e=>setPayoutForm(v=>({...v,supplierId:e.target.value}))}><option value="">Selecione</option>{suppliers.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
