@@ -138,9 +138,9 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         .eparts-workspace .eparts-brand-row{display:flex!important;min-height:54px!important;align-items:center!important;justify-content:space-between!important;margin:0!important;padding:0 0 9px!important}
         .eparts-workspace .company-logo{display:flex!important;align-items:center!important;gap:10px!important}
         .eparts-workspace .company-logo>span{display:grid!important;place-items:center!important;width:42px!important;height:42px!important;border:1px solid #ed142c!important;background:linear-gradient(145deg,#1b1710,#090909)!important;color:#ff6878!important;border-radius:11px!important}
-        .eparts-workspace .company-logo b{font-size:18px!important;letter-spacing:2px!important;color:#f2d18b!important}
+        .eparts-workspace .company-logo b{font-size:18px!important;letter-spacing:2px!important;color:#fff!important}
         .eparts-workspace .company-logo small{font-size:8px!important;letter-spacing:1px!important;color:#ff9aa5!important}
-        .eparts-workspace .eparts-mobile-menu-button{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:42px!important;height:42px!important;border:1px solid #a90019!important;border-radius:10px!important;background:#17130d!important;color:#f0cf7d!important}
+        .eparts-workspace .eparts-mobile-menu-button{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:42px!important;height:42px!important;border:1px solid #a90019!important;border-radius:10px!important;background:#17130d!important;color:#fff!important}
         .eparts-workspace .eparts-company-chip{display:none!important}
         .eparts-workspace>.company-sidebar nav{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;padding:9px 0 13px!important;margin:0!important;max-height: min(62dvh,480px)!important;overflow:auto!important}
         .eparts-workspace>.company-sidebar nav.eparts-nav-closed{display:none!important}
@@ -237,7 +237,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         }
         .eparts-workspace>.company-sidebar nav:not(.eparts-nav-closed) .company-nav-section{gap:5px!important}
         .eparts-workspace>.company-sidebar nav:not(.eparts-nav-closed) .company-nav-section-label{
-          padding:8px 9px 4px!important;color:#d2ad68!important;font-size:9px!important;letter-spacing:1.35px!important
+          padding:8px 9px 4px!important;color:#ff6878!important;font-size:9px!important;letter-spacing:1.35px!important
         }
         .eparts-workspace>.company-sidebar nav:not(.eparts-nav-closed) button,
         .eparts-workspace>.company-sidebar nav:not(.eparts-nav-closed) .eparts-nav-link{
@@ -334,7 +334,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         .eparts-workspace .eparts-mobile-drawer{position:absolute!important;top:max(12px,env(safe-area-inset-top))!important;left:12px!important;right:12px!important;max-height:calc(100dvh - 24px - env(safe-area-inset-bottom))!important;overflow-y:auto!important;display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:12px!important;padding:17px!important;border:1px solid #8a6935!important;border-radius:16px!important;background:linear-gradient(155deg,#1c1812,#090909 78%)!important;box-shadow:0 22px 65px #000e!important;overscroll-behavior:contain!important}
         .eparts-workspace .eparts-mobile-drawer .company-nav-section{display:grid!important;gap:6px!important;padding-top:9px!important;border-top:1px solid #3b3020!important}
         .eparts-workspace .eparts-mobile-drawer .company-nav-section:first-child{padding-top:0!important;border-top:0!important}
-        .eparts-workspace .eparts-mobile-drawer .company-nav-section-label{display:block!important;padding:3px 8px!important;color:#d2ad68!important;font-size:9px!important;letter-spacing:1.35px!important;font-weight:800!important}
+        .eparts-workspace .eparts-mobile-drawer .company-nav-section-label{display:block!important;padding:3px 8px!important;color:#ff6878!important;font-size:9px!important;letter-spacing:1.35px!important;font-weight:800!important}
         .eparts-workspace .eparts-mobile-drawer button,.eparts-workspace .eparts-mobile-drawer .eparts-nav-link{display:flex!important;align-items:center!important;gap:12px!important;width:100%!important;min-height:46px!important;padding:10px 12px!important;border:1px solid #6f1020!important;border-radius:10px!important;background:#171512!important;color:#ffd0d5!important;font-size:13px!important;text-decoration:none!important;text-align:left!important}
         .eparts-workspace .eparts-mobile-drawer button.active{border-color:#ed142c!important;background:#6f1020!important;color:#ffe3a4!important}
         .eparts-workspace .eparts-mobile-drawer svg{flex:none!important;color:#ff8793!important}
@@ -477,7 +477,22 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         .eparts-workspace .company-panel-head small{color:#bdb3b4!important}
       }
       @media(max-width:760px){.eparts-workspace .eparts-menu-page{padding-bottom:8px}.eparts-workspace .eparts-menu-group{padding:13px!important}.eparts-workspace .eparts-menu-options button,.eparts-workspace .eparts-menu-options a{min-height:48px;font-size:13px}}
-    `}</style>
+    `}
+      /* Final pass: every EPARTS navigation tab follows the approved palette */
+      .eparts-workspace .company-nav-section-label,.eparts-workspace .company-nav-item svg,
+      .eparts-workspace .eparts-menu-options svg{color:#ff4052!important}
+      .eparts-workspace .company-nav-item{color:#eee!important}
+      .eparts-workspace .company-nav-item.active{background:linear-gradient(110deg,#ed142c,#76000e)!important;border-color:#ff4052!important;color:#fff!important}
+      .eparts-workspace .company-nav-item.active svg{color:#fff!important}
+      .eparts-workspace .company-primary{background:linear-gradient(110deg,#ed142c,#850012)!important;border-color:#ff4052!important;color:#fff!important}
+      .eparts-workspace .company-secondary{background:#1a1113!important;border-color:#64202a!important;color:#ffb5bd!important}
+      .eparts-workspace .company-form,.eparts-workspace .company-table-wrap{border-color:#64202a!important}
+      .eparts-workspace input:focus,.eparts-workspace select:focus,.eparts-workspace textarea:focus{border-color:#ed142c!important;box-shadow:0 0 0 3px #ed142c22!important}
+      .eparts-workspace .company-table th{color:#ff8793!important}
+      .eparts-workspace .company-table td{border-color:#352126!important}
+      .eparts-workspace .eparts-menu-options button,.eparts-workspace .eparts-menu-options a{border-color:#64202a!important;background:#171012!important;color:#fff!important}
+      .eparts-workspace .eparts-menu-options button:hover,.eparts-workspace .eparts-menu-options a:hover{background:#3a1018!important;border-color:#ed142c!important}
+</style>
     <aside className="company-sidebar">
       <div className="eparts-brand-row">
         <div className="company-logo"><span><ShoppingCart/></span><div><b>EPARTS</b><small>PORTAL DO FORNECEDOR</small></div></div>
