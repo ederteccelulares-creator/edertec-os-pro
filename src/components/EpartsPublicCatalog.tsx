@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useState,type FormEvent,type CSSProperties} from 'react'
-import {Search,ShoppingBag,Plus,Minus,ArrowLeft,RefreshCw,Store} from 'lucide-react'
+import {Search,ShoppingBag,Plus,Minus,ArrowLeft,RefreshCw,Store,Smartphone,Film,Plug,Cable,Headphones,Speaker,Package,Truck,ShieldCheck,CreditCard,MapPin} from 'lucide-react'
 import {supabase} from '../lib/supabase'
 
 const COMPANY_ID='336c5941-6f23-418e-968e-730442650d98'
@@ -11,6 +11,7 @@ export default function EpartsPublicCatalog(){
  const [products,setProducts]=useState<Product[]>([])
  const [cart,setCart]=useState<CartItem[]>([])
  const [search,setSearch]=useState('')
+ const [category,setCategory]=useState('Todas')
  const [loading,setLoading]=useState(true)
  const [error,setError]=useState('')
  const [notice,setNotice]=useState('')
@@ -27,7 +28,15 @@ export default function EpartsPublicCatalog(){
   setLoading(false)
  }
  useEffect(()=>{void load()},[])
- const visible=useMemo(()=>products.filter(p=>[p.name,p.sku||'',p.brand_name||''].join(' ').toLocaleLowerCase('pt-BR').includes(search.toLocaleLowerCase('pt-BR'))),[products,search])
+ const categories=[{name:'Todas',icon:Smartphone,terms:[]},{name:'Capas',icon:Smartphone,terms:['capa','case','cover']},{name:'Películas',icon:Film,terms:['pelicula','película','vidro','protetor']},{name:'Carregadores',icon:Plug,terms:['carregador','fonte','adaptador']},{name:'Cabos',icon:Cable,terms:['cabo','usb','lightning','type-c','tipo c']},{name:'Fones',icon:Headphones,terms:['fone','headphone','earbud']},{name:'Caixas de som',icon:Speaker,terms:['caixa de som','speaker']},{name:'Suportes',icon:Package,terms:['suporte','apoio','holder']},{name:'Outros',icon:Package,terms:[]}] as const
+ const normalized=(value:string)=>value.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLocaleLowerCase('pt-BR')
+ const visible=useMemo(()=>products.filter(p=>{
+  const haystack=normalized([p.name,p.description||'',p.sku||'',p.brand_name||''].join(' '))
+  const matchesSearch=haystack.includes(normalized(search))
+  const selected=categories.find(item=>item.name===category)
+  const matchesCategory=!selected||selected.name==='Todas'||(selected.name==='Outros'?!categories.slice(1,-1).some(item=>item.terms.some(term=>haystack.includes(normalized(term)))):selected.terms.some(term=>haystack.includes(normalized(term))))
+  return matchesSearch&&matchesCategory
+ }),[products,search,category])
  const total=cart.reduce((n,i)=>n+i.product.sale_price*i.quantity,0)
  const quantity=cart.reduce((n,i)=>n+i.quantity,0)
  function add(product:Product){setCart(old=>{const found=old.find(i=>i.product.product_id===product.product_id);return found?old.map(i=>i.product.product_id===product.product_id?{...i,quantity:i.quantity+1}:i):[...old,{product,quantity:1}]})}
@@ -53,6 +62,16 @@ export default function EpartsPublicCatalog(){
    .ep-store-brand strong{display:block;font-size:21px;letter-spacing:2px;font-weight:950}
    .ep-store-brand small{display:block;color:#a8a0a2;font-size:9px;letter-spacing:2.4px;font-weight:800}
    .ep-store-cart{border:1px solid #ed3449;border-radius:12px;background:linear-gradient(120deg,#ed142c,#a9001a);color:white;padding:12px 16px;font-weight:800;display:flex;align-items:center;gap:9px;cursor:pointer;box-shadow:0 8px 24px #ed142c22}
+   .ep-store-benefits{width:min(1240px,100%);margin:0 auto;padding:0 24px 12px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+   .ep-store-benefit{display:flex;align-items:center;gap:10px;min-width:0;color:#e8e1e3;font-size:12px;line-height:1.35}
+   .ep-store-benefit svg{flex:0 0 auto;color:#ff334a}
+   .ep-store-benefit b{display:block;color:#fff;font-size:12px}
+   .ep-store-categories{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 14px;scrollbar-width:thin}
+   .ep-store-category{flex:0 0 auto;min-width:106px;min-height:78px;border:1px solid #3b3035;border-radius:13px;background:linear-gradient(145deg,#191719,#0e0e10);color:#eee;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:10px;cursor:pointer;font:inherit;font-size:12px}
+   .ep-store-category svg{color:#f5f0f1}
+   .ep-store-category.active{border-color:#ff334a;background:linear-gradient(145deg,#ed142c,#940018);box-shadow:0 0 20px #ed142c45}
+   .ep-store-local{width:min(1180px,calc(100% - 48px));margin:0 auto 28px;border:1px solid #ed3449;border-radius:999px;padding:13px 18px;display:flex;align-items:center;justify-content:center;gap:12px;background:linear-gradient(90deg,#210b10,#100d10);color:#fff;text-align:center;font-weight:750;box-shadow:0 0 22px #ed142c22}
+   .ep-store-local svg{color:#ff334a;flex:0 0 auto}
    .ep-store-hero{width:min(1240px,100%);margin:0 auto;padding:52px 24px 28px}
    .ep-store-hero-box{position:relative;overflow:hidden;border:1px solid #4c2630;border-radius:26px;padding:clamp(28px,6vw,68px);background:radial-gradient(ellipse at 85% 10%,#4a101c 0%,transparent 42%),linear-gradient(120deg,#1a1115,#0d0d10 68%);box-shadow:0 24px 70px #0007}
    .ep-store-hero-box:after{content:"";position:absolute;width:260px;height:260px;right:-90px;bottom:-150px;border:1px solid #ed344933;border-radius:50%;box-shadow:0 0 0 28px #ed34490a,0 0 0 58px #ed344907}
@@ -105,6 +124,9 @@ export default function EpartsPublicCatalog(){
     .ep-store-mark{width:39px;height:39px}
     .ep-store-brand strong{font-size:18px}
     .ep-store-cart{padding:10px 12px;font-size:12px}
+    .ep-store-benefits{grid-template-columns:repeat(2,minmax(0,1fr));padding:8px 14px 14px;gap:14px 10px}
+    .ep-store-benefit{font-size:10px}
+    .ep-store-benefit b{font-size:11px}
     .ep-store-hero{padding:22px 14px 12px}
     .ep-store-hero-box{padding:27px 21px;border-radius:20px}
     .ep-store-hero h1{font-size:37px;letter-spacing:-1px}
@@ -126,18 +148,27 @@ export default function EpartsPublicCatalog(){
    @media(max-width:360px){.ep-store-products{grid-template-columns:minmax(0,1fr)}.ep-store-product-image{height:210px}}
   `}</style>
   <header className="ep-store-header"><div className="ep-store-head-inner">
-   <div className="ep-store-brand"><span className="ep-store-mark"><Store size={22}/></span><div><strong>EPARTS</strong><small>CATÁLOGO ONLINE</small></div></div>
+   <div className="ep-store-brand"><span className="ep-store-mark"><Smartphone size={23}/></span><div><strong>EPARTS</strong><small>ACESSÓRIOS PARA CELULARES</small></div></div>
    <button className="ep-store-cart" onClick={()=>setCheckout(true)}><ShoppingBag size={17}/> Carrinho <span>({quantity})</span><b>{money(total)}</b></button>
   </div></header>
   <section className="ep-store-hero"><div className="ep-store-hero-box">
-   <div className="ep-store-kicker">TECNOLOGIA • ACESSÓRIOS • CONFIANÇA</div>
-   <h1>Seu próximo produto<br/><em>está aqui.</em></h1>
-   <p>Explore nosso catálogo, encontre o que precisa e envie seu pedido em poucos passos.</p>
-   <div className="ep-store-searchbar"><Search size={19} color="#aaa"/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar produto, marca ou código..."/><button onClick={()=>void load()} title="Atualizar catálogo"><RefreshCw size={17}/></button></div>
+   <div className="ep-store-kicker">ESTILO • PROTEÇÃO • TECNOLOGIA</div>
+   <h1>Tudo em<br/><em>acessórios</em><br/>para o seu celular.</h1>
+   <p>Capas, películas, carregadores, fones e muito mais para o seu dia a dia.</p>
+   <div className="ep-store-searchbar"><Search size={19} color="#aaa"/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar produtos, marcas ou modelos..."/><button onClick={()=>void load()} title="Atualizar catálogo"><RefreshCw size={17}/></button></div>
   </div></section>
+  <section className="ep-store-benefits">
+   <div className="ep-store-benefit"><Store size={28}/><span><b>Retirada na loja</b>Com agilidade</span></div>
+   <div className="ep-store-benefit"><Truck size={30}/><span><b>Entrega local</b>Consulte sua região</span></div>
+   <div className="ep-store-benefit"><CreditCard size={28}/><span><b>Pagamento</b>Diversas opções</span></div>
+   <div className="ep-store-benefit"><ShieldCheck size={29}/><span><b>Qualidade</b>Produtos selecionados</span></div>
+  </section>
   <section className="ep-store-section">
+   <div className="ep-store-categories" aria-label="Categorias de acessórios">
+    {categories.map(item=>{const Icon=item.icon;return <button key={item.name} className={`ep-store-category ${category===item.name?'active':''}`} onClick={()=>setCategory(item.name)}><Icon size={22}/>{item.name}</button>})}
+   </div>
    {error&&<div className="ep-store-message ep-store-error">{error}</div>}{notice&&<div className="ep-store-message">{notice}{order&&<span> Número do pedido: {order}</span>}</div>}
-   <div className="ep-store-section-head"><div><small>SELEÇÃO EPARTS</small><h2>Produtos disponíveis</h2></div><span className="ep-store-count">{loading?'Atualizando catálogo…':visible.length+' produtos'}</span></div>
+   <div className="ep-store-section-head"><div><small>SELEÇÃO EPARTS</small><h2>{category==='Todas'?'Destaques da loja':category}</h2></div><span className="ep-store-count">{loading?'Atualizando catálogo…':visible.length+' produtos'}</span></div>
    {loading?<div className="ep-store-empty">Carregando produtos…</div>:visible.length===0?<div className="ep-store-empty">Nenhum produto encontrado. Tente outro nome ou código.</div>:<div className="ep-store-products">
     {visible.map(p=><article className="ep-store-product" key={p.product_id}>
      <div className="ep-store-product-image">{p.image_url?<img src={p.image_url} alt={p.name}/>:<span className="ep-store-product-placeholder"><ShoppingBag size={44}/></span>}</div>
@@ -145,7 +176,8 @@ export default function EpartsPublicCatalog(){
     </article>)}
    </div>}
   </section>
-  <footer className="ep-store-footer">EPARTS · CATÁLOGO ONLINE</footer>
+  <div className="ep-store-local"><MapPin size={24}/> Consulte as regiões atendidas e as opções de entrega <Truck size={25}/></div>
+  <footer className="ep-store-footer">EPARTS · ACESSÓRIOS PARA CELULARES</footer>
   {checkout&&<div className="ep-store-drawer" role="dialog" aria-modal="true" aria-label="Seu pedido"><section className="ep-store-drawer-panel">
    <button className="ep-store-back" onClick={()=>setCheckout(false)}><ArrowLeft size={18}/> Voltar ao catálogo</button><h2>Seu pedido</h2>
    {cart.length===0?<p style={{color:'#aaa'}}>Seu carrinho está vazio.</p>:<div>{cart.map(i=><div className="ep-store-cart-row" key={i.product.product_id}><div><b>{i.product.name}</b><div style={{color:'#aaa',fontSize:13,marginTop:5}}>{money(i.product.sale_price)} cada</div><div className="ep-store-qty"><button type="button" onClick={()=>change(i.product.product_id,-1)}><Minus size={14}/></button>{i.quantity}<button type="button" onClick={()=>change(i.product.product_id,1)}><Plus size={14}/></button></div></div><b>{money(i.product.sale_price*i.quantity)}</b></div>)}<h3 style={{textAlign:'right',marginTop:18}}>Total: {money(total)}</h3></div>}
