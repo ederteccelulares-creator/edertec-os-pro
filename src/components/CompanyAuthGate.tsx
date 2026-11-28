@@ -4,11 +4,20 @@ import { Building2, CreditCard, ExternalLink, LoaderCircle, LogOut, Mail, Shield
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 import { listMyCompanies, registerCompany, type Company, type CompanyMembership } from '../lib/company-data'
 import CompanyWorkspace from './CompanyWorkspace'
+import EpartsWorkspace from './EpartsWorkspace'
 import PlatformAdminPanel from './PlatformAdminPanel'
 
+const EPARTS_COMPANY_ID = '336c5941-6f23-418e-968e-730442650d98'
+
 export default function CompanyAuthGate() {
+  const currentPath = window.location.pathname.replace(/\/+$/, '') || '/'
+  const currentParams = new URLSearchParams(window.location.search)
+  const routeEpartsOnly = window.location.hostname === 'eparts.edertecospro.com.br' || currentPath === '/eparts' || currentParams.get('painel') === 'eparts'
   const isAdminRoute = window.location.pathname.replace(/\/+$/, '') === '/admin' || new URLSearchParams(window.location.search).get('admin') === '1'
   const [session, setSession] = useState<Session | null>(null)
+  const [epartsMember, setEpartsMember] = useState(false)
+  const epartsAdminEmail = session?.user.email?.trim().toLowerCase() === 'edertecospro@gmail.com'
+  const epartsOnly = routeEpartsOnly || epartsAdminEmail || epartsMember
   const [memberships, setMemberships] = useState<CompanyMembership[]>([])
   const [platformAdmin, setPlatformAdmin] = useState(false)
   const [selected, setSelected] = useState<Company | null>(null)
@@ -38,18 +47,26 @@ export default function CompanyAuthGate() {
   const refreshMemberships = useCallback(async () => {
     setSelected(null)
     const rows = await listMyCompanies()
-    setMemberships(rows)
-    const { data, error } = await supabase!.rpc('is_platform_admin')
-    if (error) throw error
-    setPlatformAdmin(data === true)
-    if (rows.length === 1) {
-      const membership = rows[0]
+    const hasEpartsMembership = rows.some(row => row.company_id === EPARTS_COMPANY_ID)
+    if (hasEpartsMembership) setEpartsMember(true)
+    const restrictToEparts = epartsOnly || hasEpartsMembership
+    const visibleRows = restrictToEparts ? rows.filter(row => row.company_id === EPARTS_COMPANY_ID) : rows
+    setMemberships(visibleRows)
+    if (restrictToEparts) {
+      setPlatformAdmin(false)
+    } else {
+      const { data, error } = await supabase!.rpc('is_platform_admin')
+      if (error) throw error
+      setPlatformAdmin(data === true)
+    }
+    if (visibleRows.length === 1) {
+      const membership = visibleRows[0]
       const company = Array.isArray(membership.companies) ? membership.companies[0] : membership.companies
       if (company) {
         setSelected(company)
       }
     }
-  }, [])
+  }, [epartsOnly])
 
 
   async function finishPendingCompany(user: { id:string; email?:string; email_confirmed_at?:string; user_metadata?:Record<string,unknown> }) {
@@ -108,7 +125,7 @@ export default function CompanyAuthGate() {
     })
     const {data:{subscription}} = supabase.auth.onAuthStateChange((_event,next) => {
       setSession(next)
-      if (!next) { setMemberships([]); setSelected(null); setPlatformAdmin(false) }
+      if (!next) { setMemberships([]); setSelected(null); setPlatformAdmin(false); setEpartsMember(false) }
       else { setMemberships([]); setSelected(null); setPlatformAdmin(false); window.setTimeout(() => { finishPendingCompany(next.user).catch(e => setError(e instanceof Error ? e.message : 'Não foi possível concluir o cadastro da empresa.')) .finally(() => refreshMemberships().catch(e => setError(e instanceof Error ? e.message : 'Erro ao carregar assistências.'))) },0) }
     })
     return () => { alive = false; subscription.unsubscribe() }
@@ -238,7 +255,7 @@ export default function CompanyAuthGate() {
 
   async function signOut() {
     await supabase!.auth.signOut()
-    setSession(null); setMemberships([]); setSelected(null); setPlatformAdmin(false)
+    setSession(null); setMemberships([]); setSelected(null); setPlatformAdmin(false); setEpartsMember(false)
   }
 
   if (!session) return <main className="company-auth"><section className="company-auth-card">
@@ -264,12 +281,12 @@ export default function CompanyAuthGate() {
       <button className="company-primary" disabled={busy}>{busy?'Aguarde...':mode==='login'?'Entrar':'Criar conta e assistência'}</button>
     </form>}
     {mode==='login' && !quickMode && <button type="button" className="company-link company-pin-login" onClick={()=>{setQuickMode(true);setError('');setNotice('')}}><span aria-hidden="true">⌘</span><span><b>Entrar com código da empresa e PIN</b><small>Acesso rápido para funcionários</small></span><span aria-hidden="true">→</span></button>}
-    <button className="company-link" onClick={()=>{setMode(mode==='login'?'signup':'login');setQuickMode(false);setError('');setNotice('')}}>{mode==='login'?'Ainda não tem conta? Criar acesso':'Já tem conta? Entrar'}</button>
+    {!epartsOnly && <button className="company-link" onClick={()=>{setMode(mode==='login'?'signup':'login');setQuickMode(false);setError('');setNotice('')}}>{mode==='login'?'Ainda não tem conta? Criar acesso':'Já tem conta? Entrar'}</button>}
   </section></main>
 
-  if (platformAdmin) return <PlatformAdminPanel email={session.user.email||''} onSignOut={signOut}/>
+  if (platformAdmin && !epartsOnly) return <PlatformAdminPanel email={session.user.email||''} onSignOut={signOut}/>
 
-  if (isAdminRoute) return <main className="company-auth"><section className="company-auth-card">
+  if (isAdminRoute && !epartsOnly) return <main className="company-auth"><section className="company-auth-card">
     <div className="company-auth-brand"><ShieldCheck size={25}/><div><b>EDERTEC <i>OS PRO</i></b><small>ÁREA ADMINISTRATIVA</small></div></div>
     <h1>Acesso restrito</h1>
     <p>Esta área é exclusiva da conta Super Admin da plataforma. Sua conta não possui essa autorização.</p>
@@ -305,10 +322,14 @@ export default function CompanyAuthGate() {
       <p><b>E-mail:</b> {registrationInfo.email}</p>
       <p>Entre com seu e-mail e senha. Para funcionários, use o código da empresa, usuário e PIN.</p>
       <button className="company-link" onClick={()=>setRegistrationInfo(null)}>Continuar</button>
-    </section>}</><CompanyWorkspace company={selected} role={memberships.find(m=>m.company_id===selected.id)?.role||'technician'} email={session.user.email||''} onSignOut={signOut}/></>
+    </section>}</>{epartsOnly ? <EpartsWorkspace companyId={selected.id} companyName={selected.name} role={memberships.find(m=>m.company_id===selected.id)?.role||'technician'} email={session.user.email||''} onSignOut={signOut}/> : <CompanyWorkspace company={selected} role={memberships.find(m=>m.company_id===selected.id)?.role||'technician'} email={session.user.email||''} onSignOut={signOut}/>} </>
   }
 
+  if (epartsOnly && !selected && memberships.length === 0) return <main className="company-auth"><section className="company-auth-card"><div className="company-auth-brand"><Smartphone size={25}/><div><b>EPARTS</b><small>ACESSO EXCLUSIVO</small></div></div><h1>Usuário sem acesso à EPARTS</h1><p>Esta conta não possui vínculo com a empresa EPARTS. O ambiente é restrito aos usuários cadastrados e autorizados pela própria empresa.</p><button className="company-primary" onClick={signOut}>Sair da conta</button></section></main>
+
   if (memberships.length>1) return <main className="company-auth"><section className="company-auth-card"><h1>Selecione sua assistência</h1><div className="company-select-list">{memberships.map(m=>{const c=Array.isArray(m.companies)?m.companies[0]:m.companies;return c?<button key={m.company_id} onClick={()=>setSelected(c)}><Building2/><span><b>{c.name}</b><small>{m.role}</small></span></button>:null})}</div><button className="company-link" onClick={signOut}><LogOut size={15}/> Sair</button></section></main>
+
+  if (epartsOnly) return <main className="company-auth"><section className="company-auth-card"><div className="company-auth-brand"><Smartphone size={25}/><div><b>EPARTS</b><small>ACESSO AO SISTEMA</small></div></div><h1>Vínculo com a EPARTS não encontrado</h1><p>Entre em contato com o administrador da EPARTS para receber acesso. Não é permitido criar outra empresa neste endereço.</p><button className="company-link" onClick={signOut}>Sair da conta</button></section></main>
 
   return <main className="company-auth"><section className="company-auth-card">
     <div className="company-auth-brand"><Building2 size={25}/><div><b>EDERTEC <i>OS PRO</i></b><small>NOVA ASSISTÊNCIA</small></div></div>

@@ -15,6 +15,7 @@ import CompanyFinanceDashboardPanel from './CompanyFinanceDashboardPanel'
 import CustomerPortalAdminPanel from './CustomerPortalAdminPanel'
 import CompanySupportPanel from './CompanySupportPanel'
 import CompanyTeamPanel from './CompanyTeamPanel'
+import EpartsWorkspace from './EpartsWorkspace'
 import './CompanyMobileNavigation.css'
 import { recordCompanyServiceOrderPayment, type PaymentMethod } from '../lib/company-service-order-payments'
 import { invoiceServiceOrderNet30, listCustomerOverdueReceivables, type OverdueReceivable } from '../lib/company-financial-entries'
@@ -338,6 +339,10 @@ export default function CompanyWorkspace({company,role,email,onSignOut}:Props) {
     if ((next==='settings'||next==='backup'||next==='team') && !canAdmin) return
     if (next==='backup' && !canAdmin) return
     setTab(next); setMenuOpen(false); setShowOrder(false); setShowCustomer(false)
+  }
+
+  if (company.id === '336c5941-6f23-418e-968e-730442650d98') {
+    return <EpartsWorkspace companyId={company.id} companyName={companyInfo.name} email={email} role={role} onSignOut={onSignOut} />
   }
 
   return <div className="company-app">
