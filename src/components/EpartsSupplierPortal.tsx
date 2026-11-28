@@ -4,7 +4,8 @@ import { LogOut, RefreshCw, Store, UserRound, LockKeyhole, Eye, EyeOff, ChartNoA
 import { supabase } from '../lib/supabase'
 
 type Supplier = { id:string; company_id:string; name:string; email:string|null; user_id:string|null }
-type Brand = { id:string; name:string }\ntype Product = { id:string; brand_id:string|null; name:string; sku:string|null; stock_quantity:number; sale_price:number; image_url:string|null }
+type Brand = { id:string; name:string }
+type Product = { id:string; brand_id:string|null; name:string; sku:string|null; stock_quantity:number; sale_price:number; image_url:string|null }
 type SaleItem = { id:string; sale_id:string; product_id:string; product_name:string; sku:string|null; quantity:number; unit_price:number; line_total:number; eparts_commission_amount:number; supplier_amount:number; created_at:string }
 type Sale = { id:string; order_number:number; status:string; payment_status:string; created_at:string }
 type Payout = { id:string; amount:number; payment_method:string; paid_at:string; reference:string|null; notes:string|null }
@@ -15,7 +16,8 @@ const date=(value:string)=>new Date(value).toLocaleDateString('pt-BR')
 export default function EpartsSupplierPortal(){
   const [session,setSession]=useState<Session|null>(null)
   const [supplier,setSupplier]=useState<Supplier|null>(null)
-  const [products,setProducts]=useState<Product[]>([])\n  const [brands,setBrands]=useState<Brand[]>([])
+  const [products,setProducts]=useState<Product[]>([])
+  const [brands,setBrands]=useState<Brand[]>([])
   const [items,setItems]=useState<SaleItem[]>([])
   const [sales,setSales]=useState<Sale[]>([])
   const [payouts,setPayouts]=useState<Payout[]>([])
@@ -46,7 +48,9 @@ export default function EpartsSupplierPortal(){
         supabase.from('eparts_supplier_payouts').select('id,amount,payment_method,paid_at,reference,notes').eq('company_id',profile.company_id).eq('supplier_id',profile.id).order('paid_at',{ascending:false})
       ])
       if(p.error) throw p.error;if(po.error) throw po.error
-      const {data:brandRows,error:brandsError}=brandIds.length?await supabase.from('eparts_brands').select('id,name').eq('company_id',profile.company_id).in('id',brandIds).order('name'):{data:[],error:null}\n      if(brandsError)throw brandsError\n      const productIds=(p.data||[]).map(row=>row.id as string)
+      const {data:brandRows,error:brandsError}=brandIds.length?await supabase.from('eparts_brands').select('id,name').eq('company_id',profile.company_id).in('id',brandIds).order('name'):{data:[],error:null}
+      if(brandsError)throw brandsError
+      const productIds=(p.data||[]).map(row=>row.id as string)
       let itemRows:SaleItem[]=[]
       if(productIds.length){
         let itemQuery=supabase.from('eparts_sale_items').select('id,sale_id,product_id,product_name,sku,quantity,unit_price,line_total,eparts_commission_amount,supplier_amount,created_at').eq('company_id',profile.company_id)
@@ -136,7 +140,8 @@ export default function EpartsSupplierPortal(){
       .ep-supplier-root th{color:#ff6b71;background:#1c1113;font-size:10px;letter-spacing:1px}
       .ep-supplier-root td{color:#e4dcdc}
       .ep-supplier-empty{padding:25px;text-align:center;color:#b8adad}
-      .ep-supplier-section-title{margin:0 0 14px;color:#ff777d;font-size:16px}\n      .ep-supplier-brand-list{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 18px}.ep-supplier-brand-chip{padding:7px 11px;border:1px solid #743039;border-radius:999px;background:#251014;color:#ffb0b4;font-size:12px;font-weight:700}.ep-supplier-muted{color:#a99d9d;font-size:12px}
+      .ep-supplier-section-title{margin:0 0 14px;color:#ff777d;font-size:16px}
+      .ep-supplier-brand-list{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 18px}.ep-supplier-brand-chip{padding:7px 11px;border:1px solid #743039;border-radius:999px;background:#251014;color:#ffb0b4;font-size:12px;font-weight:700}.ep-supplier-muted{color:#a99d9d;font-size:12px}
       @media(max-width:720px){.ep-supplier-root{padding:18px 12px 30px}.ep-supplier-card{padding:15px}.ep-supplier-login{padding:24px 17px}.ep-supplier-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.ep-supplier-stat{padding:13px}.ep-supplier-stat strong{font-size:19px}.ep-supplier-top{align-items:flex-start;flex-direction:column}.ep-supplier-top button{align-self:flex-end}.ep-supplier-login-links span{font-size:10px}}
     `}</style>
     <div className="ep-supplier-wrap">
