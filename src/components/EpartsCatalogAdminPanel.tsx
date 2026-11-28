@@ -284,7 +284,24 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
           gap: 10px;
         }
       }
-    `}</style>
+    `}
+      /* EPARTS: identidade visual preta e vermelha compartilhada */
+      .eparts-admin-panel .eparts-tabs>button{border:1px solid #64202a!important;background:#171012!important;color:#f4eeee!important}
+      .eparts-admin-panel .eparts-tabs>button.company-primary,
+      .eparts-admin-panel .eparts-tabs>button.active{background:linear-gradient(110deg,#ed142c,#76000e)!important;border-color:#ff4052!important;color:#fff!important;box-shadow:0 0 12px #ed142c25!important}
+      .eparts-admin-panel .company-form{border-color:#64202a!important;background:linear-gradient(145deg,#1a1315,#0c0b0b)!important}
+      .eparts-admin-panel .company-form input,.eparts-admin-panel .company-form select,.eparts-admin-panel .company-form textarea{border-color:#5b3037!important;background:#0b090a!important;color:#fff!important}
+      .eparts-admin-panel .company-form input:focus,.eparts-admin-panel .company-form select:focus,.eparts-admin-panel .company-form textarea:focus{border-color:#ed142c!important;box-shadow:0 0 0 3px #ed142c22!important}
+      .eparts-admin-panel .company-form fieldset{border-color:#64202a!important}
+      .eparts-admin-panel .company-primary{background:linear-gradient(110deg,#ed142c,#850012)!important;border:1px solid #ff4052!important;color:#fff!important}
+      .eparts-admin-panel .company-secondary{background:#1a1113!important;border:1px solid #64202a!important;color:#ffb5bd!important}
+      .eparts-admin-panel .company-table-wrap{border-color:#4c252c!important;background:#100d0e!important}
+      .eparts-admin-panel table th{background:#211215!important;color:#ff8793!important;border-color:#64202a!important}
+      .eparts-admin-panel table td{border-color:#352126!important;color:#eee!important}
+      .eparts-admin-panel .company-panel-head b{color:#fff!important}
+      .eparts-admin-panel .company-panel-head small{color:#bdb3b4!important}
+      .eparts-admin-panel .eparts-checkbox{color:#eee!important}
+    </style>
     <div className="company-panel-head"><div><b>Central Eparts</b><small>Cadastros e catálogo do marketplace · comissão da plataforma: 12%</small></div><button className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar</button></div>
     <div className="company-inline-actions eparts-tabs">
       <button className={tab==='customers'?'company-primary':'company-secondary'} onClick={()=>{setTab('customers');setShowForm(false)}}><BadgePlus size={15}/> Clientes ({customers.length})</button>
