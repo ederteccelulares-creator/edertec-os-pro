@@ -31,6 +31,7 @@ export default function EpartsSupplierPortal(){
   const [busy,setBusy]=useState(false)
   const [loading,setLoading]=useState(true)
   const [error,setError]=useState('')
+  const [notice,setNotice]=useState('')
   const [from,setFrom]=useState('')
   const [to,setTo]=useState('')
 
@@ -211,14 +212,14 @@ export default function EpartsSupplierPortal(){
         <form onSubmit={login}>
           <label>Usuário<span className="ep-supplier-field"><UserRound size={21}/><input type="text" autoCapitalize="none" autoComplete="username" minLength={4} maxLength={30} required value={username} onChange={e=>setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g,''))} placeholder="Seu usuário"/></span></label>
           <label>Senha<span className="ep-supplier-field"><LockKeyhole size={21}/><input type={showPassword?'text':'password'} autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)} placeholder="Sua senha"/><button type="button" aria-label={showPassword?'Ocultar senha':'Mostrar senha'} onClick={()=>setShowPassword(v=>!v)}>{showPassword?<EyeOff size={19}/>:<Eye size={19}/>}</button></span></label>
-          {error&&<div className="ep-supplier-error" role="alert">{error}</div>}
+          {error&&<div className="ep-supplier-error" role="alert">{error}</div>}{notice&&<div className="ep-supplier-notice" role="status">{notice}</div>}
           <button className="ep-supplier-login-submit" type="submit" disabled={busy}><LogIn size={20}/>{busy?'Validando acesso...':'Entrar'}</button>
         </form>
         <p className="ep-supplier-notice">Acesso individual e protegido. Você visualiza somente as informações vinculadas ao seu cadastro.</p>
         <div className="ep-supplier-login-links"><span><ChartNoAxesColumn size={25}/>Vendas</span><span><Package size={25}/>Produtos</span><span><Tag size={25}/>Marcas</span><span><Coins size={25}/>Repasses</span></div>
       </section>:loading?<section className="ep-supplier-card">Carregando seu painel...</section>:!supplier?<section className="ep-supplier-card"><h1>Acesso ainda não vinculado</h1><p>{error||'Peça ao administrador da EPARTS para vincular este usuário ao seu cadastro de fornecedor.'}</p><button onClick={logout}><LogOut size={16}/> Sair</button></section>:<>
         <div className="ep-supplier-top"><div><small>ÁREA EXCLUSIVA DO FORNECEDOR</small><h1>Olá, {supplier.name}</h1><p>Acompanhe seus produtos, vendas e repasses.</p></div><button onClick={()=>void loadSupplier(session.user.id)}><RefreshCw size={16}/> Atualizar</button></div>
-        {error&&<div className="ep-supplier-error">{error}</div>}
+        {error&&<div className="ep-supplier-error">{error}</div>}{notice&&<div className="ep-supplier-notice" role="status">{notice}</div>}
         <div className="ep-supplier-filters"><label>De<input type="date" value={from} onChange={e=>setFrom(e.target.value)}/></label><label>Até<input type="date" value={to} onChange={e=>setTo(e.target.value)}/></label></div>
         <div className="ep-supplier-grid">
           <div className="ep-supplier-stat"><span>Produtos vinculados</span><strong>{products.length}</strong></div>
