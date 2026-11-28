@@ -8,7 +8,8 @@ type Brand = { id:string; name:string }
 type Product = { id:string; brand_id:string|null; name:string; sku:string|null; stock_quantity:number; sale_price:number; image_url:string|null }
 type SaleItem = { id:string; sale_id:string; product_id:string; product_name:string; sku:string|null; quantity:number; unit_price:number; line_total:number; eparts_commission_amount:number; supplier_amount:number; created_at:string }
 type Sale = { id:string; order_number:number; status:string; payment_status:string; created_at:string }
-type Payout = { id:string; amount:number; payment_method:string; paid_at:string; reference:string|null; notes:string|null }\ntype PaymentRequest = { id:string; amount:number; notes:string|null; status:'pending'|'approved'|'rejected'|'paid'; requested_at:string; admin_notes:string|null }
+type Payout = { id:string; amount:number; payment_method:string; paid_at:string; reference:string|null; notes:string|null }
+type PaymentRequest = { id:string; amount:number; notes:string|null; status:'pending'|'approved'|'rejected'|'paid'; requested_at:string; admin_notes:string|null }
 
 const money=(value:number)=>Number(value||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 const date=(value:string)=>new Date(value).toLocaleDateString('pt-BR')
@@ -20,7 +21,10 @@ export default function EpartsSupplierPortal(){
   const [brands,setBrands]=useState<Brand[]>([])
   const [items,setItems]=useState<SaleItem[]>([])
   const [sales,setSales]=useState<Sale[]>([])
-  const [payouts,setPayouts]=useState<Payout[]>([])\n  const [paymentRequests,setPaymentRequests]=useState<PaymentRequest[]>([])\n  const [requestAmount,setRequestAmount]=useState('')\n  const [requestNotes,setRequestNotes]=useState('')
+  const [payouts,setPayouts]=useState<Payout[]>([])
+  const [paymentRequests,setPaymentRequests]=useState<PaymentRequest[]>([])
+  const [requestAmount,setRequestAmount]=useState('')
+  const [requestNotes,setRequestNotes]=useState('')
   const [username,setUsername]=useState('')
   const [password,setPassword]=useState('')
   const [showPassword,setShowPassword]=useState(false)
@@ -45,7 +49,8 @@ export default function EpartsSupplierPortal(){
       productQuery=brandIds.length?productQuery.or('supplier_id.eq.'+profile.id+',brand_id.in.('+brandIds.join(',')+')'):productQuery.eq('supplier_id',profile.id)
       const [p,po,requests]=await Promise.all([
         productQuery.order('name'),
-        supabase.from('eparts_supplier_payouts').select('id,amount,payment_method,paid_at,reference,notes').eq('company_id',profile.company_id).eq('supplier_id',profile.id).order('paid_at',{ascending:false}),\n        supabase.from('eparts_supplier_payment_requests').select('id,amount,notes,status,requested_at,admin_notes').eq('company_id',profile.company_id).eq('supplier_id',profile.id).order('requested_at',{ascending:false})
+        supabase.from('eparts_supplier_payouts').select('id,amount,payment_method,paid_at,reference,notes').eq('company_id',profile.company_id).eq('supplier_id',profile.id).order('paid_at',{ascending:false}),
+        supabase.from('eparts_supplier_payment_requests').select('id,amount,notes,status,requested_at,admin_notes').eq('company_id',profile.company_id).eq('supplier_id',profile.id).order('requested_at',{ascending:false})
       ])
       if(p.error) throw p.error;if(po.error) throw po.error;if(requests.error)throw requests.error
       const {data:brandRows,error:brandsError}=brandIds.length?await supabase.from('eparts_brands').select('id,name').eq('company_id',profile.company_id).in('id',brandIds).order('name'):{data:[],error:null}
@@ -107,7 +112,8 @@ export default function EpartsSupplierPortal(){
   const paid=payouts.filter(p=>!from||p.paid_at.slice(0,10)>=from).filter(p=>!to||p.paid_at.slice(0,10)<=to).reduce((n,p)=>n+Number(p.amount),0)
   const eligibleTotal=items.reduce((n,item)=>{const sale=sales.find(x=>x.id===item.sale_id);return sale&&sale.status!=='cancelled'&&sale.payment_status==='paid'?n+Number(item.supplier_amount):n},0)
   const paidAllTime=payouts.reduce((n,p)=>n+Number(p.amount),0)
-  const openRequests=paymentRequests.filter(r=>r.status==='pending'||r.status==='approved').reduce((n,r)=>n+Number(r.amount),0)\n  const pending=Math.max(0,eligibleTotal-paidAllTime-openRequests)
+  const openRequests=paymentRequests.filter(r=>r.status==='pending'||r.status==='approved').reduce((n,r)=>n+Number(r.amount),0)
+  const pending=Math.max(0,eligibleTotal-paidAllTime-openRequests)
 
   return <main className="ep-supplier-root">
     <style>{`
