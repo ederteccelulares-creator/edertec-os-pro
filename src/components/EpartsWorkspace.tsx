@@ -37,9 +37,22 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
   useEffect(()=>{
     const main=document.querySelector('.eparts-workspace .company-main')
     if(main instanceof HTMLElement)main.scrollTo({top:0,left:0,behavior:'auto'})
-    if(window.innerWidth<=760)window.scrollTo({top:0,left:0,behavior:'auto'})
+    if(window.innerWidth<=760){
+      try{if('scrollRestoration' in window.history)window.history.scrollRestoration='manual'}catch{}
+      window.scrollTo({top:0,left:0,behavior:'auto'})
+      document.documentElement.scrollTop=0
+      document.body.scrollTop=0
+      requestAnimationFrame(()=>{window.scrollTo({top:0,left:0,behavior:'auto'});document.documentElement.scrollTop=0;document.body.scrollTop=0})
+    }
     setMenuOpen(false)
   },[tab])
+  useEffect(()=>{
+    if(window.innerWidth>760)return
+    try{if('scrollRestoration' in window.history)window.history.scrollRestoration='manual'}catch{}
+    window.scrollTo({top:0,left:0,behavior:'auto'})
+    document.documentElement.scrollTop=0
+    document.body.scrollTop=0
+  },[])
   const nav=(value:Tab)=>{setMenuOpen(false);setQuickCreate(null);setTab(value)}
   const title=menuOpen?'Menu':tab==='dashboard'?'Visão geral':tab==='products'?'Produtos e estoque':tab==='brands'?'Marcas':tab==='suppliers'?'Fornecedores':tab==='customers'?'Clientes':tab==='categories'?'Categorias':tab==='sales'?'Vendas e pedidos':tab==='pos'?'Ponto de venda':'Comissões e repasses'
   const navItems=[
@@ -610,6 +623,20 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
           margin:0!important;
           padding-top:0!important;
           transform:none!important;
+        }
+      }
+
+      /* O app EPARTS deve iniciar no topo do documento, sem centralização vertical */
+      @media(max-width:760px){
+        html:has(.eparts-workspace),body:has(.eparts-workspace),body:has(.eparts-workspace) #root{
+          margin:0!important;padding:0!important;
+          align-content:start!important;justify-content:flex-start!important;
+          min-height:0!important;height:auto!important;
+          scroll-padding-top:0!important;
+        }
+        .eparts-workspace{
+          top:0!important;align-self:flex-start!important;
+          margin-block:0!important;inset-block-start:0!important;
         }
       }
 </style>
