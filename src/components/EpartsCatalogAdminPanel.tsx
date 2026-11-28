@@ -11,7 +11,8 @@ type Sale = { id:string; order_number:number; status:string; payment_status:stri
 type SaleItem = {id:string;product_name:string;sku:string|null;quantity:number;unit_price:number;line_total:number;eparts_commission_amount:number;supplier_amount:number};
 type SaleEvent = {id:string;old_status:string|null;new_status:string;old_payment_status:string|null;new_payment_status:string;created_at:string};
 type Payout = {id:string;supplier_id:string;sale_id:string|null;amount:number;payment_method:string;paid_at:string;reference:string|null;notes:string|null;eparts_suppliers?:{name:string}[]|null};
-type SupplierBalance = {supplier_id:string;supplier_name:string;eligible_amount:number;paid_amount:number;pending_amount:number}\ntype SupplierPaymentRequest = {id:string;company_id:string;supplier_id:string;amount:number;notes:string|null;status:'pending'|'approved'|'rejected'|'paid';requested_at:string;reviewed_at:string|null;admin_notes:string|null;eparts_suppliers?:{name:string}[]|null};
+type SupplierBalance = {supplier_id:string;supplier_name:string;eligible_amount:number;paid_amount:number;pending_amount:number}
+type SupplierPaymentRequest = {id:string;company_id:string;supplier_id:string;amount:number;notes:string|null;status:'pending'|'approved'|'rejected'|'paid';requested_at:string;reviewed_at:string|null;admin_notes:string|null;eparts_suppliers?:{name:string}[]|null};
 type Tab = 'products'|'suppliers'|'brands'|'sales'|'payouts'|'customers'
 const money=(value:number)=>Number(value||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 
@@ -28,7 +29,8 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
   const [brands,setBrands]=useState<Brand[]>([])
   const [sales,setSales]=useState<Sale[]>([])
   const [payouts,setPayouts]=useState<Payout[]>([])
-  const [supplierBalances,setSupplierBalances]=useState<SupplierBalance[]>([])\n  const [paymentRequests,setPaymentRequests]=useState<SupplierPaymentRequest[]>([])
+  const [supplierBalances,setSupplierBalances]=useState<SupplierBalance[]>([])
+  const [paymentRequests,setPaymentRequests]=useState<SupplierPaymentRequest[]>([])
   const [payoutForm,setPayoutForm]=useState({supplierId:'',saleId:'',amount:'',paymentMethod:'pix',reference:'',notes:''})
   const [loading,setLoading]=useState(true)
   const [busy,setBusy]=useState(false)
@@ -57,7 +59,8 @@ export default function EpartsCatalogAdminPanel({companyId,initialTab='products'
         supabase.from('eparts_sales').select('id,order_number,status,payment_status,total_amount,eparts_commission_amount,supplier_amount,customer_name,customer_phone,created_at').eq('company_id',companyId).order('created_at',{ascending:false}).limit(100),
         supabase.from('eparts_supplier_payouts').select('id,supplier_id,sale_id,amount,payment_method,paid_at,reference,notes,eparts_suppliers(name)').eq('company_id',companyId).order('paid_at',{ascending:false}).limit(200),
         supabase.rpc('eparts_supplier_balances',{p_company_id:companyId}),
-        supabase.from('eparts_customers').select('id,name,email,phone,document,address').eq('company_id',companyId).order('name'),\n        supabase.from('eparts_supplier_payment_requests').select('id,company_id,supplier_id,amount,notes,status,requested_at,reviewed_at,admin_notes,eparts_suppliers(name)').eq('company_id',companyId).order('requested_at',{ascending:false}).limit(200),
+        supabase.from('eparts_customers').select('id,name,email,phone,document,address').eq('company_id',companyId).order('name'),
+        supabase.from('eparts_supplier_payment_requests').select('id,company_id,supplier_id,amount,notes,status,requested_at,reviewed_at,admin_notes,eparts_suppliers(name)').eq('company_id',companyId).order('requested_at',{ascending:false}).limit(200),
       ])
       if(p.error)throw p.error;if(s.error)throw s.error;if(b.error)throw b.error;if(o.error)throw o.error;if(po.error)throw po.error;if(balances.error)throw balances.error;if(cu.error)throw cu.error;if(requests.error)throw requests.error
       setProducts((p.data||[]) as Product[]);setSuppliers((s.data||[]) as Supplier[]);setBrands((b.data||[]) as Brand[]);setSales((o.data||[]) as Sale[]);setPayouts((po.data||[]) as Payout[]);setSupplierBalances((balances.data||[]) as SupplierBalance[]);setCustomers((cu.data||[]) as Customer[]);setPaymentRequests((requests.data||[]) as SupplierPaymentRequest[])
