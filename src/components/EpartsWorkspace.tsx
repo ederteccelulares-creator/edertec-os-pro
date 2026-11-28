@@ -513,10 +513,18 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
           min-height:100dvh!important;overflow-x:hidden!important;
         }
         .eparts-workspace>.company-sidebar{
-          position:relative!important;top:auto!important;inset:auto!important;
-          display:block!important;width:100%!important;height:auto!important;
-          min-height:0!important;max-height:none!important;overflow:visible!important;
-          margin:0!important;padding:7px 14px 0!important;transform:none!important;
+          position:fixed!important;top:0!important;left:0!important;bottom:0!important;right:auto!important;
+          display:flex!important;flex-direction:column!important;
+          width:min(86vw,320px)!important;height:100dvh!important;
+          min-height:0!important;max-height:100dvh!important;overflow-y:auto!important;
+          margin:0!important;padding:16px 14px calc(22px + env(safe-area-inset-bottom))!important;
+          z-index:1002!important;background:linear-gradient(155deg,#211316,#090909 78%)!important;
+          border-right:1px solid #76202b!important;
+          transform:translateX(-105%)!important;visibility:hidden!important;pointer-events:none!important;
+          transition:transform .22s ease,visibility .22s ease!important;
+        }
+        .eparts-workspace>.company-sidebar.drawer-open{
+          transform:translateX(0)!important;visibility:visible!important;pointer-events:auto!important;
         }
         .eparts-workspace .eparts-brand-row{
           min-height:44px!important;height:auto!important;
@@ -530,7 +538,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
           display:block!important;position:relative!important;
           width:100%!important;min-height:0!important;
           margin:0!important;padding:12px 13px calc(110px + env(safe-area-inset-bottom))!important;
-          transform:none!important;top:auto!important;
+          transform:none!important;top:0!important;
         }
         .eparts-workspace .company-top{margin-top:0!important;padding-top:0!important}
       }
@@ -639,8 +647,15 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
           margin-block:0!important;inset-block-start:0!important;
         }
       }
+
+      @media(max-width:760px){
+        .eparts-workspace>.company-sidebar .eparts-nav-closed{display:none!important}
+        .eparts-workspace>.company-sidebar .eparts-nav-open{display:grid!important}
+        .eparts-workspace>.company-main{padding-top:10px!important}
+        .eparts-workspace .company-top{margin:0 0 18px!important;padding:0 0 16px!important}
+      }
 </style>
-    <aside className="company-sidebar">
+    <aside className={menuOpen?"company-sidebar drawer-open":"company-sidebar"}>
       <div className="eparts-brand-row">
         <div className="company-logo"><span><ShoppingCart/></span><div><b>EPARTS</b><small>PORTAL DO FORNECEDOR</small></div></div>
         <button type="button" className="eparts-mobile-menu-button" onClick={()=>setMenuOpen(v=>!v)} aria-expanded={menuOpen} aria-controls="eparts-mobile-drawer" aria-label={menuOpen?'Fechar menu':'Abrir menu'}>{menuOpen?<X size={19}/>:<Menu size={19}/>}</button>
