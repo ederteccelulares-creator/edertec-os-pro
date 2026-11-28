@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { LayoutDashboard, Package, Boxes, Tags, Truck, ShoppingCart, Wallet, Users, LogOut, RefreshCw, ExternalLink, Menu, X, ChevronRight, Store, BarChart3 } from 'lucide-react'
+import { LayoutDashboard, Package, Boxes, Tags, Truck, ShoppingCart, Wallet, Users, LogOut, RefreshCw, ExternalLink, Menu, X, ChevronRight, Store, BarChart3, FileText, Zap } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import EpartsCatalogAdminPanel from './EpartsCatalogAdminPanel'
 import EpartsPOS from './EpartsPOS'
@@ -348,6 +348,69 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
       .eparts-workspace .eparts-menu-options button>span,.eparts-workspace .eparts-menu-options a>span{flex:1}
       .eparts-workspace .eparts-menu-options button>svg:first-child,.eparts-workspace .eparts-menu-options a>svg:first-child{color:#ff8793}
       .eparts-workspace .eparts-menu-options button.active{border-color:#ed142c;background:#6f1020;color:#ffe3a4}
+      /* EPARTS visual direction approved: black / intense red / white */
+      .eparts-workspace{--ep-gold:#ed142c!important;--ep-gold-light:#fff!important}
+      .eparts-workspace .eparts-brand-row{position:relative}
+      .eparts-workspace .eparts-brand-row:before{
+        content:"";position:absolute;left:-18px;right:-18px;top:-25px;height:112px;z-index:-1;
+        background:linear-gradient(115deg,#310008 0%,#080808 24%,#080808 76%,#310008 100%);
+        border-bottom:1px solid #ed142c;box-shadow:0 5px 24px #ed142c22;
+      }
+      .eparts-workspace .company-logo>span{background:transparent!important;color:#ed142c!important;box-shadow:none!important;border:0!important}
+      .eparts-workspace .company-logo b{font-size:23px!important;letter-spacing:2px!important;color:#fff!important;font-style:italic}
+      .eparts-workspace .company-logo small{color:#fff!important;font-size:9px!important;letter-spacing:1.5px!important}
+      .eparts-workspace .company-top small{color:#f0e9e9!important}
+      .eparts-workspace .company-top h1{position:relative;padding-left:16px;color:#fff!important;font-size:clamp(27px,3vw,36px)!important}
+      .eparts-workspace .company-top h1:before{content:"";position:absolute;left:0;top:3px;bottom:3px;width:5px;border-radius:5px;background:#ed142c;box-shadow:0 0 12px #ed142c}
+      .eparts-workspace .company-secondary{background:linear-gradient(110deg,#ed142c,#990014)!important;border:1px solid #ff4052!important;color:#fff!important;box-shadow:0 0 16px #ed142c35!important}
+      .eparts-workspace .company-icon-button{background:#100c0d!important;border:1px solid #ed142c!important;color:#fff!important}
+      .eparts-workspace .company-panel{border:1px solid #8f2633!important;background:linear-gradient(145deg,#151112,#080808)!important;box-shadow:0 0 18px #ed142c12,inset 0 1px #ff405255!important}
+      .eparts-workspace .company-panel-head b{color:#fff!important;font-size:19px!important}
+      .eparts-workspace .company-panel-head:has(small):before{color:#ed142c}
+      .eparts-workspace .company-panel-head>button{background:linear-gradient(110deg,#a90019,#43000b)!important;border:1px solid #ed142c!important;color:#fff!important;min-height:48px!important}
+      .eparts-workspace .company-stat-card{
+        position:relative;border:1px solid #8b2631!important;border-radius:18px!important;
+        background:radial-gradient(ellipse at 100% 100%,#65000e55,transparent 55%),linear-gradient(145deg,#211719,#090909)!important;
+        box-shadow:inset 0 0 18px #ed142c0c!important;
+      }
+      .eparts-workspace .company-stat-card strong{color:#fff!important;font-size:30px!important}
+      .eparts-workspace .company-stat-card span{color:#f0e9e9!important}
+      .eparts-workspace .eparts-mobile-bottom-nav{
+        border:1px solid #ed142c!important;background:rgba(5,5,5,.97)!important;
+        box-shadow:0 0 18px #ed142c35!important;
+      }
+      .eparts-workspace .eparts-mobile-bottom-nav button{color:#fff!important}
+      .eparts-workspace .eparts-mobile-bottom-nav button svg{color:#fff!important}
+      .eparts-workspace .eparts-mobile-bottom-nav button.active{
+        border:1px solid #ff4052!important;background:linear-gradient(145deg,#ed142c,#71000e)!important;
+        color:#fff!important;box-shadow:0 0 14px #ed142c55!important;
+      }
+      .eparts-workspace .eparts-mobile-bottom-nav button.active svg{color:#fff!important}
+      .eparts-workspace .eparts-quick-grid button{border:1px solid #8b2631!important;background:#171012!important;color:#fff!important}
+      .eparts-workspace .eparts-quick-grid button svg{color:#ed142c!important}
+      @media(max-width:760px){
+        .eparts-workspace .company-sidebar{padding-top:16px!important}
+        .eparts-workspace .eparts-brand-row{justify-content:center!important;min-height:74px!important;padding-bottom:12px!important}
+        .eparts-workspace .eparts-brand-row:before{left:-15px!important;right:-15px!important;top:-16px!important;height:88px!important}
+        .eparts-workspace .company-logo>span{width:48px!important;height:48px!important}
+        .eparts-workspace .company-logo b{font-size:27px!important}
+        .eparts-workspace .company-logo small{font-size:9px!important}
+        .eparts-workspace .eparts-mobile-menu-button{position:absolute!important;right:0!important;top:5px!important}
+        .eparts-workspace .company-top{gap:14px!important}
+        .eparts-workspace .company-top h1{font-size:30px!important}
+        .eparts-workspace .eparts-header-actions{display:flex!important;justify-content:space-between!important}
+        .eparts-workspace .eparts-header-actions>a{min-height:50px!important;flex:1!important;background:linear-gradient(110deg,#ed142c,#990014)!important;color:#fff!important;border:1px solid #ff4052!important;box-shadow:0 0 14px #ed142c35!important;font-size:14px!important}
+        .eparts-workspace .eparts-header-actions>button{width:52px!important;height:50px!important;background:#100c0d!important;border:1px solid #ed142c!important;color:#fff!important}
+        .eparts-workspace .company-panel{padding:16px!important;border-radius:19px!important}
+        .eparts-workspace .company-panel-head{display:grid!important;grid-template-columns:1fr!important;gap:12px!important}
+        .eparts-workspace .company-panel-head b{font-size:21px!important}
+        .eparts-workspace .company-panel-head>button{width:100%!important;justify-content:center!important;min-height:52px!important;font-size:14px!important}
+        .eparts-workspace .company-stats-grid{gap:10px!important}
+        .eparts-workspace .company-stat-card{min-height:132px!important;padding:15px!important;border-radius:17px!important}
+        .eparts-workspace .company-stat-card strong{font-size:28px!important}
+        .eparts-workspace .eparts-mobile-bottom-nav{left:9px!important;right:9px!important;bottom:calc(8px + env(safe-area-inset-bottom))!important;padding:7px!important}
+        .eparts-workspace .eparts-mobile-bottom-nav button{min-height:60px!important;font-size:11px!important}
+      }
       /* Refinamento visual Edertec: vermelho consistente, menos dourado e menos brilho */
       .eparts-workspace{
         --ep-gold:#ed142c!important;--ep-gold-light:#ff6878!important;
@@ -409,7 +472,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
     `}</style>
     <aside className="company-sidebar">
       <div className="eparts-brand-row">
-        <div className="company-logo"><span><ShoppingCart/></span><div><b>EPARTS</b><small>COMÉRCIO E MARKETPLACE</small></div></div>
+        <div className="company-logo"><span><ShoppingCart/></span><div><b>EPARTS</b><small>PORTAL DO FORNECEDOR</small></div></div>
         <button type="button" className="eparts-mobile-menu-button" onClick={()=>setMenuOpen(v=>!v)} aria-expanded={menuOpen} aria-controls="eparts-mobile-drawer" aria-label={menuOpen?'Fechar menu':'Abrir menu'}>{menuOpen?<X size={19}/>:<Menu size={19}/>}</button>
       </div>
       <div className="eparts-company-chip"><Store size={17}/><span>{companyName}</span></div>
@@ -463,18 +526,18 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         </div>)}
       </section>:['customers','suppliers','brands','categories'].includes(tab)?<EpartsRegistrations key={tab+'-'+createVersion} companyId={companyId} initialTab={tab as 'customers'|'suppliers'|'brands'|'categories'} initialCreate={quickCreate===tab}/>:tab==='pos'?<EpartsPOS companyId={companyId}/>:tab==='dashboard'?<div className="eparts-dashboard">
         <section className="company-panel eparts-overview-panel">
-          <div className="company-panel-head"><div><b>Resumo da operação</b><small>Indicadores comerciais e de estoque da Eparts</small></div><button className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar dados</button></div>
+          <div className="company-panel-head"><div style={{display:"flex",alignItems:"center",gap:13}}><BarChart3 size={35} color="#ed142c"/><div><b>Resumo da operação</b><small>Indicadores comerciais e de estoque da Eparts</small></div></div><button className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar dados</button></div>
           {loading?<p className="company-empty">Carregando indicadores...</p>:<div className="company-stats-grid">
-            <article className="company-stat-card"><span>Produtos cadastrados</span><strong>{stats.products}</strong></article>
-            <article className="company-stat-card"><span>Unidades em estoque</span><strong>{stats.stock}</strong></article>
-            <article className="company-stat-card"><span>Fornecedores cadastrados</span><strong>{stats.suppliers}</strong></article>
-            <article className="company-stat-card"><span>Pedidos e vendas</span><strong>{stats.orders}</strong></article>
-            <article className="company-stat-card"><span>Valor em pedidos ativos</span><strong>{money(stats.revenue)}</strong></article>
-            <article className="company-stat-card"><span>Comissão prevista</span><strong>{money(stats.commission)}</strong></article>
+            <article className="company-stat-card"><div style={{display:"flex",alignItems:"center",gap:12}}><Package size={29} color="#ed142c"/><span>Produtos cadastrados</span></div><strong>{stats.products}</strong></article>
+            <article className="company-stat-card"><div style={{display:"flex",alignItems:"center",gap:12}}><Boxes size={29} color="#ed142c"/><span>Unidades em estoque</span></div><strong>{stats.stock}</strong></article>
+            <article className="company-stat-card"><div style={{display:"flex",alignItems:"center",gap:12}}><Truck size={29} color="#ed142c"/><span>Fornecedores cadastrados</span></div><strong>{stats.suppliers}</strong></article>
+            <article className="company-stat-card"><div style={{display:"flex",alignItems:"center",gap:12}}><ShoppingCart size={29} color="#ed142c"/><span>Pedidos e vendas</span></div><strong>{stats.orders}</strong></article>
+            <article className="company-stat-card"><div style={{display:"flex",alignItems:"center",gap:12}}><FileText size={29} color="#ed142c"/><span>Valor em pedidos ativos</span></div><strong>{money(stats.revenue)}</strong></article>
+            <article className="company-stat-card"><div style={{display:"flex",alignItems:"center",gap:12}}><Wallet size={29} color="#ed142c"/><span>Comissão prevista</span></div><strong>{money(stats.commission)}</strong></article>
           </div>}
         </section>
         <section className="company-panel eparts-quick-panel">
-          <div className="company-panel-head"><div><b>Ações rápidas</b><small>Acesse as áreas mais utilizadas</small></div></div>
+          <div className="company-panel-head"><div style={{display:"flex",alignItems:"center",gap:12}}><Zap size={28} color="#ed142c"/><div><b>Ações rápidas</b><small>Acesse as áreas mais utilizadas</small></div></div></div>
           <div className="eparts-quick-grid">
             <button type="button" onClick={()=>nav('pos')}><ShoppingCart size={25}/><b>PDV</b><small>Nova venda</small></button>
             <button type="button" onClick={()=>nav('products')}><Package size={25}/><b>Produtos</b><small>Estoque e cadastro</small></button>
