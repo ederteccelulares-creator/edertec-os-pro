@@ -125,7 +125,7 @@ export default function CompanyAuthGate() {
     })
     const {data:{subscription}} = supabase.auth.onAuthStateChange((_event,next) => {
       setSession(next)
-      if (!next) { setMemberships([]); setSelected(null); setPlatformAdmin(false) }
+      if (!next) { setMemberships([]); setSelected(null); setPlatformAdmin(false); setEpartsMember(false) }
       else { setMemberships([]); setSelected(null); setPlatformAdmin(false); window.setTimeout(() => { finishPendingCompany(next.user).catch(e => setError(e instanceof Error ? e.message : 'Não foi possível concluir o cadastro da empresa.')) .finally(() => refreshMemberships().catch(e => setError(e instanceof Error ? e.message : 'Erro ao carregar assistências.'))) },0) }
     })
     return () => { alive = false; subscription.unsubscribe() }
@@ -255,7 +255,7 @@ export default function CompanyAuthGate() {
 
   async function signOut() {
     await supabase!.auth.signOut()
-    setSession(null); setMemberships([]); setSelected(null); setPlatformAdmin(false)
+    setSession(null); setMemberships([]); setSelected(null); setPlatformAdmin(false); setEpartsMember(false)
   }
 
   if (!session) return <main className="company-auth"><section className="company-auth-card">
