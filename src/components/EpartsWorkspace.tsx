@@ -3,16 +3,17 @@ import { LayoutDashboard, Package, Tags, Truck, ShoppingCart, Wallet, Users, Log
 import { supabase } from '../lib/supabase'
 import EpartsCatalogAdminPanel from './EpartsCatalogAdminPanel'
 import EpartsPOS from './EpartsPOS'
+import EpartsRegistrations from './EpartsRegistrations'
 
 type Props = { companyId:string; companyName:string; email:string; role:string; onSignOut:()=>void }
-type Tab = 'dashboard'|'products'|'brands'|'suppliers'|'customers'|'sales'|'payouts'|'pos'
+type Tab = 'dashboard'|'products'|'brands'|'suppliers'|'customers'|'categories'|'sales'|'payouts'|'pos'
 const money=(n:number)=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})
 
 export default function EpartsWorkspace({companyId,companyName,email,role,onSignOut}:Props) {
   const [tab,setTab]=useState<Tab>('dashboard')
-  const [quickCreate,setQuickCreate]=useState<'customers'|'suppliers'|'brands'|null>(null)
+  const [quickCreate,setQuickCreate]=useState<'customers'|'suppliers'|'brands'|'categories'|null>(null)
   const [createVersion,setCreateVersion]=useState(0)
-  const quickAdd=(target:'customers'|'suppliers'|'brands')=>{setMenuOpen(false);setQuickCreate(target);setTab(target);setCreateVersion(v=>v+1)}
+  const quickAdd=(target:'customers'|'suppliers'|'brands'|'categories')=>{setMenuOpen(false);setQuickCreate(target);setTab(target);setCreateVersion(v=>v+1)}
   const [menuOpen,setMenuOpen]=useState(false)
   const [stats,setStats]=useState({products:0,suppliers:0,orders:0,revenue:0,commission:0,stock:0})
   const [loading,setLoading]=useState(true)
@@ -40,11 +41,11 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
     setMenuOpen(false)
   },[tab])
   const nav=(value:Tab)=>{setMenuOpen(false);setQuickCreate(null);setTab(value)}
-  const title=tab==='dashboard'?'Visão geral':tab==='products'?'Produtos e estoque':tab==='brands'?'Marcas':tab==='suppliers'?'Fornecedores':tab==='customers'?'Clientes':tab==='sales'?'Vendas e pedidos':tab==='pos'?'Ponto de venda':'Comissões e repasses'
+  const title=tab==='dashboard'?'Visão geral':tab==='products'?'Produtos e estoque':tab==='brands'?'Marcas':tab==='suppliers'?'Fornecedores':tab==='customers'?'Clientes':tab==='categories'?'Categorias':tab==='sales'?'Vendas e pedidos':tab==='pos'?'Ponto de venda':'Comissões e repasses'
   const navItems=[
     {section:'INÍCIO',items:[{id:'dashboard' as Tab,label:'Visão geral',icon:LayoutDashboard}]},
     {section:'VENDAS',items:[{id:'pos' as Tab,label:'PDV · Ponto de venda',icon:ShoppingCart},{id:'sales' as Tab,label:'Vendas e pedidos',icon:BarChart3}]},
-    {section:'PRODUTOS',items:[{id:'products' as Tab,label:'Produtos e estoque',icon:Package},{id:'brands' as Tab,label:'Marcas',icon:Tags}]},
+    {section:'PRODUTOS',items:[{id:'products' as Tab,label:'Produtos e estoque',icon:Package},{id:'brands' as Tab,label:'Marcas',icon:Tags},{id:'categories' as Tab,label:'Categorias',icon:Boxes}]},
     {section:'RELACIONAMENTO',items:[{id:'customers' as Tab,label:'Clientes',icon:Users},{id:'suppliers' as Tab,label:'Fornecedores',icon:Truck}]},
     {section:'FINANCEIRO',items:[{id:'payouts' as Tab,label:'Comissões e repasses',icon:Wallet}]},
     {section:'CADASTRO RÁPIDO',items:[]},
@@ -338,6 +339,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
             <button type="button" onClick={()=>quickAdd('customers')}><Users size={17}/><span>Cadastrar cliente</span><ChevronRight className="eparts-nav-arrow" size={15}/></button>
             <button type="button" onClick={()=>quickAdd('suppliers')}><Truck size={17}/><span>Cadastrar fornecedor</span><ChevronRight className="eparts-nav-arrow" size={15}/></button>
             <button type="button" onClick={()=>quickAdd('brands')}><Tags size={17}/><span>Cadastrar marca</span><ChevronRight className="eparts-nav-arrow" size={15}/></button>
+            <button type="button" onClick={()=>quickAdd('categories')}><Boxes size={17}/><span>Cadastrar categoria</span><ChevronRight className="eparts-nav-arrow" size={15}/></button>
           </>}
           {group.section==='CATÁLOGO ONLINE'&&
             <a className="eparts-nav-link" href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer"><Store size={17}/><span>Abrir catálogo</span><ExternalLink size={14} className="eparts-nav-arrow"/></a>
@@ -359,7 +361,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
     <main className="company-main">
       <header className="company-top"><div><small>EPARTS / PAINEL DE GESTÃO</small><h1>{title}</h1></div><div className="eparts-header-actions"><a href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer" className="company-secondary" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7}}><ExternalLink size={15}/> Catálogo online</a><button className="company-icon-button" onClick={()=>void load()} title="Atualizar dados" aria-label="Atualizar dados"><RefreshCw size={16}/></button></div></header>
       {error&&<div className="company-error-banner">{error}</div>}
-      {tab==='pos'?<EpartsPOS companyId={companyId}/>:tab==='dashboard'?<div className="eparts-dashboard">
+      {['customers','suppliers','brands','categories'].includes(tab)?<EpartsRegistrations key={tab+'-'+createVersion} companyId={companyId} initialTab={tab as 'customers'|'suppliers'|'brands'|'categories'} initialCreate={quickCreate===tab}/>:tab==='pos'?<EpartsPOS companyId={companyId}/>:tab==='dashboard'?<div className="eparts-dashboard">
         <section className="company-panel eparts-overview-panel">
           <div className="company-panel-head"><div><b>Resumo da operação</b><small>Indicadores comerciais e de estoque da Eparts</small></div><button className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar dados</button></div>
           {loading?<p className="company-empty">Carregando indicadores...</p>:<div className="company-stats-grid">
