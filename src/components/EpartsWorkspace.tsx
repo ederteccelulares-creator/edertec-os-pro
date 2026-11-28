@@ -594,8 +594,6 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
           padding-top:0!important;
         }
       }
-    `}
-
       /* Alinhamento vertical absoluto do shell EPARTS em celulares */
       @media(max-width:760px){
         html:has(.eparts-workspace),body:has(.eparts-workspace){
@@ -654,6 +652,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         .eparts-workspace>.company-main{padding-top:10px!important}
         .eparts-workspace .company-top{margin:0 0 18px!important;padding:0 0 16px!important}
       }
+      `}
 </style>
     <aside className={menuOpen?"company-sidebar drawer-open":"company-sidebar"}>
       <div className="eparts-brand-row">
