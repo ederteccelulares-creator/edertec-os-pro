@@ -4,7 +4,7 @@ import { LogOut, RefreshCw, Store, UserRound, LockKeyhole, Eye, EyeOff, ChartNoA
 import { supabase } from '../lib/supabase'
 
 type Supplier = { id:string; company_id:string; name:string; email:string|null; user_id:string|null }
-type Product = { id:string; brand_id:string|null; name:string; sku:string|null; stock_quantity:number; sale_price:number; image_url:string|null }
+type Brand = { id:string; name:string }\ntype Product = { id:string; brand_id:string|null; name:string; sku:string|null; stock_quantity:number; sale_price:number; image_url:string|null }
 type SaleItem = { id:string; sale_id:string; product_id:string; product_name:string; sku:string|null; quantity:number; unit_price:number; line_total:number; eparts_commission_amount:number; supplier_amount:number; created_at:string }
 type Sale = { id:string; order_number:number; status:string; payment_status:string; created_at:string }
 type Payout = { id:string; amount:number; payment_method:string; paid_at:string; reference:string|null; notes:string|null }
@@ -15,7 +15,7 @@ const date=(value:string)=>new Date(value).toLocaleDateString('pt-BR')
 export default function EpartsSupplierPortal(){
   const [session,setSession]=useState<Session|null>(null)
   const [supplier,setSupplier]=useState<Supplier|null>(null)
-  const [products,setProducts]=useState<Product[]>([])
+  const [products,setProducts]=useState<Product[]>([])\n  const [brands,setBrands]=useState<Brand[]>([])
   const [items,setItems]=useState<SaleItem[]>([])
   const [sales,setSales]=useState<Sale[]>([])
   const [payouts,setPayouts]=useState<Payout[]>([])
@@ -34,7 +34,7 @@ export default function EpartsSupplierPortal(){
     try{
       const {data:profile,error:profileError}=await supabase.from('eparts_suppliers').select('id,company_id,name,email,user_id').eq('user_id',userId).maybeSingle()
       if(profileError) throw profileError
-      if(!profile){setSupplier(null);setProducts([]);setItems([]);setSales([]);setPayouts([]);setError('Este usuário ainda não está vinculado a um cadastro de fornecedor da EPARTS. Peça ao administrador para vincular seu acesso.');return}
+      if(!profile){setSupplier(null);setProducts([]);setBrands([]);setItems([]);setSales([]);setPayouts([]);setError('Este usuário ainda não está vinculado a um cadastro de fornecedor da EPARTS. Peça ao administrador para vincular seu acesso.');return}
       setSupplier(profile as Supplier)
       const {data:brandLinks,error:brandError}=await supabase.from('eparts_supplier_brands').select('brand_id').eq('company_id',profile.company_id).eq('supplier_id',profile.id)
       if(brandError)throw brandError
@@ -46,7 +46,7 @@ export default function EpartsSupplierPortal(){
         supabase.from('eparts_supplier_payouts').select('id,amount,payment_method,paid_at,reference,notes').eq('company_id',profile.company_id).eq('supplier_id',profile.id).order('paid_at',{ascending:false})
       ])
       if(p.error) throw p.error;if(po.error) throw po.error
-      const productIds=(p.data||[]).map(row=>row.id as string)
+      const {data:brandRows,error:brandsError}=brandIds.length?await supabase.from('eparts_brands').select('id,name').eq('company_id',profile.company_id).in('id',brandIds).order('name'):{data:[],error:null}\n      if(brandsError)throw brandsError\n      const productIds=(p.data||[]).map(row=>row.id as string)
       let itemRows:SaleItem[]=[]
       if(productIds.length){
         let itemQuery=supabase.from('eparts_sale_items').select('id,sale_id,product_id,product_name,sku,quantity,unit_price,line_total,eparts_commission_amount,supplier_amount,created_at').eq('company_id',profile.company_id)
@@ -66,7 +66,7 @@ export default function EpartsSupplierPortal(){
         if(error) throw error
         saleRows=(data||[]) as Sale[]
       }
-      setProducts((p.data||[]) as Product[]);setItems(itemRows);setSales(saleRows);setPayouts((po.data||[]) as Payout[])
+      setProducts((p.data||[]) as Product[]);setBrands((brandRows||[]) as Brand[]);setItems(itemRows);setSales(saleRows);setPayouts((po.data||[]) as Payout[])
     }catch(e){setError(e instanceof Error?e.message:'Não foi possível carregar o portal do fornecedor.')}
     finally{setLoading(false)}
   }
@@ -136,7 +136,7 @@ export default function EpartsSupplierPortal(){
       .ep-supplier-root th{color:#ff6b71;background:#1c1113;font-size:10px;letter-spacing:1px}
       .ep-supplier-root td{color:#e4dcdc}
       .ep-supplier-empty{padding:25px;text-align:center;color:#b8adad}
-      .ep-supplier-section-title{margin:0 0 14px;color:#ff777d;font-size:16px}
+      .ep-supplier-section-title{margin:0 0 14px;color:#ff777d;font-size:16px}\n      .ep-supplier-brand-list{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 18px}.ep-supplier-brand-chip{padding:7px 11px;border:1px solid #743039;border-radius:999px;background:#251014;color:#ffb0b4;font-size:12px;font-weight:700}.ep-supplier-muted{color:#a99d9d;font-size:12px}
       @media(max-width:720px){.ep-supplier-root{padding:18px 12px 30px}.ep-supplier-card{padding:15px}.ep-supplier-login{padding:24px 17px}.ep-supplier-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.ep-supplier-stat{padding:13px}.ep-supplier-stat strong{font-size:19px}.ep-supplier-top{align-items:flex-start;flex-direction:column}.ep-supplier-top button{align-self:flex-end}.ep-supplier-login-links span{font-size:10px}}
     `}</style>
     <div className="ep-supplier-wrap">
@@ -168,8 +168,8 @@ export default function EpartsSupplierPortal(){
         <section className="ep-supplier-card" style={{marginBottom:14}}><h2 className="ep-supplier-section-title">Vendas dos seus produtos</h2>
           {visibleItems.length===0?<div className="ep-supplier-empty">Nenhuma venda encontrada neste período.</div>:<div className="ep-supplier-table-wrap"><table><thead><tr><th>PEDIDO</th><th>DATA</th><th>PRODUTO</th><th>QTD.</th><th>VALOR</th><th>EPARTS</th><th>SUA PARTE</th><th>STATUS</th></tr></thead><tbody>{visibleItems.map(item=>{const sale=sales.find(x=>x.id===item.sale_id);return <tr key={item.id}><td>#{sale?.order_number||'—'}</td><td>{sale?date(sale.created_at):date(item.created_at)}</td><td>{item.product_name}</td><td>{item.quantity}</td><td>{money(item.line_total)}</td><td>{money(item.eparts_commission_amount)}</td><td>{money(item.supplier_amount)}</td><td>{sale?.payment_status||sale?.status||'—'}</td></tr>})}</tbody></table></div>}
         </section>
-        <section className="ep-supplier-card"><h2 className="ep-supplier-section-title">Repasses</h2><div className="ep-supplier-grid"><div className="ep-supplier-stat"><span>Total pago</span><strong>{money(paid)}</strong></div><div className="ep-supplier-stat"><span>Saldo estimado a receber</span><strong>{money(pending)}</strong></div><div className="ep-supplier-stat"><span>Percentual EPARTS</span><strong>{commissionRate.toLocaleString('pt-BR',{maximumFractionDigits:2})}%</strong></div></div>
-          {payouts.length===0?<div className="ep-supplier-empty">Ainda não há repasses registrados.</div>:<div className="ep-supplier-table-wrap"><table><thead><tr><th>DATA</th><th>VALOR</th><th>FORMA</th><th>REFERÊNCIA</th></tr></thead><tbody>{payouts.map(p=><tr key={p.id}><td>{date(p.paid_at)}</td><td>{money(p.amount)}</td><td>{p.payment_method}</td><td>{p.reference||p.notes||'—'}</td></tr>)}</tbody></table></div>}
+        <section className="ep-supplier-card"><h2 className="ep-supplier-section-title">Repasses</h2><div className="ep-supplier-grid"><div className="ep-supplier-stat"><span>Total pago</span><strong>{money(paid)}</strong></div><div className="ep-supplier-stat"><span>Saldo liberado a receber</span><strong>{money(pending)}</strong></div><div className="ep-supplier-stat"><span>Percentual EPARTS</span><strong>{commissionRate.toLocaleString('pt-BR',{maximumFractionDigits:2})}%</strong></div></div>
+          {payouts.length===0?<div className="ep-supplier-empty">Ainda não há repasses registrados.</div>:<div className="ep-supplier-table-wrap"><table><thead><tr><th>DATA</th><th>VALOR</th><th>FORMA</th><th>REFERÊNCIA / OBSERVAÇÃO</th></tr></thead><tbody>{payouts.map(p=><tr key={p.id}><td>{date(p.paid_at)}</td><td>{money(p.amount)}</td><td>{p.payment_method}</td><td>{[p.reference,p.notes].filter(Boolean).join(' · ')||'—'}</td></tr>)}</tbody></table></div>}
         </section>
         <p style={{textAlign:'right',marginTop:16}}><button onClick={logout}><LogOut size={16}/> Sair do portal</button></p>
       </>}
