@@ -35,24 +35,8 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
   },[companyId])
   useEffect(()=>{void load()},[load])
   useEffect(()=>{
-    const main=document.querySelector('.eparts-workspace .company-main')
-    if(main instanceof HTMLElement)main.scrollTo({top:0,left:0,behavior:'auto'})
-    if(window.innerWidth<=760){
-      try{if('scrollRestoration' in window.history)window.history.scrollRestoration='manual'}catch{}
-      window.scrollTo({top:0,left:0,behavior:'auto'})
-      document.documentElement.scrollTop=0
-      document.body.scrollTop=0
-      requestAnimationFrame(()=>{window.scrollTo({top:0,left:0,behavior:'auto'});document.documentElement.scrollTop=0;document.body.scrollTop=0})
-    }
     setMenuOpen(false)
   },[tab])
-  useEffect(()=>{
-    if(window.innerWidth>760)return
-    try{if('scrollRestoration' in window.history)window.history.scrollRestoration='manual'}catch{}
-    window.scrollTo({top:0,left:0,behavior:'auto'})
-    document.documentElement.scrollTop=0
-    document.body.scrollTop=0
-  },[])
   const nav=(value:Tab)=>{setMenuOpen(false);setQuickCreate(null);setTab(value)}
   const title=menuOpen?'Menu':tab==='dashboard'?'Visão geral':tab==='products'?'Produtos e estoque':tab==='brands'?'Marcas':tab==='suppliers'?'Fornecedores':tab==='customers'?'Clientes':tab==='categories'?'Categorias':tab==='sales'?'Vendas e pedidos':tab==='pos'?'Ponto de venda':'Comissões e repasses'
   const navItems=[
@@ -652,7 +636,6 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         .eparts-workspace>.company-main{padding-top:10px!important}
         .eparts-workspace .company-top{margin:0 0 18px!important;padding:0 0 16px!important}
       }
-      `}
 
       /* Correção definitiva do shell mobile: sidebar fora do fluxo para não empurrar o conteúdo */
       @media(max-width:760px){
@@ -721,6 +704,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
           z-index:1001!important;
         }
       }
+      `}
       </style>
     <aside className={menuOpen?"company-sidebar drawer-open":"company-sidebar"}>
       <div className="eparts-brand-row">
