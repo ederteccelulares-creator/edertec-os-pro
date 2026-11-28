@@ -55,8 +55,8 @@ export default function EpartsRegistrations({companyId,initialTab,initialCreate=
     e.preventDefault();if(!supabase||!accessSupplier)return
     setBusy(true);setError('');setNotice('')
     try{
-      const {data,error}=await supabase.functions.invoke('eparts-supplier-access',{body:{supplier_id:accessSupplier.id,username:accessUsername.trim().toLowerCase(),password:accessPassword}})
-      if(error)throw error
+      const {data,error}=await supabase.functions.invoke('eparts-supplier-access',{body:{supplier_id:accessSupplier.id,company_id:companyId,username:accessUsername.trim().toLowerCase(),password:accessPassword}})
+      if(error){let detail='';try{detail=await error.context?.json?.().then((body: any)=>body?.error||body?.message||'').catch(()=> '')}catch{};throw new Error(detail||error.message||'Falha ao chamar a função de acesso.')}
       if(data?.error)throw new Error(data.error)
       setNotice('Acesso criado/atualizado para '+accessSupplier.name+'. Entregue o usuário e a senha ao fornecedor.')
       setAccessSupplier(null);setAccessUsername('');setAccessPassword('');await load()
@@ -71,8 +71,8 @@ export default function EpartsRegistrations({companyId,initialTab,initialCreate=
       .eparts-registrations .er-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:16px 0}
       .eparts-registrations .er-tabs button{min-height:44px;border:1px solid #66502c;border-radius:10px;background:#17130e;color:#ffd0d5;font-weight:650}
       .eparts-registrations .er-tabs button.active{background:linear-gradient(110deg,#604719,#241b0e);border-color:#ed142c;color:#ffb5bd}
-      .eparts-registrations .er-form{display:grid;gap:12px;padding:16px;margin:14px 0;border:1px solid #8f1524;border-radius:14px;background:#12110f}
-      .eparts-registrations .er-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+      .eparts-registrations .er-form{display:grid;gap:10px;padding:14px;margin:12px 0;border:1px solid #8f1524;border-radius:14px;background:#12110f}
+      .eparts-registrations .er-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
       .eparts-registrations label{display:grid;gap:6px;color:#d7c8ab;font-size:12px}
       .eparts-registrations input,.eparts-registrations textarea{width:100%;min-height:43px;box-sizing:border-box;padding:10px;border:1px solid #57472f;border-radius:9px;background:#090909;color:#fff;font-size:16px}
       .eparts-registrations .er-actions{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap}
@@ -117,6 +117,6 @@ export default function EpartsRegistrations({companyId,initialTab,initialCreate=
       <div className="er-actions"><button type="button" className="company-secondary" onClick={()=>setShowForm(false)}>Cancelar</button><button className="company-primary" disabled={busy}>{busy?'Salvando...':'Salvar '+label}</button></div>
     </form>}
     <label style={{display:'block',margin:'14px 0'}}>Buscar {label}<input value={search} onChange={e=>setSearch(e.target.value)} placeholder={'Digite o nome do '+label}/></label>
-    {loading?<p className="company-empty">Carregando cadastros...</p>:filtered.length===0?<p className="company-empty">Nenhum(a) {label} encontrado(a). Clique em “Cadastrar {label}” para adicionar.</p>:<div className="er-table"><table><thead><tr><th>NOME</th>{tab==='customers'&&<><th>TELEFONE</th><th>E-MAIL</th><th>DOCUMENTO</th></>}{tab==='suppliers'&&<><th>RESPONSÁVEL</th><th>TELEFONE</th><th>E-MAIL</th><th>USUÁRIO</th><th>ACESSO</th></>}{tab==='categories'&&<th>DESCRIÇÃO</th>}{tab==='brands'&&<th>CADASTRO</th>}</tr></thead><tbody>{filtered.map(r=><tr key={r.id}><td><b>{r.name}</b></td>{tab==='customers'&&<><td>{r.phone||'—'}</td><td>{r.email||'—'}</td><td>{r.document||'—'}</td></>}{tab==='suppliers'&&<><td>{r.contact_name||'—'}</td><td>{r.phone||'—'}</td><td>{r.email||'—'}</td><td>{r.username||'Não criado'}</td><td><button type="button" className="company-secondary" onClick={()=>{setAccessSupplier(r);setAccessUsername(r.username||'');setAccessPassword('')}}>{r.username?'Alterar acesso':'Criar acesso'}</button></td></>}{tab==='categories'&&<td>{r.description||'—'}</td>}{tab==='brands'&&<td>Ativa</td>}</tr>)}</tbody></table></div>}
+    {loading?<p className="company-empty">Carregando cadastros...</p>:filtered.length===0?<p className="company-empty">Nenhum(a) {label} encontrado(a). Clique em “Cadastrar {label}” para adicionar.</p>:<div className="er-table"><table><thead><tr><th>NOME</th>{tab==='customers'&&<><th>TELEFONE</th><th>E-MAIL</th><th>DOCUMENTO</th></>}{tab==='suppliers'&&<><th>RESPONSÁVEL</th><th>TELEFONE</th><th>E-MAIL</th><th>USUÁRIO</th><th>ACESSO</th></>}{tab==='categories'&&<th>DESCRIÇÃO</th>}{tab==='brands'&&<th>CADASTRO</th>}</tr></thead><tbody>{filtered.map(r=><tr key={r.id}><td><b>{r.name}</b></td>{tab==='customers'&&<><td data-label="TELEFONE">{r.phone||'—'}</td><td data-label="E-MAIL">{r.email||'—'}</td><td data-label="DOCUMENTO">{r.document||'—'}</td></>}{tab==='suppliers'&&<><td data-label="RESPONSÁVEL">{r.contact_name||'—'}</td><td data-label="TELEFONE">{r.phone||'—'}</td><td data-label="E-MAIL">{r.email||'—'}</td><td data-label="USUÁRIO">{r.username||'Não criado'}</td><td data-label="ACESSO"><button type="button" className="company-secondary" onClick={()=>{setAccessSupplier(r);setAccessUsername(r.username||'');setAccessPassword('')}}>{r.username?'Alterar acesso':'Criar acesso'}</button></td></>}{tab==='categories'&&<td>{r.description||'—'}</td>}{tab==='brands'&&<td>Ativa</td>}</tr>)}</tbody></table></div>}
   </section>
 }
