@@ -378,7 +378,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
             <button type="button" onClick={()=>nav('sales')}><BarChart3 size={25}/><b>Vendas</b><small>Pedidos e histórico</small></button>
           </div>
         </section>
-      </div>:<EpartsCatalogAdminPanel key={tab+'-'+createVersion} companyId={companyId} initialTab={tab} initialCreate={quickCreate===tab}/>}
+      </div>:<EpartsCatalogAdminPanel key={tab+'-'+createVersion} companyId={companyId} initialTab={tab} initialCreate={quickCreate===tab||tab==='customers'||tab==='suppliers'}/>}
       <footer className="company-footer">EPARTS · Painel comercial exclusivo · Acesso protegido por empresa</footer>
     </main>
   </div>
