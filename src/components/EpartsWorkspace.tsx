@@ -557,6 +557,23 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
       .eparts-workspace .eparts-menu-options a.active{
         background:linear-gradient(110deg,#ed142c,#76000e)!important;color:#fff!important;
       }
+
+      /* Ajuste fino: aproximar o cabeçalho do topo visível no iPhone */
+      @media(max-width:760px){
+        .eparts-workspace>.company-main{
+          padding-top:0!important;
+          margin-top:0!important;
+        }
+        .eparts-workspace .company-top{
+          margin-top:0!important;
+          padding-top:0!important;
+          transform:translateY(-3px)!important;
+        }
+        .eparts-workspace .company-top>div:first-child{
+          margin-top:0!important;
+          padding-top:0!important;
+        }
+      }
 </style>
     <aside className="company-sidebar">
       <div className="eparts-brand-row">
