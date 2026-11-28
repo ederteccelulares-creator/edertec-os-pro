@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { ArrowDownToLine, Box, CalendarDays, CircleDollarSign, LogOut, Package, RefreshCw, ShieldCheck, Store, TrendingUp } from 'lucide-react'
+import { LogOut, RefreshCw, Store } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 type Supplier = { id:string; company_id:string; name:string; email:string|null; user_id:string|null }
@@ -24,7 +24,6 @@ export default function EpartsSupplierPortal(){
   const [busy,setBusy]=useState(false)
   const [loading,setLoading]=useState(true)
   const [error,setError]=useState('')
-  const [notice,setNotice]=useState('')
   const [from,setFrom]=useState('')
   const [to,setTo]=useState('')
 
@@ -63,16 +62,14 @@ export default function EpartsSupplierPortal(){
     return()=>{alive=false;subscription.unsubscribe()}
   },[])
 
-  async function login(e:FormEvent){e.preventDefault();if(!supabase)return;setBusy(true);setError('');setNotice('');try{const {data,error}=await supabase.auth.signInWithPassword({email:email.trim(),password});if(error)throw error;setSession(data.session);if(data.user)await loadSupplier(data.user.id)}catch(e){setError(e instanceof Error?e.message:'Não foi possível entrar.')}finally{setBusy(false)}}
+  async function login(e:FormEvent){e.preventDefault();if(!supabase)return;setBusy(true);setError('');try{const {data,error}=await supabase.auth.signInWithPassword({email:email.trim(),password});if(error)throw error;setSession(data.session);if(data.user)await loadSupplier(data.user.id)}catch(e){setError(e instanceof Error?e.message:'Não foi possível entrar.')}finally{setBusy(false)}}
   async function logout(){await supabase?.auth.signOut();setSession(null);setSupplier(null)}
 
   const visibleItems=useMemo(()=>items.filter(row=>{const sale=sales.find(x=>x.id===row.sale_id);if(!sale)return false;const day=sale.created_at.slice(0,10);return(!from||day>=from)&&(!to||day<=to)}),[items,sales,from,to])
-  const saleIds=new Set(visibleItems.map(x=>x.sale_id))
   const gross=visibleItems.reduce((n,x)=>n+Number(x.line_total),0)
   const supplierTotal=visibleItems.reduce((n,x)=>n+Number(x.supplier_amount),0)
   const paid=payouts.filter(p=>!from||p.paid_at.slice(0,10)>=from).filter(p=>!to||p.paid_at.slice(0,10)<=to).reduce((n,p)=>n+Number(p.amount),0)
   const pending=Math.max(0,supplierTotal-paid)
-  const currencyClass='ep-supplier-money'
 
   return <main className="ep-supplier-root">
     <style>{`
