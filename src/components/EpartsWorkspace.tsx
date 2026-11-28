@@ -574,6 +574,44 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         }
       }
     `}
+
+      /* Alinhamento vertical absoluto do shell EPARTS em celulares */
+      @media(max-width:760px){
+        html:has(.eparts-workspace),body:has(.eparts-workspace){
+          margin:0!important;padding:0!important;
+        }
+        .company-app.eparts-workspace{
+          display:block!important;
+          position:relative!important;
+          inset:auto!important;
+          top:0!important;
+          align-self:start!important;
+          justify-self:stretch!important;
+          align-content:start!important;
+          justify-content:start!important;
+          align-items:stretch!important;
+          width:100%!important;
+          min-height:100dvh!important;
+          height:auto!important;
+          margin:0!important;
+          padding:0!important;
+          transform:none!important;
+        }
+        .company-app.eparts-workspace>.company-sidebar{
+          position:relative!important;
+          inset:auto!important;
+          top:0!important;
+          margin:0!important;
+        }
+        .company-app.eparts-workspace>.company-main{
+          position:relative!important;
+          inset:auto!important;
+          top:0!important;
+          margin:0!important;
+          padding-top:0!important;
+          transform:none!important;
+        }
+      }
 </style>
     <aside className="company-sidebar">
       <div className="eparts-brand-row">
