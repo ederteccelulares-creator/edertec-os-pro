@@ -41,7 +41,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
     setMenuOpen(false)
   },[tab])
   const nav=(value:Tab)=>{setMenuOpen(false);setQuickCreate(null);setTab(value)}
-  const title=tab==='dashboard'?'Visão geral':tab==='products'?'Produtos e estoque':tab==='brands'?'Marcas':tab==='suppliers'?'Fornecedores':tab==='customers'?'Clientes':tab==='categories'?'Categorias':tab==='sales'?'Vendas e pedidos':tab==='pos'?'Ponto de venda':'Comissões e repasses'
+  const title=menuOpen?'Menu':tab==='dashboard'?'Visão geral':tab==='products'?'Produtos e estoque':tab==='brands'?'Marcas':tab==='suppliers'?'Fornecedores':tab==='customers'?'Clientes':tab==='categories'?'Categorias':tab==='sales'?'Vendas e pedidos':tab==='pos'?'Ponto de venda':'Comissões e repasses'
   const navItems=[
     {section:'INÍCIO',items:[{id:'dashboard' as Tab,label:'Visão geral',icon:LayoutDashboard}]},
     {section:'VENDAS',items:[{id:'pos' as Tab,label:'PDV · Ponto de venda',icon:ShoppingCart},{id:'sales' as Tab,label:'Vendas e pedidos',icon:BarChart3}]},
@@ -338,6 +338,16 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         .eparts-workspace .eparts-mobile-drawer button.active{border-color:#d6ad60!important;background:#493516!important;color:#ffe3a4!important}
         .eparts-workspace .eparts-mobile-drawer svg{flex:none!important;color:#e1bd73!important}
       }
+      .eparts-workspace .eparts-menu-page{display:grid;gap:13px}
+      .eparts-workspace .eparts-menu-group{margin:0!important}
+      .eparts-workspace .eparts-menu-group .company-panel-head{margin-bottom:12px}
+      .eparts-workspace .eparts-menu-group .company-panel-head b{color:#d9b66f;font-size:11px;letter-spacing:1.4px}
+      .eparts-workspace .eparts-menu-options{display:grid;gap:8px}
+      .eparts-workspace .eparts-menu-options button,.eparts-workspace .eparts-menu-options a{display:flex;align-items:center;gap:12px;width:100%;min-height:49px;padding:12px;border:1px solid #51432e;border-radius:10px;background:#171512;color:#f0e4cb;text-align:left;text-decoration:none;font-size:13px}
+      .eparts-workspace .eparts-menu-options button>span,.eparts-workspace .eparts-menu-options a>span{flex:1}
+      .eparts-workspace .eparts-menu-options button>svg:first-child,.eparts-workspace .eparts-menu-options a>svg:first-child{color:#e1bd73}
+      .eparts-workspace .eparts-menu-options button.active{border-color:#d6ad60;background:#493516;color:#ffe3a4}
+      @media(max-width:760px){.eparts-workspace .eparts-menu-page{padding-bottom:8px}.eparts-workspace .eparts-menu-group{padding:13px!important}.eparts-workspace .eparts-menu-options button,.eparts-workspace .eparts-menu-options a{min-height:48px;font-size:13px}}
     `}</style>
     <aside className="company-sidebar">
       <div className="eparts-brand-row">
@@ -365,21 +375,6 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         <button onClick={onSignOut}><LogOut size={15}/> Sair da conta</button>
       </div>
     </aside>
-    {menuOpen&&<div className="eparts-mobile-drawer-backdrop" onClick={()=>setMenuOpen(false)}>
-      <nav className="eparts-mobile-drawer" aria-label="Menu EPARTS" onClick={e=>e.stopPropagation()}>
-        {navItems.map(group=><div className="company-nav-section" key={group.section}>
-          <span className="company-nav-section-label">{group.section}</span>
-          {group.items.map(item=><button type="button" key={item.id} className={tab===item.id?'active':''} onClick={()=>nav(item.id)}><item.icon size={17}/><span>{item.label}</span>{tab===item.id&&<ChevronRight className="eparts-nav-arrow" size={15}/>}</button>)}
-          {group.section==='CADASTRO RÁPIDO'&&<>
-            <button type="button" onClick={()=>quickAdd('customers')}><Users size={17}/><span>Cadastrar cliente</span><ChevronRight className="eparts-nav-arrow" size={15}/></button>
-            <button type="button" onClick={()=>quickAdd('suppliers')}><Truck size={17}/><span>Cadastrar fornecedor</span><ChevronRight className="eparts-nav-arrow" size={15}/></button>
-            <button type="button" onClick={()=>quickAdd('brands')}><Tags size={17}/><span>Cadastrar marca</span><ChevronRight className="eparts-nav-arrow" size={15}/></button>
-            <button type="button" onClick={()=>quickAdd('categories')}><Boxes size={17}/><span>Cadastrar categoria</span><ChevronRight className="eparts-nav-arrow" size={15}/></button>
-          </>}
-          {group.section==='CATÁLOGO ONLINE'&&<a className="eparts-nav-link" href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer" onClick={()=>setMenuOpen(false)}><Store size={17}/><span>Abrir catálogo</span><ExternalLink size={14} className="eparts-nav-arrow"/></a>}
-        </div>)}
-      </nav>
-    </div>}
     <nav className="eparts-mobile-bottom-nav" aria-label="Navegação rápida">
       <button className={tab==='dashboard'?'active':''} onClick={()=>nav('dashboard')}><LayoutDashboard size={19}/><span>Início</span></button>
       <button className={tab==='products'?'active':''} onClick={()=>nav('products')}><Package size={19}/><span>Produtos</span></button>
@@ -390,7 +385,21 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
     <main className="company-main">
       <header className="company-top"><div><small>EPARTS / PAINEL DE GESTÃO</small><h1>{title}</h1></div><div className="eparts-header-actions"><a href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer" className="company-secondary" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7}}><ExternalLink size={15}/> Catálogo online</a><button className="company-icon-button" onClick={()=>void load()} title="Atualizar dados" aria-label="Atualizar dados"><RefreshCw size={16}/></button></div></header>
       {error&&<div className="company-error-banner">{error}</div>}
-      {['customers','suppliers','brands','categories'].includes(tab)?<EpartsRegistrations key={tab+'-'+createVersion} companyId={companyId} initialTab={tab as 'customers'|'suppliers'|'brands'|'categories'} initialCreate={quickCreate===tab}/>:tab==='pos'?<EpartsPOS companyId={companyId}/>:tab==='dashboard'?<div className="eparts-dashboard">
+      {menuOpen?<section className="eparts-menu-page">
+        {navItems.map(group=><div className="company-panel eparts-menu-group" key={group.section}>
+          <div className="company-panel-head"><b>{group.section}</b></div>
+          <div className="eparts-menu-options">
+            {group.items.map(item=><button type="button" key={item.id} className={tab===item.id?'active':''} onClick={()=>nav(item.id)}><item.icon size={20}/><span>{item.label}</span><ChevronRight size={17}/></button>)}
+            {group.section==='CADASTRO RÁPIDO'&&<>
+              <button type="button" onClick={()=>quickAdd('customers')}><Users size={20}/><span>Cadastrar cliente</span><ChevronRight size={17}/></button>
+              <button type="button" onClick={()=>quickAdd('suppliers')}><Truck size={20}/><span>Cadastrar fornecedor</span><ChevronRight size={17}/></button>
+              <button type="button" onClick={()=>quickAdd('brands')}><Tags size={20}/><span>Cadastrar marca</span><ChevronRight size={17}/></button>
+              <button type="button" onClick={()=>quickAdd('categories')}><Boxes size={20}/><span>Cadastrar categoria</span><ChevronRight size={17}/></button>
+            </>}
+            {group.section==='CATÁLOGO ONLINE'&&<a href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer"><Store size={20}/><span>Abrir catálogo</span><ExternalLink size={17}/></a>}
+          </div>
+        </div>)}
+      </section>:['customers','suppliers','brands','categories'].includes(tab)?<EpartsRegistrations key={tab+'-'+createVersion} companyId={companyId} initialTab={tab as 'customers'|'suppliers'|'brands'|'categories'} initialCreate={quickCreate===tab}/>:tab==='pos'?<EpartsPOS companyId={companyId}/>:tab==='dashboard'?<div className="eparts-dashboard">
         <section className="company-panel eparts-overview-panel">
           <div className="company-panel-head"><div><b>Resumo da operação</b><small>Indicadores comerciais e de estoque da Eparts</small></div><button className="company-secondary" onClick={()=>void load()} disabled={loading}><RefreshCw size={15}/> Atualizar dados</button></div>
           {loading?<p className="company-empty">Carregando indicadores...</p>:<div className="company-stats-grid">
