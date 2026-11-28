@@ -15,8 +15,9 @@ export default function CompanyAuthGate() {
   const routeEpartsOnly = window.location.hostname === 'eparts.edertecospro.com.br' || currentPath === '/eparts' || currentParams.get('painel') === 'eparts'
   const isAdminRoute = window.location.pathname.replace(/\/+$/, '') === '/admin' || new URLSearchParams(window.location.search).get('admin') === '1'
   const [session, setSession] = useState<Session | null>(null)
+  const [epartsMember, setEpartsMember] = useState(false)
   const epartsAdminEmail = session?.user.email?.trim().toLowerCase() === 'edertecospro@gmail.com'
-  const epartsOnly = routeEpartsOnly || epartsAdminEmail
+  const epartsOnly = routeEpartsOnly || epartsAdminEmail || epartsMember
   const [memberships, setMemberships] = useState<CompanyMembership[]>([])
   const [platformAdmin, setPlatformAdmin] = useState(false)
   const [selected, setSelected] = useState<Company | null>(null)
@@ -46,9 +47,12 @@ export default function CompanyAuthGate() {
   const refreshMemberships = useCallback(async () => {
     setSelected(null)
     const rows = await listMyCompanies()
-    const visibleRows = epartsOnly ? rows.filter(row => row.company_id === EPARTS_COMPANY_ID) : rows
+    const hasEpartsMembership = rows.some(row => row.company_id === EPARTS_COMPANY_ID)
+    if (hasEpartsMembership) setEpartsMember(true)
+    const restrictToEparts = epartsOnly || hasEpartsMembership
+    const visibleRows = restrictToEparts ? rows.filter(row => row.company_id === EPARTS_COMPANY_ID) : rows
     setMemberships(visibleRows)
-    if (epartsOnly) {
+    if (restrictToEparts) {
       setPlatformAdmin(false)
     } else {
       const { data, error } = await supabase!.rpc('is_platform_admin')
