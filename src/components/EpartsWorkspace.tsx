@@ -492,6 +492,36 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
       .eparts-workspace .company-table td{border-color:#352126!important}
       .eparts-workspace .eparts-menu-options button,.eparts-workspace .eparts-menu-options a{border-color:#64202a!important;background:#171012!important;color:#fff!important}
       .eparts-workspace .eparts-menu-options button:hover,.eparts-workspace .eparts-menu-options a:hover{background:#3a1018!important;border-color:#ed142c!important}
+
+      /* Corrige espaço vertical no topo em Safari/iPhone */
+      @media(max-width:760px){
+        .eparts-workspace{
+          display:block!important;position:relative!important;
+          margin:0!important;padding:0!important;
+          min-height:100dvh!important;overflow-x:hidden!important;
+        }
+        .eparts-workspace>.company-sidebar{
+          position:relative!important;top:auto!important;inset:auto!important;
+          display:block!important;width:100%!important;height:auto!important;
+          min-height:0!important;max-height:none!important;overflow:visible!important;
+          margin:0!important;padding:7px 14px 0!important;transform:none!important;
+        }
+        .eparts-workspace .eparts-brand-row{
+          min-height:44px!important;height:auto!important;
+          margin:0!important;padding:0 0 6px!important;
+        }
+        .eparts-workspace .company-logo>span{width:36px!important;height:36px!important}
+        .eparts-workspace .company-logo b{font-size:16px!important}
+        .eparts-workspace .company-logo small{font-size:7px!important}
+        .eparts-workspace .eparts-mobile-menu-button{width:36px!important;height:36px!important}
+        .eparts-workspace>.company-main{
+          display:block!important;position:relative!important;
+          width:100%!important;min-height:0!important;
+          margin:0!important;padding:12px 13px calc(110px + env(safe-area-inset-bottom))!important;
+          transform:none!important;top:auto!important;
+        }
+        .eparts-workspace .company-top{margin-top:0!important;padding-top:0!important}
+      }
 </style>
     <aside className="company-sidebar">
       <div className="eparts-brand-row">
