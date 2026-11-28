@@ -86,7 +86,7 @@ export default function EpartsSupplierPortal(){
   async function login(e:FormEvent){e.preventDefault();if(!supabase)return;setBusy(true);setError('');try{const {data,error}=await supabase.auth.signInWithPassword({email:username.trim().toLowerCase()+'@eparts-login.invalid',password});if(error)throw error;setSession(data.session);if(data.user)await loadSupplier(data.user.id)}catch(e){setError(e instanceof Error?e.message:'Não foi possível entrar.')}finally{setBusy(false)}}
   async function logout(){await supabase?.auth.signOut();setSession(null);setSupplier(null)}
 
-  const visibleItems=useMemo(()=>items.filter(row=>{const sale=sales.find(x=>x.id===row.sale_id);if(!sale)return false;const day=sale.created_at.slice(0,10);return(!from||day>=from)&&(!to||day<=to)}),[items,sales,from,to])
+  const visibleItems=useMemo(()=>items.filter(row=>{const sale=sales.find(x=>x.id===row.sale_id);if(!sale||sale.status==='cancelled')return false;const day=sale.created_at.slice(0,10);return(!from||day>=from)&&(!to||day<=to)}),[items,sales,from,to])
   const gross=visibleItems.reduce((n,x)=>n+Number(x.line_total),0)
   const epartsCommission=visibleItems.reduce((n,x)=>n+Number(x.eparts_commission_amount),0)
   const supplierTotal=visibleItems.reduce((n,x)=>n+Number(x.supplier_amount),0)
