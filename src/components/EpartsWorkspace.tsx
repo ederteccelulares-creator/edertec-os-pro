@@ -653,7 +653,75 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
         .eparts-workspace .company-top{margin:0 0 18px!important;padding:0 0 16px!important}
       }
       `}
-</style>
+
+      /* Correção definitiva do shell mobile: sidebar fora do fluxo para não empurrar o conteúdo */
+      @media(max-width:760px){
+        html:has(.eparts-workspace),body:has(.eparts-workspace),body:has(.eparts-workspace) #root{
+          display:block!important;
+          width:100%!important;
+          min-width:0!important;
+          min-height:100%!important;
+          height:auto!important;
+          overflow-x:hidden!important;
+          overflow-y:auto!important;
+          align-content:normal!important;
+          justify-content:normal!important;
+          align-items:normal!important;
+        }
+        .company-app.eparts-workspace{
+          display:block!important;
+          position:relative!important;
+          width:100%!important;
+          min-height:100dvh!important;
+          height:auto!important;
+          margin:0!important;
+          padding:0!important;
+          overflow:visible!important;
+        }
+        .company-app.eparts-workspace>.company-sidebar{
+          position:fixed!important;
+          inset:0 auto 0 0!important;
+          width:min(86vw,320px)!important;
+          height:100dvh!important;
+          min-height:0!important;
+          max-height:100dvh!important;
+          margin:0!important;
+          padding:16px 14px calc(22px + env(safe-area-inset-bottom))!important;
+          overflow-x:hidden!important;
+          overflow-y:auto!important;
+          z-index:1002!important;
+          transform:translateX(-105%)!important;
+          visibility:hidden!important;
+          pointer-events:none!important;
+        }
+        .company-app.eparts-workspace>.company-sidebar.drawer-open{
+          transform:translateX(0)!important;
+          visibility:visible!important;
+          pointer-events:auto!important;
+        }
+        .company-app.eparts-workspace>.company-main{
+          display:block!important;
+          position:relative!important;
+          inset:auto!important;
+          width:100%!important;
+          min-width:0!important;
+          max-width:none!important;
+          min-height:0!important;
+          height:auto!important;
+          margin:0!important;
+          padding:10px 13px calc(112px + env(safe-area-inset-bottom))!important;
+          overflow:visible!important;
+          transform:none!important;
+        }
+        .company-app.eparts-workspace>.eparts-mobile-bottom-nav{
+          position:fixed!important;
+          left:10px!important;
+          right:10px!important;
+          bottom:calc(8px + env(safe-area-inset-bottom))!important;
+          z-index:1001!important;
+        }
+      }
+      </style>
     <aside className={menuOpen?"company-sidebar drawer-open":"company-sidebar"}>
       <div className="eparts-brand-row">
         <div className="company-logo"><span><ShoppingCart/></span><div><b>EPARTS</b><small>PORTAL DO FORNECEDOR</small></div></div>
