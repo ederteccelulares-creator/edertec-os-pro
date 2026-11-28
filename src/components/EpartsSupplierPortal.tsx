@@ -19,7 +19,7 @@ export default function EpartsSupplierPortal(){
   const [items,setItems]=useState<SaleItem[]>([])
   const [sales,setSales]=useState<Sale[]>([])
   const [payouts,setPayouts]=useState<Payout[]>([])
-  const [email,setEmail]=useState('')
+  const [username,setUsername]=useState('')
   const [password,setPassword]=useState('')
   const [busy,setBusy]=useState(false)
   const [loading,setLoading]=useState(true)
@@ -62,7 +62,7 @@ export default function EpartsSupplierPortal(){
     return()=>{alive=false;subscription.unsubscribe()}
   },[])
 
-  async function login(e:FormEvent){e.preventDefault();if(!supabase)return;setBusy(true);setError('');try{const {data,error}=await supabase.auth.signInWithPassword({email:email.trim(),password});if(error)throw error;setSession(data.session);if(data.user)await loadSupplier(data.user.id)}catch(e){setError(e instanceof Error?e.message:'Não foi possível entrar.')}finally{setBusy(false)}}
+  async function login(e:FormEvent){e.preventDefault();if(!supabase)return;setBusy(true);setError('');try{const {data,error}=await supabase.auth.signInWithPassword({email:username.trim().toLowerCase()+'@eparts-login.invalid',password});if(error)throw error;setSession(data.session);if(data.user)await loadSupplier(data.user.id)}catch(e){setError(e instanceof Error?e.message:'Não foi possível entrar.')}finally{setBusy(false)}}
   async function logout(){await supabase?.auth.signOut();setSession(null);setSupplier(null)}
 
   const visibleItems=useMemo(()=>items.filter(row=>{const sale=sales.find(x=>x.id===row.sale_id);if(!sale)return false;const day=sale.created_at.slice(0,10);return(!from||day>=from)&&(!to||day<=to)}),[items,sales,from,to])
@@ -109,8 +109,8 @@ export default function EpartsSupplierPortal(){
     <div className="ep-supplier-wrap">
       <div className="ep-supplier-brand"><span className="ep-supplier-brand-mark"><Store size={23}/></span><div><b>EPARTS</b><small>PORTAL DO FORNECEDOR</small></div></div>
       {!session?<section className="ep-supplier-card ep-supplier-login">
-        <h1>Acesso do fornecedor</h1><p>Entre com o e-mail e a senha vinculados ao seu cadastro na EPARTS.</p>
-        <form onSubmit={login}><label>E-mail<input type="email" autoComplete="username" required value={email} onChange={e=>setEmail(e.target.value)}/></label><label>Senha<input type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)}/></label>
+        <h1>Acesso do fornecedor</h1><p>Entre com o usuário e a senha fornecidos pelo administrador da EPARTS.</p>
+        <form onSubmit={login}><label>Usuário<input type="text" autoCapitalize="none" autoComplete="username" minLength={4} maxLength={30} required value={username} onChange={e=>setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g,''))} placeholder="Seu usuário"/></label><label>Senha<input type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)}/></label>
           {error&&<div className="ep-supplier-error">{error}</div>}<button type="submit" disabled={busy}>{busy?'Validando acesso...':'Entrar no portal'}</button>
         </form><p className="ep-supplier-notice">O acesso é individual. Cada fornecedor visualiza somente seus próprios produtos, vendas e repasses.</p>
       </section>:loading?<section className="ep-supplier-card">Carregando seu painel...</section>:!supplier?<section className="ep-supplier-card"><h1>Acesso ainda não vinculado</h1><p>{error||'Peça ao administrador da EPARTS para vincular este usuário ao seu cadastro de fornecedor.'}</p><button onClick={logout}><LogOut size={16}/> Sair</button></section>:<>
