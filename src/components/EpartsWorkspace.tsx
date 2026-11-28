@@ -49,7 +49,8 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
     {section:'RELACIONAMENTO',items:[{id:'customers' as Tab,label:'Clientes',icon:Users},{id:'suppliers' as Tab,label:'Fornecedores',icon:Truck}]},
     {section:'FINANCEIRO',items:[{id:'payouts' as Tab,label:'Comissões e repasses',icon:Wallet}]},
     {section:'CADASTRO RÁPIDO',items:[]},
-    {section:'CATÁLOGO ONLINE',items:[]}
+    {section:'CATÁLOGO ONLINE',items:[]},
+    {section:'PORTAL DO FORNECEDOR',items:[]}
   ]
   return <div className="company-app eparts-workspace">
     <style>{`
@@ -368,6 +369,9 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
           {group.section==='CATÁLOGO ONLINE'&&
             <a className="eparts-nav-link" href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer"><Store size={17}/><span>Abrir catálogo</span><ExternalLink size={14} className="eparts-nav-arrow"/></a>
           }
+          {group.section==='PORTAL DO FORNECEDOR'&&
+            <a className="eparts-nav-link" href={`${window.location.origin}/?portal=fornecedor`} target="_blank" rel="noreferrer"><Users size={17}/><span>Acesso do fornecedor</span><ExternalLink size={14} className="eparts-nav-arrow"/></a>
+          }
         </div>)}
       </nav>
       <div className="company-user">
@@ -397,6 +401,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
               <button type="button" onClick={()=>quickAdd('categories')}><Boxes size={20}/><span>Cadastrar categoria</span><ChevronRight size={17}/></button>
             </>}
             {group.section==='CATÁLOGO ONLINE'&&<a href={`${window.location.origin}/?catalogo=eparts`} target="_blank" rel="noreferrer"><Store size={20}/><span>Abrir catálogo</span><ExternalLink size={17}/></a>}
+            {group.section==='PORTAL DO FORNECEDOR'&&<a href={`${window.location.origin}/?portal=fornecedor`} target="_blank" rel="noreferrer"><Users size={20}/><span>Acesso do fornecedor</span><ExternalLink size={17}/></a>}
           </div>
         </div>)}
       </section>:['customers','suppliers','brands','categories'].includes(tab)?<EpartsRegistrations key={tab+'-'+createVersion} companyId={companyId} initialTab={tab as 'customers'|'suppliers'|'brands'|'categories'} initialCreate={quickCreate===tab}/>:tab==='pos'?<EpartsPOS companyId={companyId}/>:tab==='dashboard'?<div className="eparts-dashboard">
