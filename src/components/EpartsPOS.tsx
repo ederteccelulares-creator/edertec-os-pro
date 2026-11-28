@@ -189,8 +189,6 @@ export default function EpartsPOS({companyId}:Props){
      .eparts-pos .pos-pay button{min-height:55px!important;font-size:11px!important}
      .eparts-pos .pos-final{min-height:54px!important;font-size:16px!important}
    }
-
-  `}
    .eparts-pos .pos-heading h2{color:#fff!important}
    .eparts-pos .pos-heading-icon,.eparts-pos .pos-search>svg{color:#ed142c!important}
    .eparts-pos .pos-search,.eparts-pos .pos-scan{border-color:#ed142c!important;background:#151012!important;color:#fff!important}
@@ -206,6 +204,7 @@ export default function EpartsPOS({companyId}:Props){
    .eparts-pos .pos-field{color:#e8dfe0!important}
    .eparts-pos .pos-summary-row.total strong{color:#fff!important}
    .eparts-pos .pos-stock-note{border-color:#438d46!important}
+    `}
 </style>
   <div className="pos-heading"><span className="pos-heading-icon"><ShoppingCart size={48}/></span><div><h2>PDV <span style={{color:'#d8d0c5',fontWeight:450}}>– Ponto de Venda</span></h2><p>Venda rápida · controle de estoque em tempo real</p></div></div>
   {error&&<div className="pos-message">{error}</div>}{notice&&<div className="pos-message success"><CheckCircle2 size={18}/>{notice}</div>}
