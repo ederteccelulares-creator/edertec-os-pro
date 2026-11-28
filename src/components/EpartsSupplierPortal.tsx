@@ -4,7 +4,7 @@ import { LogOut, RefreshCw, Store, UserRound, LockKeyhole, Eye, EyeOff, ChartNoA
 import { supabase } from '../lib/supabase'
 
 type Supplier = { id:string; company_id:string; name:string; email:string|null; user_id:string|null }
-type Product = { id:string; name:string; sku:string|null; stock_quantity:number; sale_price:number; image_url:string|null }
+type Product = { id:string; brand_id:string|null; name:string; sku:string|null; stock_quantity:number; sale_price:number; image_url:string|null }
 type SaleItem = { id:string; sale_id:string; product_id:string; product_name:string; sku:string|null; quantity:number; unit_price:number; line_total:number; eparts_commission_amount:number; supplier_amount:number; created_at:string }
 type Sale = { id:string; order_number:number; status:string; payment_status:string; created_at:string }
 type Payout = { id:string; amount:number; payment_method:string; paid_at:string; reference:string|null; notes:string|null }
@@ -36,13 +36,29 @@ export default function EpartsSupplierPortal(){
       if(profileError) throw profileError
       if(!profile){setSupplier(null);setProducts([]);setItems([]);setSales([]);setPayouts([]);setError('Este usuário ainda não está vinculado a um cadastro de fornecedor da EPARTS. Peça ao administrador para vincular seu acesso.');return}
       setSupplier(profile as Supplier)
-      const [p,i,po]=await Promise.all([
-        supabase.from('eparts_products').select('id,name,sku,stock_quantity,sale_price,image_url').eq('company_id',profile.company_id).eq('supplier_id',profile.id).order('name'),
-        supabase.from('eparts_sale_items').select('id,sale_id,product_id,product_name,sku,quantity,unit_price,line_total,eparts_commission_amount,supplier_amount,created_at').eq('company_id',profile.company_id).eq('supplier_id',profile.id).order('created_at',{ascending:false}),
+      const {data:brandLinks,error:brandError}=await supabase.from('eparts_supplier_brands').select('brand_id').eq('company_id',profile.company_id).eq('supplier_id',profile.id)
+      if(brandError)throw brandError
+      const brandIds=(brandLinks||[]).map(row=>row.brand_id as string)
+      let productQuery=supabase.from('eparts_products').select('id,brand_id,name,sku,stock_quantity,sale_price,image_url').eq('company_id',profile.company_id)
+      productQuery=brandIds.length?productQuery.or('supplier_id.eq.'+profile.id+',brand_id.in.('+brandIds.join(',')+')'):productQuery.eq('supplier_id',profile.id)
+      const [p,po]=await Promise.all([
+        productQuery.order('name'),
         supabase.from('eparts_supplier_payouts').select('id,amount,payment_method,paid_at,reference,notes').eq('company_id',profile.company_id).eq('supplier_id',profile.id).order('paid_at',{ascending:false})
       ])
-      if(p.error) throw p.error;if(i.error) throw i.error;if(po.error) throw po.error
-      const itemRows=(i.data||[]) as SaleItem[]
+      if(p.error) throw p.error;if(po.error) throw po.error
+      const productIds=(p.data||[]).map(row=>row.id as string)
+      let itemRows:SaleItem[]=[]
+      if(productIds.length){
+        let itemQuery=supabase.from('eparts_sale_items').select('id,sale_id,product_id,product_name,sku,quantity,unit_price,line_total,eparts_commission_amount,supplier_amount,created_at').eq('company_id',profile.company_id)
+        itemQuery=brandIds.length?itemQuery.or('supplier_id.eq.'+profile.id+',product_id.in.('+productIds.join(',')+')'):itemQuery.eq('supplier_id',profile.id)
+        const {data,error}=await itemQuery.order('created_at',{ascending:false})
+        if(error)throw error
+        itemRows=(data||[]) as SaleItem[]
+      } else {
+        const {data,error}=await supabase.from('eparts_sale_items').select('id,sale_id,product_id,product_name,sku,quantity,unit_price,line_total,eparts_commission_amount,supplier_amount,created_at').eq('company_id',profile.company_id).eq('supplier_id',profile.id).order('created_at',{ascending:false})
+        if(error)throw error
+        itemRows=(data||[]) as SaleItem[]
+      }
       const saleIds=[...new Set(itemRows.map(row=>row.sale_id))]
       let saleRows:Sale[]=[]
       if(saleIds.length){
