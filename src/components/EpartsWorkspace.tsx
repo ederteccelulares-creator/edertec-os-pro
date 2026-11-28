@@ -348,6 +348,14 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
       .eparts-workspace .eparts-menu-options button>span,.eparts-workspace .eparts-menu-options a>span{flex:1}
       .eparts-workspace .eparts-menu-options button>svg:first-child,.eparts-workspace .eparts-menu-options a>svg:first-child{color:#ff8793}
       .eparts-workspace .eparts-menu-options button.active{border-color:#ed142c;background:#6f1020;color:#ffe3a4}
+      .eparts-workspace .eparts-financial-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+      .eparts-workspace .eparts-financial-grid>div{min-width:0;padding:15px;border:1px solid #5a3037;border-radius:14px;background:linear-gradient(145deg,#201719,#0d0c0c);display:grid;gap:8px}
+      .eparts-workspace .eparts-financial-grid svg{color:#ed142c}
+      .eparts-workspace .eparts-financial-grid span{font-size:12px;color:#d0c6c7;line-height:1.35}
+      .eparts-workspace .eparts-financial-grid strong{font-size:clamp(18px,2vw,25px);color:#fff;overflow-wrap:anywhere}
+      .eparts-workspace .eparts-financial-grid .eparts-commission-value{color:#ff5364}
+      .eparts-workspace .eparts-financial-grid .eparts-supplier-value{color:#78df8a}
+      @media(max-width:760px){.eparts-workspace .eparts-financial-grid{grid-template-columns:1fr}.eparts-workspace .eparts-financial-grid>div{grid-template-columns:28px 1fr;align-items:center;gap:4px 10px;padding:12px}.eparts-workspace .eparts-financial-grid strong{grid-column:2;font-size:22px}}
       /* EPARTS visual direction approved: black / intense red / white */
       .eparts-workspace{--ep-gold:#ed142c!important;--ep-gold-light:#fff!important}
       .eparts-workspace .eparts-brand-row{position:relative}
@@ -535,6 +543,14 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
             <article className="company-stat-card"><div style={{display:"flex",alignItems:"center",gap:12}}><FileText size={29} color="#ed142c"/><span>Valor em pedidos ativos</span></div><strong>{money(stats.revenue)}</strong></article>
             <article className="company-stat-card"><div style={{display:"flex",alignItems:"center",gap:12}}><Wallet size={29} color="#ed142c"/><span>Comissão prevista</span></div><strong>{money(stats.commission)}</strong></article>
           </div>}
+        </section>
+        <section className="company-panel eparts-financial-split">
+          <div className="company-panel-head"><div style={{display:"flex",alignItems:"center",gap:12}}><Wallet size={29} color="#ed142c"/><div><b>Distribuição das vendas</b><small>Estimativa sobre os pedidos ativos · comissão EPARTS atual de 12%</small></div></div></div>
+          <div className="eparts-financial-grid">
+            <div><ShoppingCart size={23}/><span>Vendas do período</span><strong>{money(stats.revenue)}</strong></div>
+            <div><Wallet size={23}/><span>Comissão EPARTS (12%)</span><strong className="eparts-commission-value">{money(stats.commission)}</strong></div>
+            <div><Users size={23}/><span>Parte do fornecedor (estimada)</span><strong className="eparts-supplier-value">{money(Math.max(0,stats.revenue-stats.commission))}</strong></div>
+          </div>
         </section>
         <section className="company-panel eparts-quick-panel">
           <div className="company-panel-head"><div style={{display:"flex",alignItems:"center",gap:12}}><Zap size={28} color="#ed142c"/><div><b>Ações rápidas</b><small>Acesse as áreas mais utilizadas</small></div></div></div>
