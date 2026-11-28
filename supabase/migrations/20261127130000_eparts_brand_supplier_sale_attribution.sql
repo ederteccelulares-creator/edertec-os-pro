@@ -56,7 +56,7 @@ begin
 
     v_supplier_id := v_product.supplier_id;
     if v_supplier_id is null and v_product.brand_id is not null then
-      select count(*), min(sb.supplier_id) into v_brand_supplier_count, v_supplier_id
+      select count(*), (array_agg(sb.supplier_id order by sb.supplier_id))[1] into v_brand_supplier_count, v_supplier_id
       from public.eparts_supplier_brands sb
       where sb.company_id=p_company_id and sb.brand_id=v_product.brand_id;
       if v_brand_supplier_count>1 then
@@ -125,7 +125,7 @@ update public.eparts_sale_items i
 set supplier_id = sb.supplier_id
 from public.eparts_products p
 join (
-  select company_id, brand_id, min(supplier_id) as supplier_id
+  select company_id, brand_id, (array_agg(supplier_id order by supplier_id))[1] as supplier_id
   from public.eparts_supplier_brands
   group by company_id, brand_id
   having count(*)=1
