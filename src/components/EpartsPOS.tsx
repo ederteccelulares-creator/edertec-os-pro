@@ -66,14 +66,14 @@ export default function EpartsPOS({companyId}:Props){
   <style>{`
    .eparts-pos{color:#f7f2e8;min-width:0}
    .eparts-pos .pos-heading{display:flex;align-items:center;gap:15px;margin:0 0 22px}
-   .eparts-pos .pos-heading-icon{width:54px;height:54px;display:grid;place-items:center;flex:none;color:#edc66f}
+   .eparts-pos .pos-heading-icon{width:54px;height:54px;display:grid;place-items:center;flex:none;color:#ff6878}
    .eparts-pos .pos-heading h2{margin:0;color:#f2d28e;font-size:clamp(25px,3vw,38px);letter-spacing:-1px}
    .eparts-pos .pos-heading p{margin:2px 0 0;color:#b8b0a4;font-size:14px}
    .eparts-pos .pos-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:18px}
-   .eparts-pos .pos-search{display:flex;align-items:center;gap:12px;flex:1;min-width:0;min-height:58px;padding:0 16px;border:1px solid #b58b39;border-radius:13px;background:linear-gradient(100deg,#171411,#111)}
+   .eparts-pos .pos-search{display:flex;align-items:center;gap:12px;flex:1;min-width:0;min-height:58px;padding:0 16px;border:1px solid #a90019;border-radius:13px;background:linear-gradient(100deg,#171411,#111)}
    .eparts-pos .pos-search>svg{color:#e9c36f;flex:none}
    .eparts-pos .pos-search input{width:100%;min-width:0;padding:12px 0!important;border:0!important;outline:none!important;box-shadow:none!important;background:transparent!important;color:#fff;font-size:16px}
-   .eparts-pos .pos-scan{width:58px;height:58px;display:grid;place-items:center;border:1px solid #b58b39;border-radius:13px;background:#19140e;color:#f1ce7b}
+   .eparts-pos .pos-scan{width:58px;height:58px;display:grid;place-items:center;border:1px solid #a90019;border-radius:13px;background:#19140e;color:#f1ce7b}
    .eparts-pos .pos-products{display:grid;gap:9px;margin-bottom:20px}
    .eparts-pos .pos-product{display:grid;grid-template-columns:116px minmax(0,1fr) auto;align-items:center;gap:16px;min-width:0;padding:12px;border:1px solid #414141;border-radius:15px;background:linear-gradient(110deg,#202020,#141414);box-shadow:0 6px 16px #0004}
    .eparts-pos .pos-product-image{width:116px;height:108px;display:grid;place-items:center;overflow:hidden;border-radius:12px;background:#0d0d0d;border:1px solid #2b2b2b}
@@ -168,7 +168,7 @@ export default function EpartsPOS({companyId}:Props){
    .eparts-pos .pos-pay{gap:9px!important}
    .eparts-pos .pos-pay button{min-height:58px!important;border-color:#494033!important;border-radius:10px!important;background:#171614!important;color:#ddd4c4!important;font-size:13px!important}
    .eparts-pos .pos-pay button svg{color:#d9b56d!important}
-   .eparts-pos .pos-pay button.active{border:1px solid #c49b52!important;background:linear-gradient(120deg,#392b16,#21180d)!important;color:#ffe4a4!important;box-shadow:inset 0 0 0 1px #c49b5230!important}
+   .eparts-pos .pos-pay button.active{border:1px solid #a90019!important;background:linear-gradient(120deg,#392b16,#21180d)!important;color:#ffe4a4!important;box-shadow:inset 0 0 0 1px #a9001930!important}
    .eparts-pos .pos-final{min-height:58px!important;margin-top:14px!important;border:1px solid #9f2632!important;border-radius:10px!important;background:linear-gradient(100deg,#bd2736,#851722)!important;font-size:17px!important;box-shadow:0 6px 16px #8f15242b!important}
    .eparts-pos .pos-stock-note{border:1px solid #4c6946!important;border-radius:10px!important;background:#111a11!important;color:#c7d9c2!important;font-size:12px!important}
    .eparts-pos .pos-stock-note svg{color:#9bc48e!important}
