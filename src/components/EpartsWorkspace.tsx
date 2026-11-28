@@ -692,7 +692,7 @@ export default function EpartsWorkspace({companyId,companyName,email,role,onSign
           min-height:0!important;
           height:auto!important;
           margin:0!important;
-          padding:10px 13px calc(112px + env(safe-area-inset-bottom))!important;
+          padding:10px 13px calc(190px + env(safe-area-inset-bottom))!important;
           overflow:visible!important;
           transform:none!important;
         }
