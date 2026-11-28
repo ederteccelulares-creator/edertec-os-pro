@@ -4,6 +4,7 @@ import CompanyAuthGate from './components/CompanyAuthGate';
 import CustomerOrderTracking from './components/CustomerOrderTracking';
 import CustomerPortal from './components/CustomerPortal';
 import EpartsPublicCatalog from './components/EpartsPublicCatalog';
+import EpartsSupplierPortal from './components/EpartsSupplierPortal';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import PWAUpdatePrompt from './components/PWAUpdatePrompt';
 import './styles.css';
@@ -21,11 +22,12 @@ const params = new URLSearchParams(window.location.search);
 const trackingToken = params.get('acompanhar');
 const customerPortalToken = params.get('area-cliente');
 const epartsCatalog = params.get('catalogo') === 'eparts';
+const epartsSupplierPortal = params.get('portal') === 'fornecedor';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <PWAInstallPrompt />
     <PWAUpdatePrompt />
-    {epartsCatalog ? <EpartsPublicCatalog /> : customerPortalToken ? <CustomerPortal token={customerPortalToken} /> : trackingToken ? <CustomerOrderTracking token={trackingToken} /> : <CompanyAuthGate />}
+    {epartsSupplierPortal ? <EpartsSupplierPortal /> : epartsCatalog ? <EpartsPublicCatalog /> : customerPortalToken ? <CustomerPortal token={customerPortalToken} /> : trackingToken ? <CustomerOrderTracking token={trackingToken} /> : <CompanyAuthGate />}
   </React.StrictMode>
 );
