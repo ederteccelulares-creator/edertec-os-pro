@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { LayoutDashboard, Package, Tags, Truck, ShoppingCart, Wallet, Users, LogOut, RefreshCw, ExternalLink, Menu, X, ChevronRight, Store, BarChart3 } from 'lucide-react'
+import { LayoutDashboard, Package, Boxes, Tags, Truck, ShoppingCart, Wallet, Users, LogOut, RefreshCw, ExternalLink, Menu, X, ChevronRight, Store, BarChart3 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import EpartsCatalogAdminPanel from './EpartsCatalogAdminPanel'
 import EpartsPOS from './EpartsPOS'
