@@ -12,7 +12,7 @@ import './components/CompanyAuthLogin.css';
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`, { updateViaCache: 'none' }).then(registration => registration.update()).catch(error => {
+    navigator.serviceWorker.register(\`\${import.meta.env.BASE_URL}sw.js\`, { updateViaCache: 'none' }).then(registration => registration.update()).catch(error => {
       console.error('Não foi possível registrar o modo instalável:', error);
     });
   });
@@ -21,7 +21,7 @@ if ('serviceWorker' in navigator) {
 const params = new URLSearchParams(window.location.search);
 const trackingToken = params.get('acompanhar');
 const customerPortalToken = params.get('area-cliente');
-const path = window.location.pathname.replace(/\\/+$/, '') || '/';
+const path = window.location.pathname.replace(/\/+$/, '') || '/';
 const epartsCatalog = params.get('catalogo') === 'eparts' || path === '/eparts/catalogo';
 const epartsSupplierPortal = params.get('portal') === 'fornecedor' || path === '/eparts/fornecedor';
 const epartsWorkspace = path === '/eparts' || params.get('painel') === 'eparts';
